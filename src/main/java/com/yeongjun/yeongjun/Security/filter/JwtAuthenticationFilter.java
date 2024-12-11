@@ -31,19 +31,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        // JWT 토큰 추출 (쿠키와 헤더 모두 확인)
-        String token = resolveToken(request);
+        try {
+            // JWT 토큰 추출 (쿠키와 헤더 모두 확인)
+            String token = resolveToken(request);
 
-        // 토큰이 유효하면 인증 설정
-        if (token != null && jwtProvider.validateToken(token)) {
-            String username = jwtProvider.getUsername(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            // 토큰이 유효하면 인증 설정
+            if (token != null && jwtProvider.validateToken(token)) {
+                String username = jwtProvider.getUsername(token);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            // 예외 로그
+            logger.error("JWT Authentication Filter Error: ", e);
+            throw e;
         }
-
-        filterChain.doFilter(request, response);
     }
 
     // JWT 토큰을 쿠키 또는 Authorization 헤더에서 추출

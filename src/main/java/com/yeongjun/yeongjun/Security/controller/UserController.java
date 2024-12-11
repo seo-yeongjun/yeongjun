@@ -21,7 +21,7 @@ public class UserController {
     // 로그인 화면
     @GetMapping("/login")
     public String loginPage() {
-        return "/auth/login"; // login.html
+        return "auth/login"; // login.html
     }
 
     @PostMapping("/login")
@@ -43,7 +43,7 @@ public class UserController {
             return "redirect:/home"; // 로그인 후 리디렉션
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
-            return "/auth/login";
+            return "auth/login";
         }
     }
 
@@ -62,7 +62,7 @@ public class UserController {
     @GetMapping("/register")
     public String registerPage(Model model) {
         model.addAttribute("user", new User());
-        return "/auth/register"; // register.html
+        return "auth/register"; // register.html
     }
 
     // 회원가입 처리
@@ -73,7 +73,7 @@ public class UserController {
             return "redirect:/auth/login?success";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
-            return "/auth/register";
+            return "auth/register";
         }
     }
 }
