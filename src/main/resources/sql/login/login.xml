@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="login.login">
+    <select id="getUserById" resultType="com.yeongjun.yeongjun.Security.model.User">
+        SELECT username,
+               password,
+               nickname,
+               email,
+               role,
+               is_active,
+               created_at,
+               updated_at
+        FROM Users
+        WHERE username = #{username}
+    </select>
+
+    <insert id="insertUser" parameterType="com.yeongjun.yeongjun.Security.model.User">
+        INSERT INTO Users (username,
+                           password,
+                           nickname,
+                           email,
+                           role,
+                           is_active,
+                           created_at,
+                           updated_at)
+        VALUES (
+                   #{username},
+                   #{password},
+                   #{nickname},
+                   #{email},
+                   #{role},
+                   #{is_active},
+                   #{created_at},
+                   #{updated_at}
+               );
+    </insert>
+</mapper>
