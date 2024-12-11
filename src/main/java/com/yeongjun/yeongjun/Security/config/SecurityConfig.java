@@ -29,7 +29,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/home","/error/**", "/common/**", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/test-layout","/auth/**", "/home","/error/**", "/common/**", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN") // 관리자만 접근 가능
                         .requestMatchers("/hyerin/**").hasAnyRole("HYERIN", "ADMIN") // 특정 역할만 허용
                         .anyRequest().authenticated() // 나머지는 인증 필요

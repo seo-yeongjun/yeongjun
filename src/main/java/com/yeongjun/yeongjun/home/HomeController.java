@@ -20,4 +20,13 @@ public class HomeController {
         }
         return "home"; // home.html 반환
     }
+
+    @GetMapping("/test-layout")
+    public String testLayout(@AuthenticationPrincipal User user, Model model) {
+        model.addAttribute("title", "홈 페이지");
+        model.addAttribute("message", "Welcome to the Home Page!");
+        if (user != null) {
+            model.addAttribute("user", user.getNickname());
+        }    return "layout";
+    }
 }
