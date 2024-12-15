@@ -1,13 +1,46 @@
 <!DOCTYPE html>
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{layout}">
 <head>
-  <title th:text="${title} ?: '홈 페이지'">홈 페이지</title>
+    <title th:text="${title} ?: '홈 페이지'">홈 페이지</title>
+    <style>
+        .category-box:nth-child(7n+1) {
+            background-color: #f87171; /* 빨강 */
+        }
+        .category-box:nth-child(7n+2) {
+            background-color: #fb923c; /* 주황 */
+        }
+        .category-box:nth-child(7n+3) {
+            background-color: #facc15; /* 노랑 */
+        }
+        .category-box:nth-child(7n+4) {
+            background-color: #4ade80; /* 초록 */
+        }
+        .category-box:nth-child(7n+5) {
+            background-color: #60a5fa; /* 파랑 */
+        }
+        .category-box:nth-child(7n+6) {
+            background-color: #818cf8; /* 남색 */
+        }
+        .category-box:nth-child(7n) {
+            background-color: #a78bfa; /* 보라 */
+        }
+    </style>
 </head>
 <body>
 <div layout:fragment="content">
-  <h2 class="text-xl text-gray-800" th:text="${message}">홈 페이지에 오신 것을 환영합니다.</h2>
-  <p th:if="${user != null}" th:text="'안녕하세요, ' + ${user} + '님!'"></p>
-  <p th:if="${user == null}">로그인되지 않았습니다.</p>
+    <div id="categories" class="flex flex-wrap gap-4">
+        <ul class="flex flex-wrap gap-4">
+            <li th:each="category : ${baseCategory}"
+                class="w-48 p-4 border border-gray-300 rounded-lg shadow-lg text-center text-white hover:scale-105 transform transition-transform category-box">
+                <a th:href="${category.path}"
+                   class="block w-full h-full cursor-pointer">
+                    <strong th:text="${category.category_name}" class="block text-lg font-semibold mb-2">Category Name</strong>
+                    <p th:if="${category.description != null}" th:text="${category.description}" class="text-sm"></p>
+                </a>
+            </li>
+        </ul>
+
+    </div>
 </div>
 </body>
 </html>

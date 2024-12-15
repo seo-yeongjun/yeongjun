@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{transactions/layout}">
+<head>
+    <title th:text="${title} ?: '홈 페이지'">홈 페이지</title>
+    <script th:inline="javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            const category1Select = document.getElementById("category1");
+            const category2Select = document.getElementById("category2");
+
+            // Thymeleaf에서 JSON 데이터를 JavaScript로 전달
+            const categoryData = /*[[${transactionsRecordAllCategory}]]*/ '[]';
+
+            // 2차 카테고리 초기화
+            category2Select.innerHTML = '<option value="" disabled selected>2차 카테고리를 선택하세요</option>';
+
+            // 1차 카테고리 변경 시 2차 카테고리 필터링
+            category1Select.addEventListener("change", () => {
+                const selectedParentId = category1Select.value;
+
+                // 2차 카테고리 초기화
+                category2Select.innerHTML = '<option value="" disabled selected>2차 카테고리를 선택하세요</option>';
+
+                // 선택된 1차 카테고리의 자식 카테고리만 필터링
+                categoryData
+                    .filter(category => category.parents_category_id == selectedParentId)
+                    .forEach(category => {
+                        const option = document.createElement("option");
+                        option.value = category.transaction_category_id;
+                        option.textContent = category.category_nm;
+                        category2Select.appendChild(option);
+                    });
+            });
+        });
+    </script>
+
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- 기록 목록 -->
+    <section class="mb-6">
+        <h2 class="text-2xl font-bold mb-4 border-b pb-2">소비기록 목록</h2>
+        <div class="bg-white shadow-md rounded-lg p-4">
+            <ul class="space-y-2">
+                <!-- Thymeleaf를 사용하여 모델의 transactionsList를 반복 출력 -->
+                <li th:each="transaction : ${transactionsList}"
+                    class="flex justify-between items-center p-2 border-b">
+                    <span class="text-gray-700" th:text="${transaction.memo}">커피 ☕</span>
+                    <span class="text-gray-500" th:text="${transaction.transaction_date}">2024-12-15</span>
+                    <span class="text-red-500 font-semibold"
+                          th:text="'- ' + ${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '원'">- 5,000원</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 입력창 -->
+    <section>
+        <h2 class="text-2xl font-bold mb-4 border-b pb-2">기록</h2>
+        <form th:action="@{/transactions/add}" method="post" class="bg-white shadow-md rounded-lg p-4">
+            <!-- 항목 -->
+            <div class="mb-4">
+                <label for="description" class="block text-gray-700 font-semibold mb-2">항목</label>
+                <input type="text" id="description" name="description" placeholder="예: 커피 ☕"
+                       class="w-full p-2 border rounded focus:outline-none focus:ring focus:ring-blue-200">
+            </div>
+
+            <!-- 금액 -->
+            <div class="mb-4">
+                <label for="amount" class="block text-gray-700 font-semibold mb-2">금액</label>
+                <input type="number" id="amount" name="amount" placeholder="예: 5000"
+                       class="w-full p-2 border rounded focus:outline-none focus:ring focus:ring-blue-200">
+            </div>
+
+            <!-- 1차 카테고리 선택 -->
+            <div class="mb-4">
+                <label for="category1" class="block text-gray-700 font-semibold mb-2">1차 카테고리</label>
+                <select id="category1" class="w-full p-2 border rounded focus:outline-none focus:ring focus:ring-blue-200">
+                    <option value="" disabled selected>1차 카테고리를 선택하세요</option>
+                    <!-- 부모 카테고리만 표시 -->
+                    <option th:each="category : ${transactionsRecordAllCategory}"
+                            th:if="${category.parents_category_id == null}"
+                            th:value="${category.transaction_category_id}"
+                            th:text="${category.category_nm}">1차 카테고리
+                    </option>
+                </select>
+            </div>
+
+            <!-- 2차 카테고리 선택 -->
+            <div class="mb-4">
+                <label for="category2" class="block text-gray-700 font-semibold mb-2">2차 카테고리</label>
+                <select id="category2" name="categoryId"
+                        class="w-full p-2 border rounded focus:outline-none focus:ring focus:ring-blue-200">
+                    <option value="" disabled selected>2차 카테고리를 선택하세요</option>
+                </select>
+            </div>
+
+            <!-- 날짜 -->
+            <div class="mb-4">
+                <label for="date" class="block text-gray-700 font-semibold mb-2">날짜</label>
+                <input type="date" id="date" name="transactionDate"
+                       class="w-full p-2 border rounded focus:outline-none focus:ring focus:ring-blue-200">
+            </div>
+
+            <!-- 기록 추가 버튼 -->
+            <div class="text-right">
+                <button type="submit"
+                        class="bg-blue-500 text-white font-semibold px-4 py-2 rounded hover:bg-blue-600 transition">
+                    기록 추가
+                </button>
+            </div>
+        </form>
+    </section>
+</div>
+</body>
+</html>

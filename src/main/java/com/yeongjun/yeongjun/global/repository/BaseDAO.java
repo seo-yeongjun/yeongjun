@@ -1,4 +1,4 @@
-package com.yeongjun.yeongjun;
+package com.yeongjun.yeongjun.global.repository;
 
 
 import org.apache.ibatis.session.SqlSession;

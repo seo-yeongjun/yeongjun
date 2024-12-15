@@ -1,6 +1,6 @@
 package com.yeongjun.yeongjun.Security.repository;
 
-import com.yeongjun.yeongjun.BaseDAO;
+import com.yeongjun.yeongjun.global.repository.BaseDAO;
 import com.yeongjun.yeongjun.Security.model.User;
 import org.springframework.stereotype.Repository;
 

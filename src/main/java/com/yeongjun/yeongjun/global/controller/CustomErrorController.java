@@ -1,4 +1,4 @@
-package com.yeongjun.yeongjun;
+package com.yeongjun.yeongjun.global.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.web.servlet.error.ErrorController;

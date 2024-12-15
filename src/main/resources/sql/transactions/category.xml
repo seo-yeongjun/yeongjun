@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="transactions.category">
+    <select id="selectAllTransactionCategories" resultType="com.yeongjun.yeongjun.transactions.model.TransactionsCategory">
+        SELECT transaction_category_id, income_expense_gb, category_nm, parents_category_id
+        FROM transactions_category;
+    </select>
+
+    <select id="selectIncomeCategories" resultType="com.yeongjun.yeongjun.transactions.model.TransactionsCategory">
+        SELECT transaction_category_id, category_nm, parents_category_id
+        FROM transactions_category
+        WHERE income_expense_gb = 1;
+    </select>
+
+    <select id="selectExpenseCategories" resultType="com.yeongjun.yeongjun.transactions.model.TransactionsCategory">
+        SELECT transaction_category_id, category_nm, parents_category_id
+        FROM transactions_category
+        WHERE income_expense_gb = 2;
+    </select>
+</mapper>

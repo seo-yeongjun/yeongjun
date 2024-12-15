@@ -20,8 +20,9 @@ public class UserController {
 
     // 로그인 화면
     @GetMapping("/login")
-    public String loginPage() {
-        return "auth/login"; // login.html
+    public String loginPage(Model model) {
+        model.addAttribute("title", "로그인");
+        return "auth/login"; // login.html 반환
     }
 
     @PostMapping("/login")
