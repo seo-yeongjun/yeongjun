@@ -5,7 +5,7 @@
   <title th:text="${title} ?: '기본 제목'">기본 제목</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link th:href="@{/main.css}" rel="stylesheet">
 </head>
 <body class="bg-gray-100 flex flex-col min-h-screen">
 <header class="bg-white shadow-md py-4 relative">

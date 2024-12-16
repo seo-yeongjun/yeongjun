@@ -5,7 +5,7 @@
     <title th:text="${title} ?: '기본 제목'">기본 제목</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link th:href="@{/main.css}" rel="stylesheet">
 </head>
 <body class="bg-gray-100 flex flex-col min-h-screen">
 <header class="bg-white shadow-md py-4 relative">
@@ -57,16 +57,25 @@
         </a>
     </div>
 </div>
-<div class="container mx-auto py-6 px-4 flex-grow flex">
-    <aside class="w-64 bg-gray-100 border-r border-gray-300 p-4">
+<div id="mobile-category-menu" class="block md:hidden bg-gray-100 py-2 px-2 overflow-x-auto whitespace-nowrap border-b border-gray-300">
+    <ul class="flex">
+        <!--/*@thymesVar id="transactionsCategory" type="com.yeongjun.yeongjun.transactions.controller.TransactionController"*/-->
+        <li th:each="category : ${transactionsCategory}" class="mr-4 last:mr-0">
+            <a class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm font-medium"
+               th:href="@{|/${category.path}|}" th:text="${category.category_name}"></a>
+        </li>
+    </ul>
+</div>
+
+<div class="container ml-1 mr-2 py-6 pr-2 flex-grow flex">
+    <aside class="hidden md:block w-60 bg-gray-100 border-r border-gray-300 p-2">
         <ul class="space-y-2">
-            <!--/*@thymesVar id="transactionsCategory" type="com.yeongjun.yeongjun.transactions.controller.TransactionController"*/-->
             <li class="p-2 rounded hover:bg-gray-200 cursor-pointer" th:each="category : ${transactionsCategory}">
                 <a class="block w-full h-full" th:href="@{|/${category.path}|}" th:text="${category.category_name}"></a>
             </li>
         </ul>
     </aside>
-    <main layout:fragment="content" class="container mx-auto py-6 px-4 flex-grow">
+    <main layout:fragment="content" class="container mx-auto pt-6 px-4 flex-grow">
     </main>
 </div>
 <footer class="bg-gray-800 py-2 text-center text-gray-200">

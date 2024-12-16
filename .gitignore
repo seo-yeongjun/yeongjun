@@ -38,3 +38,6 @@ out/
 .vscode/
 
 .DS_Store
+
+###frontend
+src/main/resources/frontend/node_modules
