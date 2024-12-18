@@ -47,20 +47,27 @@
     <div class="flex flex-col flex-grow p-4 h-full">
         <!-- 기록 목록 -->
         <section class="mb-6">
-            <h2 class="text-2xl font-bold mb-4 border-b pb-2">소비기록 목록</h2>
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2">오늘의 소비기록 목록</h2>
             <div class="bg-white shadow-md rounded-lg p-4">
-                <ul class="divide-y">
-                    <li th:each="transaction : ${transactionsList}" class="flex justify-between items-center py-2">
+                <!-- Transactions List -->
+                <ul class="divide-y" th:if="${transactionsListToday.size() != 0}">
+                    <li th:each="transaction : ${transactionsListToday}" class="flex justify-between items-center py-2">
                         <span class="text-gray-700" th:text="${transaction.memo}">커피 ☕</span>
                         <span class="text-gray-500" th:text="${transaction.transaction_date}">2024-12-15</span>
                         <span class="text-red-500 font-semibold"
                               th:text="'- ' + ${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '원'">- 5,000원</span>
                     </li>
                 </ul>
+
+                <div th:if="${transactionsListToday.size() == 0}" class="text-center text-gray-500 py-4">
+                    <p>오늘 아직 기록하지 않으셨네요!</p>
+                    <p>오늘의 소비기록을 해보세요</p>
+                </div>
             </div>
         </section>
         <section class="bg-white shadow-md p-4 mt-auto rounded-lg">
-            <div class="flex" style="justify-content: end">
+            <div class="flex justify-between">
+                <h2>소비를 기록합시다✍️</h2>
                 <button id="toggle-record-button" class="text-gray-500 text-sm pb-2">줄이기▼</button>
             </div>
             <div id="record-section">

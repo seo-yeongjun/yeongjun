@@ -28,6 +28,11 @@ public class TransactionsDAO extends BaseDAO<Transaction> {
         return selectList("selectAllTransactionsByUser", username);
     }
 
+    // 사용자별 전체 거래 조회
+    public List<Transaction> selectAllTransactionsByUserAndCreatedDate(Object params) {
+        return selectList("selectAllTransactionsByUserAndCreatedDate", params);
+    }
+
     // 사용자, 연도-월, 카테고리별 수입 거래 조회
     public List<Transaction> selectIncomeTransactionsByUserAndYearMonthCategory(Object params) {
         return selectList("selectIncomeTransactionsByUserAndYearMonthCategory", params);

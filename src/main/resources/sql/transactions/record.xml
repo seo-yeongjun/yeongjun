@@ -42,25 +42,19 @@
         ORDER BY transaction_date DESC;
     </select>
 
-    <!-- 수입 거래 조회 by 사용자, 연도, 월, 카테고리 -->
-    <select id="selectIncomeTransactionsByUserAndYearMonthCategory" resultType="com.yeongjun.yeongjun.transactions.model.Transaction">
+    <!-- 유저별 거래기록날짜로 조회 -->
+    <select id="selectAllTransactionsByUserAndCreatedDate" resultType="com.yeongjun.yeongjun.transactions.model.Transaction">
         SELECT
-        transaction_id, username, category_id, amount, transaction_date, memo, created_at
+            transaction_id, username, category_id, amount, transaction_date, memo, created_at
         FROM transactions
         WHERE username = #{username}
-        <if test="categoryId != null and categoryId != ''">
-            AND category_id = #{categoryId}
+        <if test="created_at != null">
+            AND created_at &gt;= #{created_at}
+            AND created_at &lt; DATE_ADD(#{created_at}, INTERVAL 1 DAY)
         </if>
-        <if test="yearMonth != null and yearMonth != ''">
-            AND DATE_FORMAT(transaction_date, '%Y-%m') = #{yearMonth}
-        </if>
-        AND category_id IN (
-        SELECT transaction_category_id
-        FROM transactions_category
-        WHERE income_expense_gb = 1
-        )
         ORDER BY transaction_date DESC;
     </select>
+
 
     <!-- 지출 거래 조회 by 사용자, 연도, 월, 카테고리 -->
     <select id="selectExpenseTransactionsByUserAndYearMonthCategory" resultType="com.yeongjun.yeongjun.transactions.model.Transaction">
@@ -85,7 +79,7 @@
     <!-- 거래 추가 -->
     <insert id="insertTransactions" parameterType="com.yeongjun.yeongjun.transactions.model.Transaction">
         INSERT INTO transactions (username, category_id, amount, transaction_date, memo, created_at)
-        VALUES (#{username}, #{categoryId}, #{amount}, #{transactionDate}, #{memo}, NOW());
+        VALUES (#{username}, #{categoryId}, #{amount}, #{transaction_date}, #{memo}, NOW());
     </insert>
 
     <!-- 거래 수정 -->

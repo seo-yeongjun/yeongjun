@@ -1,14 +1,22 @@
 package com.yeongjun.yeongjun.transactions.controller;
 
 import com.yeongjun.yeongjun.Security.model.User;
+import com.yeongjun.yeongjun.transactions.model.Transaction;
 import com.yeongjun.yeongjun.transactions.repository.TransactionsDAO;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Controller
 @RequestMapping("/transactions") // 클래스 수준에서 /transaction 경로 지정
@@ -32,7 +40,28 @@ public class TransactionController {
     @GetMapping("record")
     public String transactionsRecordPage(@AuthenticationPrincipal User user, Model model) {
         model.addAttribute("title", "가계부-소비기록\uD83D\uDCDA");
-        model.addAttribute("transactionsList", transactionsDAO.selectAllTransactionsByUser(user.getUsername()));
+
+        Transaction params = new Transaction();
+        params.setUsername(user.getUsername());
+        params.setCreated_at(LocalDateTime.now());
+        model.addAttribute("transactionsListToday", transactionsDAO.selectAllTransactionsByUserAndCreatedDate(params));
         return "transactions/record";
+    }
+
+    // 트랜잭션 추가를 처리하는 POST 요청
+    @PostMapping("add")
+    public String addTransaction(@AuthenticationPrincipal User user,@Valid @ModelAttribute("transaction") Transaction transaction,
+                                 BindingResult bindingResult,
+                                 Model model) {
+        if (bindingResult.hasErrors()) {
+            Transaction params = new Transaction();
+            params.setUsername(user.getUsername());
+            params.setCreated_at(LocalDateTime.now());
+            model.addAttribute("transactionsListToday", transactionsDAO.selectAllTransactionsByUserAndCreatedDate(params));
+            return "transactions/record"; // 다시 폼으로 돌아감
+        }
+        transaction.setUsername(user.getUsername());
+        transactionsDAO.insertTransaction(transaction);
+        return "redirect:/transactions/record"; // 트랜잭션 목록 페이지로 리다이렉트
     }
 }
