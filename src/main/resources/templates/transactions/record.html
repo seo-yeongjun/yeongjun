@@ -71,11 +71,19 @@
                 <button id="toggle-record-button" class="text-gray-500 text-sm pb-2">줄이기▼</button>
             </div>
             <div id="record-section">
-                <form th:action="@{/transactions/add}" method="post"
+                <form th:action="@{/transactions/add}" method="post" th:object="${transaction}"
                       class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-2 text-sm">
                     <div class="flex items-center bg-gray-100 rounded p-2 border w-full md:w-auto">
-                        <input type="date" id="date" name="transaction_date"
+                        <div th:if="${#fields.hasGlobalErrors()}" class="mb-4">
+                            <ul>
+                                <li th:each="err : ${#fields.globalErrors()}" th:text="${err}"></li>
+                            </ul>
+                        </div>
+                        <input type="date" th:field="*{transaction_date}"
                                class="w-full bg-transparent focus:outline-none">
+                        <div th:if="${#fields.hasErrors('transaction_date')}" class="text-red-500 text-xs">
+                            <p th:errors="*{transaction_date}"></p>
+                        </div>
                     </div>
                     <div class="flex items-center bg-gray-100 rounded p-2 border w-full md:w-auto">
                         <select id="category1" class="w-full bg-transparent focus:outline-none">
@@ -87,17 +95,26 @@
                         </select>
                     </div>
                     <div class="flex items-center bg-gray-100 rounded p-2 border w-full md:w-auto">
-                        <select id="category2" name="category_id" class="w-full bg-transparent focus:outline-none">
+                        <select id="category2" th:field="*{category_id}" class="w-full bg-transparent focus:outline-none">
                             <option value="" disabled selected>2차 카테고리</option>
                         </select>
+                        <div th:if="${#fields.hasErrors('category_id')}" class="text-red-500 text-xs">
+                            <p th:errors="*{category_id}"></p>
+                        </div>
                     </div>
                     <div class="flex items-center bg-gray-100 rounded p-2 border w-full md:w-auto">
-                        <input type="text" id="memo" name="memo" placeholder="메모"
+                        <input type="text" th:field="*{memo}"  placeholder="메모"
                                class="w-full p-2 bg-transparent focus:outline-none">
+                        <div th:if="${#fields.hasErrors('memo')}" class="text-red-500 text-xs">
+                            <p th:errors="*{memo}"></p>
+                        </div>
                     </div>
                     <div class="flex items-center bg-gray-100 rounded p-2 border w-full md:w-auto">
-                        <input type="number" id="amount" name="amount" placeholder="금액 (예: 5000)"
+                        <input type="number" th:field="*{amount}" placeholder="금액 (예: 5000)"
                                class="w-full p-2 bg-transparent focus:outline-none">
+                        <div th:if="${#fields.hasErrors('amount')}" class="text-red-500 text-xs">
+                            <p th:errors="*{amount}"></p>
+                        </div>
                     </div>
                     <button type="submit"
                             class="bg-blue-500 text-white font-semibold px-4 py-2 rounded hover:bg-blue-600 transition">

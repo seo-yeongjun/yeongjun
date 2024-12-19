@@ -79,7 +79,7 @@
     <!-- 거래 추가 -->
     <insert id="insertTransactions" parameterType="com.yeongjun.yeongjun.transactions.model.Transaction">
         INSERT INTO transactions (username, category_id, amount, transaction_date, memo, created_at)
-        VALUES (#{username}, #{categoryId}, #{amount}, #{transaction_date}, #{memo}, NOW());
+        VALUES (#{username}, #{category_id}, #{amount}, #{transaction_date}, #{memo}, NOW());
     </insert>
 
     <!-- 거래 수정 -->

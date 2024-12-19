@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 콘솔 앱렌더 설정 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %5p [%t] %-40.40logger{39} : %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 루트 로거 설정 -->
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <!-- MyBatis 로거 설정 -->
+    <logger name="org.mybatis" level="DEBUG"/>
+    <logger name="org.apache.ibatis" level="DEBUG"/>
+    <logger name="com.yeongjun.yeongjun.transactions.mapper" level="TRACE"/>
+
+    <!-- 불필요한 로그 억제 -->
+    <logger name="sun.rmi.loader" level="ERROR"/>
+    <logger name="sun.rmi" level="ERROR"/>
+    <logger name="javax.management" level="ERROR"/>
+
+    <!-- Spring Framework 로거 설정 -->
+    <logger name="org.springframework" level="INFO"/>
+</configuration>

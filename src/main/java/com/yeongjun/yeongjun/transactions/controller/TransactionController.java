@@ -1,6 +1,7 @@
 package com.yeongjun.yeongjun.transactions.controller;
 
 import com.yeongjun.yeongjun.Security.model.User;
+import com.yeongjun.yeongjun.transactions.TransactionRequest;
 import com.yeongjun.yeongjun.transactions.model.Transaction;
 import com.yeongjun.yeongjun.transactions.repository.TransactionsDAO;
 import jakarta.validation.Valid;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -45,12 +47,13 @@ public class TransactionController {
         params.setUsername(user.getUsername());
         params.setCreated_at(LocalDateTime.now());
         model.addAttribute("transactionsListToday", transactionsDAO.selectAllTransactionsByUserAndCreatedDate(params));
+        model.addAttribute("transaction", new TransactionRequest());
         return "transactions/record";
     }
 
     // 트랜잭션 추가를 처리하는 POST 요청
     @PostMapping("add")
-    public String addTransaction(@AuthenticationPrincipal User user,@Valid @ModelAttribute("transaction") Transaction transaction,
+    public String addTransaction(@AuthenticationPrincipal User user,@Valid @ModelAttribute("transaction") TransactionRequest transaction,
                                  BindingResult bindingResult,
                                  Model model) {
         if (bindingResult.hasErrors()) {
@@ -60,8 +63,14 @@ public class TransactionController {
             model.addAttribute("transactionsListToday", transactionsDAO.selectAllTransactionsByUserAndCreatedDate(params));
             return "transactions/record"; // 다시 폼으로 돌아감
         }
-        transaction.setUsername(user.getUsername());
-        transactionsDAO.insertTransaction(transaction);
+        Transaction newTransaction = new Transaction();
+        newTransaction.setUsername(user.getUsername());
+        newTransaction.setCreated_at(LocalDateTime.now());
+        newTransaction.setAmount(transaction.getAmount());
+        newTransaction.setCategory_id(transaction.getCategory_id());
+        newTransaction.setMemo(transaction.getMemo());
+        newTransaction.setTransaction_date(Date.valueOf(transaction.getTransaction_date()));
+        transactionsDAO.insertTransaction(newTransaction);
         return "redirect:/transactions/record"; // 트랜잭션 목록 페이지로 리다이렉트
     }
 }
