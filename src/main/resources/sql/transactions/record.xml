@@ -45,8 +45,10 @@
     <!-- 유저별 거래기록날짜로 조회 -->
     <select id="selectAllTransactionsByUserAndCreatedDate" resultType="com.yeongjun.yeongjun.transactions.model.Transaction">
         SELECT
-            transaction_id, username, category_id, amount, transaction_date, memo, created_at
-        FROM transactions
+        transaction_id, username,income_expense_gb, category_id, category_nm, amount, transaction_date, memo, created_at
+        FROM transactions A
+            LEFT JOIN transactions_category B
+        ON A.category_id = B.transaction_category_id
         WHERE username = #{username}
         <if test="created_at != null">
             AND TO_CHAR(created_at,'YYYYMMDD') = TO_CHAR(#{created_at},'YYYYMMDD')

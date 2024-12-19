@@ -8,6 +8,7 @@
             const category2Select = document.getElementById("category2");
             const toggleRecordButton = document.getElementById("toggle-record-button");
             const recordSection = document.getElementById("record-section");
+            const transactionDate = document.getElementById("transaction_date");
 
             // Thymeleaf에서 JSON 데이터를 JavaScript로 전달
             const categoryData = /*[[${transactionsRecordAllCategory}]]*/ '[]';
@@ -38,6 +39,11 @@
                 const isHidden = recordSection.classList.toggle("hidden");
                 toggleRecordButton.textContent = isHidden ? "확대▲" : "줄이기▼";
             });
+
+            transactionDate.value = new Date().toISOString().slice(0, 10);
+
+            //onload 후 스크롤 제일 아래로
+            window.scrollTo(0, document.body.scrollHeight);
         });
     </script>
 
@@ -48,17 +54,28 @@
         <!-- 기록 목록 -->
         <section class="mb-6">
             <h2 class="text-2xl font-bold mb-4 border-b pb-2">오늘의 소비기록 목록</h2>
-            <div class="bg-white shadow-md rounded-lg p-4">
+            <div class="bg-white shadow-md rounded-lg">
                 <!-- Transactions List -->
-                <ul class="divide-y" th:if="${transactionsListToday.size() != 0}">
-                    <li th:each="transaction : ${transactionsListToday}" class="flex justify-between items-center py-2">
-                        <span class="text-gray-700" th:text="${transaction.memo}">커피 ☕</span>
-                        <span class="text-gray-500" th:text="${transaction.transaction_date}">2024-12-15</span>
-                        <span class="text-red-500 font-semibold"
-                              th:text="'- ' + ${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '원'">- 5,000원</span>
+                <ul class="divide-y text-center" th:if="${transactionsListToday.size() != 0}">
+                    <!-- 헤더 추가 -->
+                    <li class="flex justify-between items-center py-2 font-semibold bg-gray-200">
+                        <span class="w-1/4">날짜</span>
+                        <span class="w-1/4">카테고리</span>
+                        <span class="w-1/4">메모</span>
+                        <span class="w-1/4">금액</span>
+                    </li>
+                    <!-- 개별 거래 항목 -->
+                    <li th:each="transaction : ${transactionsListToday}" class="flex items-center py-2">
+                        <span class="text-gray-500 w-1/4 text-sm md:text-base"
+                              th:text="${#dates.format(transaction.transaction_date, 'yyyy.MM.dd EEEE')}">20241215 월</span>
+                        <span class="text-gray-500 w-1/4 text-sm md:text-base" th:text="${transaction.category_nm}">음식/음료</span>
+                        <span class="text-gray-700 w-1/4 text-sm md:text-base" th:text="${transaction.memo}">커피 ☕</span>
+                        <span th:if="${transaction.income_expense_gb} == 2" class="text-red-500 font-semibold w-1/4 text-sm md:text-base"
+                        th:text="'- ' + ${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '원'">- 5,000원</span>
+                        <span th:if="${transaction.income_expense_gb} == 1" class="text-blue-500 font-semibold w-1/4 text-sm md:text-base"
+                        th:text="'+ ' + ${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '원'">+ 5,000원</span>
                     </li>
                 </ul>
-
                 <div th:if="${transactionsListToday.size() == 0}" class="text-center text-gray-500 py-4">
                     <p>오늘 아직 기록하지 않으셨네요!</p>
                     <p>오늘의 소비기록을 해보세요</p>
@@ -67,12 +84,13 @@
         </section>
         <section class="bg-white shadow-md p-4 mt-auto rounded-lg">
             <div class="flex justify-between">
+                <div></div>
                 <h2>소비를 기록합시다✍️</h2>
                 <button id="toggle-record-button" class="text-gray-500 text-sm pb-2">줄이기▼</button>
             </div>
             <div id="record-section">
                 <form th:action="@{/transactions/add}" method="post" th:object="${transaction}"
-                      class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-2 text-sm">
+                      class="flex justify-center flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-2 text-sm">
                     <div class="flex items-center bg-gray-100 rounded p-2 border w-full md:w-auto">
                         <div th:if="${#fields.hasGlobalErrors()}" class="mb-4">
                             <ul>
