@@ -49,8 +49,7 @@
         FROM transactions
         WHERE username = #{username}
         <if test="created_at != null">
-            AND created_at &gt;= #{created_at}
-            AND created_at &lt; DATE_ADD(#{created_at}, INTERVAL 1 DAY)
+            AND TO_CHAR(created_at,'YYYYMMDD') = TO_CHAR(#{created_at},'YYYYMMDD')
         </if>
         ORDER BY transaction_date DESC;
     </select>
