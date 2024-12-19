@@ -1,13 +1,19 @@
 package com.yeongjun.yeongjun.Security.controller;
 
+import com.yeongjun.yeongjun.Security.dto.RegisterRequest;
+import com.yeongjun.yeongjun.Security.model.Role;
 import com.yeongjun.yeongjun.Security.model.User;
 import com.yeongjun.yeongjun.Security.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 
+import java.time.LocalDateTime;
+
+@Slf4j
 @Controller
 @RequestMapping("/auth")
 public class UserController {
@@ -62,14 +68,23 @@ public class UserController {
     // 회원가입 화면
     @GetMapping("/register")
     public String registerPage(Model model) {
-        model.addAttribute("user", new User());
+        model.addAttribute("user", new RegisterRequest());
         return "auth/register"; // register.html
     }
 
     // 회원가입 처리
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute User user, Model model) {
+    public String registerUser(@ModelAttribute RegisterRequest registerRequest, Model model) {
         try {
+            User user = new User();
+            user.setUsername(registerRequest.getUsername());
+            user.setPassword(registerRequest.getPassword());
+            user.setEmail(registerRequest.getEmail());
+            user.setNickname(registerRequest.getNickname());
+            // Set default values
+            user.setRole(Role.USER); // Assuming Role.USER is default
+            user.setCreated_at(LocalDateTime.now());
+            user.setUpdated_at(LocalDateTime.now());
             userService.registerUser(user);
             return "redirect:/auth/login?success";
         } catch (IllegalArgumentException e) {
