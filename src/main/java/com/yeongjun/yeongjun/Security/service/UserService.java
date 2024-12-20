@@ -23,7 +23,7 @@ public class UserService {
     // 회원가입 처리
     public boolean registerUser(User user) {
         if (userDAO.getUserByUsername(user.getUsername()) != null) {
-            throw new IllegalArgumentException("Username is already taken");
+            throw new IllegalArgumentException("이미 사용중인 아이디입니다.");
         }
         user.setRole(Role.USER);
         user.setPassword(passwordEncoder.encode(user.getPassword())); // 비밀번호 암호화
@@ -35,7 +35,7 @@ public class UserService {
     public String loginUser(String username, String password) {
         User user = userDAO.getUserByUsername(username);
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
-            throw new IllegalArgumentException("Invalid username or password");
+            throw new IllegalArgumentException("아이디나 비밀번호가 올바르지 않습니다.");
         }
         // JWT 토큰 생성
         return jwtProvider.createToken(user.getUsername(), user.getRole());

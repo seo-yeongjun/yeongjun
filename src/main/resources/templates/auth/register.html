@@ -1,25 +1,131 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{layout}">
 <head>
-  <title>Register</title>
+  <title th:text="${title} ?: '회원가입'">회원가입</title>
+  <script>
+    function validatePassword() {
+      const password = document.getElementById('password');
+      const passwordConfirm = document.getElementById('passwordConfirm');
+      const errorMessage = document.getElementById('passwordError');
+
+      if (password.value !== passwordConfirm.value) {
+        errorMessage.textContent = '비밀번호가 일치하지 않습니다.';
+        return false;
+      }
+      errorMessage.textContent = '';
+      return true;
+    }
+
+    function validateForm() {
+      // 패스워드 검증
+      if (!validatePassword()) {
+        return false;
+      }
+
+      // 개인정보 수집 이용 동의 확인
+      const privacyCheck = document.getElementById('privacyCheck');
+      const privacyError = document.getElementById('privacyError');
+
+      if (!privacyCheck.checked) {
+        privacyError.textContent = '개인정보 수집 및 이용에 동의해 주세요.';
+        return false;
+      } else {
+        privacyError.textContent = '';
+      }
+
+      return true;
+    }
+  </script>
 </head>
 <body>
-<h1>Register</h1>
-<form th:action="@{/auth/register}" method="post" th:object="${user}">
-  <label for="username">아이디:</label>
-  <input type="text" id="username" th:field="*{username}" required>
-  <br>
-  <label for="password">비밀번호:</label>
-  <input type="password" id="password" th:field="*{password}" required>
-  <br>
-  <label for="email">이메일:</label>
-  <input type="email" id="email" th:field="*{email}" required>
-  <br>
-  <label for="nickname">닉네임:</label>
-  <input type="text" id="nickname" th:field="*{nickname}" required>
-  <br>
-  <button type="submit">회원가입</button>
-</form>
-<p th:if="${error}" th:text="${error}"></p>
+<div layout:fragment="content" class="w-full max-w-md px-4 mx-auto p-6">
+  <div class="bg-white p-6 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-6 text-center">회원가입</h1>
+    <p th:if="${error}" th:text="${error}" class="mt-4 text-red-600 text-sm"></p>
+    <form th:action="@{/auth/register}" method="post" th:object="${user}" class="flex flex-col space-y-4" onsubmit="return validateForm();">
+      <div>
+        <label for="username" class="block mb-1 font-medium text-gray-700">아이디</label>
+        <input
+                type="text"
+                id="username"
+                th:field="*{username}"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="아이디를 입력하세요"
+        >
+      </div>
+
+      <div>
+        <label for="password" class="block mb-1 font-medium text-gray-700">비밀번호</label>
+        <input
+                type="password"
+                id="password"
+                th:field="*{password}"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="비밀번호를 입력하세요"
+        >
+      </div>
+
+      <div>
+        <label for="passwordConfirm" class="block mb-1 font-medium text-gray-700">비밀번호 확인</label>
+        <input
+                type="password"
+                id="passwordConfirm"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="비밀번호를 다시 입력하세요"
+        >
+        <p id="passwordError" class="mt-1 text-red-600 text-sm"></p>
+      </div>
+
+      <div>
+        <label for="email" class="block mb-1 font-medium text-gray-700">이메일</label>
+        <input
+                type="email"
+                id="email"
+                th:field="*{email}"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="이메일을 입력하세요"
+        >
+      </div>
+
+      <div>
+        <label for="nickname" class="block mb-1 font-medium text-gray-700">닉네임</label>
+        <input
+                type="text"
+                id="nickname"
+                th:field="*{nickname}"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="닉네임을 입력하세요"
+        >
+      </div>
+
+      <!-- 개인정보 수집 및 이용 동의 섹션 -->
+      <div class="bg-gray-50 p-4 rounded">
+        <h2 class="font-semibold mb-2">개인정보 수집 및 이용에 대한 안내</h2>
+        <p class="text-sm text-gray-600 mb-2">
+          이메일 주소를 포함한 개인정보는 회원 식별,<br>
+          서비스 이용 안내, 고객 문의 응대 등의 목적으로 이용됩니다.<br>
+          자세한 내용은 <a th:href="@{/auth/privacy}" class="text-indigo-600 hover:underline" target="_blank">개인정보 처리방침</a>을 참고하세요.
+        </p>
+        <label class="inline-flex items-center">
+          <input type="checkbox" id="privacyCheck" class="form-checkbox text-indigo-600">
+          <span class="ml-2 text-sm text-gray-700">개인정보 수집 및 이용에 동의합니다.</span>
+        </label>
+        <p id="privacyError" class="mt-1 text-red-600 text-sm"></p>
+      </div>
+
+      <button
+              type="submit"
+              class="w-full py-2 bg-indigo-600 text-white font-semibold rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+      >
+        회원가입
+      </button>
+    </form>
+  </div>
+</div>
 </body>
 </html>

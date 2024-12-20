@@ -89,7 +89,13 @@ public class UserController {
             return "redirect:/auth/login?success";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
+            model.addAttribute("user", registerRequest);
             return "auth/register";
         }
+    }
+
+    @GetMapping("privacy")
+    public String privacyPage(Model model) {
+        return "auth/privacy";
     }
 }
