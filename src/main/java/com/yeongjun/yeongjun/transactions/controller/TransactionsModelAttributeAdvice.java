@@ -25,6 +25,7 @@ public class TransactionsModelAttributeAdvice {
             model.addAttribute("transactionsRecordIncomeCategory", transactionsCategoryDAO.selectIncomeCategories());
             model.addAttribute("transactionsRecordExpenseCategory", transactionsCategoryDAO.selectExpenseCategories());
             model.addAttribute("transactionsRecordAllCategory", transactionsCategoryDAO.selectAllTransactionsCategory());
+            model.addAttribute("title", "가계부");
         }
     }
 

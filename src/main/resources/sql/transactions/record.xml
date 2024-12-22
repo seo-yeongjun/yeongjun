@@ -77,6 +77,19 @@
         ORDER BY transaction_date DESC;
     </select>
 
+    <select id="selectAllTransactionsByUserAndTransactionMonth" resultType="com.yeongjun.yeongjun.transactions.model.Transaction">
+        SELECT
+        transaction_id, username, category_id, category_nm,income_expense_gb, amount, transaction_date, memo, created_at
+        FROM transactions A
+        LEFT JOIN transactions_category B
+        ON A.category_id = B.transaction_category_id
+        WHERE username = #{username}
+        <if test="transaction_date != null">
+            AND DATE_FORMAT(transaction_date, '%Y-%m') = DATE_FORMAT(#{transaction_date}, '%Y-%m')
+        </if>
+        ORDER BY transaction_date DESC;
+    </select>
+
     <!-- 거래 추가 -->
     <insert id="insertTransactions" parameterType="com.yeongjun.yeongjun.transactions.model.Transaction">
         INSERT INTO transactions (username, category_id, amount, transaction_date, memo, created_at)

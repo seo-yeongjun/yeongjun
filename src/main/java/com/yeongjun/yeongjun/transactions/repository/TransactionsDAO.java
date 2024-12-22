@@ -43,6 +43,11 @@ public class TransactionsDAO extends BaseDAO<Transaction> {
         return selectList("selectExpenseTransactionsByUserAndYearMonthCategory", params);
     }
 
+    //사용자, 연도-월, 지출수입조회
+    public List<Transaction> selectAllTransactionsByUserAndTransactionMonth(Transaction params) {
+        return selectList("selectAllTransactionsByUserAndTransactionMonth", params);
+    }
+
     // 거래 추가
     public void insertTransaction(Transaction transaction) {
         insert("insertTransactions", transaction);
