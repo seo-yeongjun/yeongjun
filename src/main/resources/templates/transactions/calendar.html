@@ -103,35 +103,49 @@
           th:text="'- ' + ${#numbers.formatInteger(dayTx.sumOfMinusAmounts, 0, 'COMMA')}+'원'">
     </span>
                     </div>
-
                     <!-- 모달 -->
                     <div th:attr="id=|modal-bg-${dayTx.day}|"
-                         class="hidden fixed inset-0 bg-black bg-opacity-50 justify-center items-center">
-                        <div class="bg-white p-4 rounded relative max-w-sm mx-auto">
+                         class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+                        <div class="bg-white p-4 rounded relative max-w-sm mx-auto max-h-[70vh] overflow-y-auto">
                             <!-- 닫기 버튼 -->
                             <span class="absolute top-2 right-2 text-red-500 cursor-pointer"
                                   th:attr="onclick=|closeModal('${dayTx.day}'); event.stopPropagation();|">
-                                닫기
-                            </span>
+            닫기
+        </span>
                             <!-- 모달 제목 -->
                             <h3 class="text-lg font-semibold mb-2"
                                 th:text="'소비 내역 - ' + ${dayTx.day} + '일'">
                                 소비 내역
                             </h3>
-
-                            <!-- 거래내역 -->
-                            <div th:if="${dayTx.transactions != null}">
-                                <ul class="list-disc list-inside">
-                                    <li th:each="transaction : ${dayTx.transactions}">
-                                        <strong th:text="${transaction.memo}">메모</strong>
-                                        (<span th:text="${transaction.amount}">금액</span>원)
-                                        <br/>
-                                        <em th:text="${transaction.transaction_date}">거래일</em>
+                            <div class="bg-white shadow-md rounded-lg">
+                                <!-- Transactions List -->
+                                <ul class="divide-y text-center" th:if="${dayTx.transactions != null}">
+                                    <!-- 헤더 추가 -->
+                                    <li class="flex justify-between items-center py-2 font-semibold bg-gray-200">
+                                        <span class="w-1/4">날짜</span>
+                                        <span class="w-1/4">카테고리</span>
+                                        <span class="w-1/4">메모</span>
+                                        <span class="w-1/4">금액</span>
+                                    </li>
+                                    <!-- 개별 거래 항목 -->
+                                    <li th:each="transaction : ${dayTx.transactions}" class="flex items-center py-2">
+                    <span class="text-gray-500 w-1/4 text-sm md:text-base"
+                          th:text="${#dates.format(transaction.transaction_date, 'yyyy.MM.dd EEEE')}">2024.12.15 월</span>
+                                        <span class="text-gray-500 w-1/4 text-sm md:text-base"
+                                              th:text="${transaction.category_nm}">음식/음료</span>
+                                        <span class="text-gray-700 w-1/4 text-sm md:text-base"
+                                              th:text="${transaction.memo}">커피 ☕</span>
+                                        <span th:if="${transaction.income_expense_gb} == 2"
+                                              class="text-red-500 font-semibold w-1/4 text-sm md:text-base"
+                                              th:text="'- ' + ${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '원'">- 5,000원</span>
+                                        <span th:if="${transaction.income_expense_gb} == 1"
+                                              class="text-blue-500 font-semibold w-1/4 text-sm md:text-base"
+                                              th:text="'+ ' + ${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '원'">+ 5,000원</span>
                                     </li>
                                 </ul>
-                            </div>
-                            <div th:if="${dayTx.transactions == null}">
-                                <em>트랜잭션 없음</em>
+                                <div th:if="${dayTx.transactions == null}" class="text-center text-gray-500 py-4">
+                                    거래 내역이 없습니다.
+                                </div>
                             </div>
                         </div>
                     </div>
