@@ -90,6 +90,20 @@
         ORDER BY transaction_date DESC;
     </select>
 
+    <select id="selectTransactionsBetweenDates" resultType="com.yeongjun.yeongjun.transactions.model.Transaction">
+        <!--todo 작성하기, graph.html 만들기 후 테스트 진행-->
+        SELECT
+        transaction_id, username, category_id, category_nm,income_expense_gb, amount, transaction_date, memo, created_at
+        FROM transactions A
+        LEFT JOIN transactions_category B
+        ON A.category_id = B.transaction_category_id
+        WHERE username = #{username}
+        <if test="start_dt != null">
+            AND transaction_date between #{start_dt} and #{end_dt}
+        </if>
+        ORDER BY transaction_date DESC;
+    </select>
+
     <!-- 거래 추가 -->
     <insert id="insertTransactions" parameterType="com.yeongjun.yeongjun.transactions.model.Transaction">
         INSERT INTO transactions (username, category_id, amount, transaction_date, memo, created_at)

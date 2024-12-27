@@ -1,7 +1,8 @@
 package com.yeongjun.yeongjun.transactions.repository;
 
-import com.yeongjun.yeongjun.transactions.model.Transaction;
 import com.yeongjun.yeongjun.global.repository.BaseDAO;
+import com.yeongjun.yeongjun.transactions.dto.TransactionBetween;
+import com.yeongjun.yeongjun.transactions.model.Transaction;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -56,5 +57,9 @@ public class TransactionsDAO extends BaseDAO<Transaction> {
     // 거래 수정
     public void updateTransaction(Transaction transaction) {
         update("updateTransactions", transaction);
+    }
+
+    public List<Transaction> selectTransactionsBetweenDates(TransactionBetween params) {
+        return selectList("selectTransactionsBetweenDates", params);
     }
 }

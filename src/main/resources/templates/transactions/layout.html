@@ -68,7 +68,7 @@
 </div>
 
 <div class=" ml-1 py-6 flex-grow flex">
-    <aside class="hidden md:block w-60 bg-gray-100 border-r border-gray-300 p-2">
+    <aside class="hidden md:block w-60 bg-gray-100 border-r border-gray-300 p-2 min-w-40">
         <ul class="space-y-2">
             <li class="p-2 rounded hover:bg-gray-200 cursor-pointer" th:each="category : ${transactionsCategory}">
                 <a class="block w-full h-full" th:href="@{|/${category.path}|}" th:text="${category.category_name}"></a>
