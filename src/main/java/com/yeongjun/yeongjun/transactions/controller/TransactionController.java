@@ -10,6 +10,8 @@ import com.yeongjun.yeongjun.transactions.repository.TransactionsDAO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -22,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -283,5 +286,31 @@ public class TransactionController {
         model.addAttribute("toDt", endDate.minusDays(1));
 
         return "transactions/graph"; // 그래프를 표시할 Thymeleaf 템플릿
+    }
+
+
+    @DeleteMapping("/delete/{transactionId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> deleteTransaction(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long transactionId) {
+
+        Transaction params = new Transaction();
+
+        params.setUsername(user.getUsername());
+        params.setTransaction_id(transactionId);
+
+        boolean deleted = transactionsDAO.deleteTransaction(params);
+        Map<String, String> response = new HashMap<>();
+
+        if (deleted) {
+            response.put("status", "success");
+            response.put("message", "삭제되었습니다.");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("status", "failure");
+            response.put("message", "삭제에 실패하였습니다.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
     }
 }

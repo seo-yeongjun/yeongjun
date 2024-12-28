@@ -122,4 +122,9 @@
         WHERE transaction_id = #{transactionId};
     </update>
 
+    <delete id="deleteTransaction" parameterType="com.yeongjun.yeongjun.transactions.model.Transaction">
+        DELETE FROM transactions
+        WHERE username = #{username}
+        AND transaction_id = #{transaction_id}
+    </delete>
 </mapper>

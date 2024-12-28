@@ -94,14 +94,14 @@
                     </span><br/>
                     <!-- 합계 표시 (콤마포맷 예: 1,234) -->
                     <div class="auto-resize-wrapper h-6 whitespace-nowrap flex items-center justify-center">
-    <span class="auto-resize text-blue-500 font-bold"
-          th:text="'+ ' + ${#numbers.formatInteger(dayTx.sumOfPlusAmounts, 0, 'COMMA')}+'원'">
-    </span>
+                        <span th:if="${dayTx.sumOfPlusAmounts > 0}" class="auto-resize text-blue-500 font-bold"
+                              th:text="'+ ' + ${#numbers.formatInteger(dayTx.sumOfPlusAmounts, 0, 'COMMA')}+'원'">
+                        </span>
                     </div>
                     <div class="auto-resize-wrapper h-6 whitespace-nowrap flex items-center justify-center">
-    <span class="auto-resize text-red-500 font-bold"
-          th:text="'- ' + ${#numbers.formatInteger(dayTx.sumOfMinusAmounts, 0, 'COMMA')}+'원'">
-    </span>
+                        <span th:if="${dayTx.sumOfMinusAmounts > 0}" class="auto-resize text-red-500 font-bold"
+                              th:text="'- ' + ${#numbers.formatInteger(dayTx.sumOfMinusAmounts, 0, 'COMMA')}+'원'">
+                        </span>
                     </div>
                     <!-- 모달 -->
                     <div th:attr="id=|modal-bg-${dayTx.day}|"
@@ -110,8 +110,8 @@
                             <!-- 닫기 버튼 -->
                             <span class="absolute top-2 right-2 text-red-500 cursor-pointer"
                                   th:attr="onclick=|closeModal('${dayTx.day}'); event.stopPropagation();|">
-            닫기
-        </span>
+                                닫기
+                            </span>
                             <!-- 모달 제목 -->
                             <h3 class="text-lg font-semibold mb-2"
                                 th:text="'소비 내역 - ' + ${dayTx.day} + '일'">
@@ -121,23 +121,35 @@
                                 <!-- Transactions List -->
                                 <ul class="divide-y text-center" th:if="${dayTx.transactions != null}">
                                     <!-- 헤더 추가 -->
-                                    <li class="flex justify-between items-center py-2 font-semibold bg-gray-200">
-                                        <span class="w-1/3">카테고리</span>
-                                        <span class="w-1/3">메모</span>
-                                        <span class="w-1/3">금액</span>
+                                    <li class="flex  items-center py-2 font-semibold bg-gray-200">
+                                        <span class="w-[30%]">카테고리</span>
+                                        <span class="w-[30%]">메모</span>
+                                        <span class="w-[30%]">금액</span>
+                                        <span class="w-[10%]">삭제</span> <!-- 삭제 열 추가 -->
                                     </li>
                                     <!-- 개별 거래 항목 -->
-                                    <li th:each="transaction : ${dayTx.transactions}" class="flex items-center py-2">
-                                        <span class="text-gray-500 w-1/3 text-sm md:text-base"
+                                    <li th:each="transaction : ${dayTx.transactions}" class="flex  items-center py-2">
+                                        <span class="text-gray-500 w-[30%] text-sm md:text-base"
                                               th:text="${transaction.category_nm}">음식/음료</span>
-                                        <div class="text-gray-700 w-1/3 text-sm md:text-base break-words break-all"
-                                              th:text="${transaction.memo}">커피 ☕</div>
+                                        <div class="text-gray-700 w-[30%] text-sm md:text-base break-words break-all"
+                                             th:text="${transaction.memo}">커피 ☕
+                                        </div>
                                         <span th:if="${transaction.income_expense_gb} == 2"
-                                              class="text-red-500 font-semibold w-1/3 text-sm md:text-base"
+                                              class="text-red-500 font-semibold w-[30%] text-sm md:text-base"
                                               th:text="'- ' + ${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '원'">- 5,000원</span>
                                         <span th:if="${transaction.income_expense_gb} == 1"
-                                              class="text-blue-500 font-semibold w-1/3 text-sm md:text-base"
+                                              class="text-blue-500 font-semibold w-[30%] text-sm md:text-base"
                                               th:text="'+ ' + ${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '원'">+ 5,000원</span>
+                                        <!-- 삭제 버튼 추가 -->
+                                        <span class="w-[10%]">
+                                  <button type="button"
+                                          th:data-transaction-id="${transaction.transaction_id}"
+                                          th:data-amount="${transaction.amount}"
+                                          th:data-income-expense-gb="${transaction.income_expense_gb}"
+                                          class="delete-button focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-1 py-1 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
+    삭제
+</button>
+                                        </span>
                                     </li>
                                 </ul>
                                 <div th:if="${dayTx.transactions == null}" class="text-center text-gray-500 py-4">
@@ -151,6 +163,119 @@
         </tr>
         </tbody>
     </table>
+
+    <!-- JavaScript 코드 추가 -->
+    <!-- 삭제 기능 JavaScript 추가 -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // 삭제 함수 정의
+            function deleteTransaction(transactionId, amount, incomeExpenseGb, day) {
+                if (!confirm('이 소비기록을 삭제하시겠습니까?')) {
+                    return;
+                }
+
+                fetch(`/transactions/delete/${transactionId}`, { // DELETE 엔드포인트 확인
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('삭제에 실패했습니다.');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert(data.message);
+                            // 트랜잭션 삭제 후 UI 업데이트
+                            const button = document.querySelector(`button[data-transaction-id="${transactionId}"]`);
+                            if (button) {
+                                const li = button.closest('li');
+                                if (li) {
+                                    // 애니메이션 효과 추가 (선택 사항)
+                                    li.style.transition = 'opacity 0.5s';
+                                    li.style.opacity = '0';
+                                    setTimeout(() => {
+                                        li.remove();
+                                    }, 500);
+                                }
+                            }
+
+                            // 달력 합계 업데이트
+                            updateCalendarSum(day, amount, incomeExpenseGb);
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('삭제 중 오류가 발생했습니다.');
+                    });
+            }
+
+            // 달력 합계 업데이트 함수
+            function updateCalendarSum(day, amount, incomeExpenseGb) {
+                // 합계를 표시하는 스팬 요소 선택
+                const dayCell = document.querySelector(`div[onclick="openModal('${day}')"]`);
+                if (!dayCell) {
+                    console.error(`Day cell for day ${day} not found`);
+                    return;
+                }
+
+                // 수입 합계 업데이트
+                const incomeSpan = dayCell.querySelector('.auto-resize.text-blue-500');
+                if (incomeSpan) {
+                    let currentIncomeText = incomeSpan.textContent || '';
+                    let currentIncome = parseFloat(currentIncomeText.replace(/[^\d.-]/g, '')) || 0;
+                    if (incomeExpenseGb === 1) {
+                        currentIncome -= amount;
+                        currentIncome = currentIncome < 0 ? 0 : currentIncome; // 음수 방지
+                    }
+                    incomeSpan.textContent = (currentIncome > 0 ? `+ ${currentIncome.toLocaleString()}원` : '');
+                }
+
+                // 지출 합계 업데이트
+                const expenseSpan = dayCell.querySelector('.auto-resize.text-red-500');
+                if (expenseSpan) {
+                    let currentExpenseText = expenseSpan.textContent || '';
+                    let currentExpense = parseFloat(currentExpenseText.replace(/[^\d.-]/g, '')) || 0;
+                    if (incomeExpenseGb === 2) {
+                        currentExpense -= amount;
+                        currentExpense = currentExpense < 0 ? 0 : currentExpense; // 음수 방지
+                    }
+                    expenseSpan.textContent = (currentExpense > 0 ? `- ${currentExpense.toLocaleString()}원` : '');
+                }
+            }
+
+            // 모든 삭제 버튼에 이벤트 리스너 추가
+            document.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const transactionId = event.target.getAttribute('data-transaction-id');
+                    const amount = parseFloat(event.target.getAttribute('data-amount')) || 0;
+                    const incomeExpenseGb = parseInt(event.target.getAttribute('data-income-expense-gb'), 10);
+
+                    // 모달의 day 정보 추출
+                    const modal = button.closest('div[id^="modal-bg-"]');
+                    let day = null;
+                    if (modal) {
+                        const modalId = modal.getAttribute('id'); // modal-bg-{day}
+                        day = modalId.replace('modal-bg-', '');
+                    }
+
+                    if (transactionId && day) {
+                        deleteTransaction(transactionId, amount, incomeExpenseGb, day);
+                    } else {
+                        console.error('Transaction ID or Day not found');
+                    }
+                });
+            });
+        });
+        /*]]>*/
+    </script>
 </div>
 </body>
 </html>

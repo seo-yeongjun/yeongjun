@@ -21,6 +21,10 @@ public abstract class BaseDAO<T> {
         return sqlSession.update(getNamespace() + "." + statement, entity);
     }
 
+    public int delete(String statement, T entity) {
+        return sqlSession.delete(getNamespace() + "." + statement, entity);
+    }
+
     public T selectOne(String statement, Object parameter) {
         return sqlSession.selectOne(getNamespace() + "." + statement, parameter);
     }

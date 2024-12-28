@@ -62,4 +62,8 @@ public class TransactionsDAO extends BaseDAO<Transaction> {
     public List<Transaction> selectTransactionsBetweenDates(TransactionBetween params) {
         return selectList("selectTransactionsBetweenDates", params);
     }
+
+    public boolean deleteTransaction(Transaction params) {
+        return delete("deleteTransaction", params)>0;
+    }
 }
