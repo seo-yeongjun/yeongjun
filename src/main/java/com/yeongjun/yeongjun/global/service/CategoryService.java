@@ -18,7 +18,12 @@ public class CategoryService {
     public List<Category> getBaseCategoryList() {
         return categoryDAO.selectAllBaseCategory();
     }
+
     public List<Category> getTransactionsCategoryList() {
         return categoryDAO.selectAllTransactionsCategory();
+    }
+
+    public List<Category> getToolsCategory() {
+        return categoryDAO.selectAllToolsCategory();
     }
 }

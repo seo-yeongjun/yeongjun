@@ -15,4 +15,10 @@
         from category_by_category_name
         where parent_name = '가계부'
     </select>
+
+    <select id="selectAllToolsCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
+        select category_id, category_name, parent_id, description, path
+        from category_by_category_name
+        where parent_name = '도구모음'
+    </select>
 </mapper>
