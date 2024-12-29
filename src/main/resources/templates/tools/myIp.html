@@ -6,14 +6,56 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <!-- IP 주소 -->
-    <p>접속 IP: <span th:text="${ip}">127.0.0.1</span></p>
-
-    <!-- 위치 정보 출력 (location이 null이 아닐 때) -->
-    <div th:if="${location != null}">
-        <p>국가: <span th:text="${location.country}">N/A</span></p>
-        <p>지역: <span th:text="${location.regionName}">N/A</span></p>
-        <p>도시: <span th:text="${location.city}">N/A</span></p>
+    <!-- 메인 제목 -->
+    <h1 class="text-3xl font-bold mb-6">내 IP 확인하기</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- IP 주소 -->
+        <div class="flex items-center bg-gray-50 p-4 rounded shadow">
+            <strong class="w-32 text-gray-700">IP 주소:</strong>
+            <span class="text-gray-900" th:text="${ipInfo?.getIp()}">IP 주소</span>
+        </div>
+        <!-- 호스트 이름 -->
+        <div class="flex items-center bg-gray-50 p-4 rounded shadow">
+            <strong class="w-32 text-gray-700">호스트 이름:</strong>
+            <span class="text-gray-900" th:text="${ipInfo?.getHostname()}">호스트 이름</span>
+        </div>
+        <!-- 도시 -->
+        <div class="flex items-center bg-gray-50 p-4 rounded shadow">
+            <strong class="w-32 text-gray-700">도시:</strong>
+            <span class="text-gray-900" th:text="${ipInfo?.getCity()}">도시</span>
+        </div>
+        <!-- 지역 -->
+        <div class="flex items-center bg-gray-50 p-4 rounded shadow">
+            <strong class="w-32 text-gray-700">지역:</strong>
+            <span class="text-gray-900" th:text="${ipInfo?.getRegion()}">지역</span>
+        </div>
+        <!-- 국가 -->
+        <div class="flex items-center bg-gray-50 p-4 rounded shadow">
+            <strong class="w-32 text-gray-700">국가:</strong>
+            <span class="text-gray-900" th:text="${ipInfo?.getCountryName() + ' ' + ipInfo?.getCountryFlag().getEmoji()}">
+                국가
+            </span>
+        </div>
+        <!-- 우편번호 -->
+        <div class="flex items-center bg-gray-50 p-4 rounded shadow">
+            <strong class="w-32 text-gray-700">우편번호:</strong>
+            <span class="text-gray-900" th:text="${ipInfo?.getPostal()}">우편번호</span>
+        </div>
+        <!-- 좌표 -->
+        <div class="flex items-center bg-gray-50 p-4 rounded shadow">
+            <strong class="w-32 text-gray-700">좌표:</strong>
+            <span class="text-gray-900" th:text="${ipInfo?.getLocation()}">위도, 경도</span>
+        </div>
+        <!-- 시간대 -->
+        <div class="flex items-center bg-gray-50 p-4 rounded shadow">
+            <strong class="w-32 text-gray-700">시간대:</strong>
+            <span class="text-gray-900" th:text="${ipInfo?.getTimezone()}">시간대</span>
+        </div>
+        <!-- 기관/회사 -->
+        <div class="flex items-center bg-gray-50 p-4 rounded shadow">
+            <strong class="w-32 text-gray-700">기관/회사:</strong>
+            <span class="text-gray-900" th:text="${ipInfo?.getOrg()}">기관/회사</span>
+        </div>
     </div>
 </div>
 </body>

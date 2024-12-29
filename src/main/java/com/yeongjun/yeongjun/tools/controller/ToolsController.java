@@ -1,7 +1,7 @@
 package com.yeongjun.yeongjun.tools.controller;
 
-import com.yeongjun.yeongjun.tools.model.IpLocation;
 import com.yeongjun.yeongjun.tools.service.IpService;
+import io.ipinfo.api.model.IPResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,23 +26,9 @@ public class ToolsController {
 
     @GetMapping("myIp")
     public String myIp(HttpServletRequest request, Model model) {
-        // 1) IP 얻기
-        String ip = request.getHeader("X-FORWARDED-FOR");
-        if (ip == null || ip.isEmpty()) {
-            ip = request.getRemoteAddr();
-        }
+        IPResponse ipResponse = ipService.getIpInfo(request);
 
-        // 2) 내부 IP 여부 판별
-        boolean isPrivate = ipService.isPrivateIP(ip);
-
-        model.addAttribute("ip", ip);
-
-        if (isPrivate) {
-            return "tools/myIp";
-        }
-        // 4) 외부 IP면 위치 정보 조회 등 처리
-        IpLocation location = ipService.getIpLocation(ip);
-        model.addAttribute("location", location);
+        model.addAttribute("ipInfo", ipResponse);
 
         return "tools/myIp";
     }
