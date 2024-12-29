@@ -32,7 +32,7 @@
         <!-- 국가 -->
         <div class="flex items-center bg-gray-50 p-4 rounded shadow">
             <strong class="w-32 text-gray-700">국가:</strong>
-            <span class="text-gray-900" th:text="${ipInfo?.getCountryName() + ' ' + ipInfo?.getCountryFlag().getEmoji()}">
+            <span class="text-gray-900" th:text="${ipInfo?.getCountryName() + ' ' + ipInfo?.getCountryFlag()?.getEmoji()}">
                 국가
             </span>
         </div>

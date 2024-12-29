@@ -33,4 +33,8 @@ public class ToolsController {
         return "tools/myIp";
     }
 
+    @GetMapping("letterCount")
+    public String letterCount() {
+        return "tools/letterCount";
+    }
 }

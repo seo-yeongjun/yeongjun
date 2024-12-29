@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+        layout:decorate="~{tools/layout}">
+<head>
+    <title th:text="${title} ?: '도구상자'">홈 페이지</title>
+    <!-- Tailwind CSS가 이미 연결되어 있다고 가정합니다. -->
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const messageArea = document.getElementById("message");
+            const textLength = document.getElementById("textLength");
+            const textSpaceRemoveLength = document.getElementById("textSpaceRemoveLength");
+
+            messageArea.addEventListener("keyup", function () {
+                countLength();
+            });
+            messageArea.addEventListener("change", function () {
+                countLength();
+            });
+            messageArea.addEventListener("input", function () {
+                countLength();
+            });
+
+            function countLength() {
+                let text = messageArea.value;
+                let length = text.length;
+                let byte = getByteLength(text);
+
+                // 공백 제거
+                let textRemoveSpace = text.replace(/\s/gi, "");
+                let lengthRemoveSpace = textRemoveSpace.length;
+                let byteRemoveSpace = getByteLength(textRemoveSpace);
+
+                textLength.innerHTML = `<span class="font-bold">띄어쓰기 포함:</span><br>${length} 글자, ${byte} byte`;
+                textSpaceRemoveLength.innerHTML = `<span class="font-bold">띄어쓰기 제외:</span><br>${lengthRemoveSpace} 글자, ${byteRemoveSpace} byte`;
+            }
+
+            function getByteLength(s, b, i, c) {
+                for (b = i = 0; c = s.charCodeAt(i++); b += c >> 11 ? 3 : c >> 7 ? 2 : 1) ;
+                return b;
+            }
+        });
+    </script>
+</head>
+<body class="bg-gray-100">
+<div layout:fragment="content">
+    <!-- 제목 -->
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">글자수와 byte를 세드려요.</h1>
+
+    <!-- 내용 감싸는 카드 -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <label for="message" class="block mb-2 font-semibold text-gray-700">내용을 입력해주세요:</label>
+        <textarea
+                id="message"
+                rows="4"
+                class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300
+                       focus:ring-blue-500 focus:border-blue-500
+                       dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400
+                       dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="여기에 글자를 입력해주세요.."></textarea>
+
+        <!-- 글자수 영역 -->
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:w-1/2 gap-4 mt-4">
+            <div id="textLength"
+                 class="text-gray-700 bg-gray-50 rounded-md p-3 border border-gray-200 dark:bg-gray-600 dark:text-white">
+                <span class="font-bold">띄어쓰기 포함:</span><br>0 글자, 0 byte
+            </div>
+            <div id="textSpaceRemoveLength"
+                 class="text-gray-700 bg-gray-50 rounded-md p-3 border border-gray-200 dark:bg-gray-600 dark:text-white">
+                <span class="font-bold">띄어쓰기 제외:</span><br>0 글자, 0 byte
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
