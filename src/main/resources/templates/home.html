@@ -29,9 +29,9 @@
 <body>
 <div layout:fragment="content">
     <div id="categories" class="flex flex-wrap gap-4">
-        <ul class="flex flex-wrap gap-2">
+        <ul class="flex flex-wrap gap-2 w-full">
             <li th:each="category : ${baseCategory}"
-                class="w-48 p-4 border border-gray-300 rounded-lg shadow-lg text-center text-white hover:scale-105 transform transition-transform category-box">
+                class="w-[48%] md:w-48 p-4 border border-gray-300 rounded-lg shadow-lg text-center text-white hover:scale-105 transform transition-transform category-box">
                 <a th:href="${category.path}"
                    class="block w-full h-full cursor-pointer">
                     <strong th:text="${category.category_name}" class="block text-lg font-semibold mb-2">Category Name</strong>

@@ -782,10 +782,6 @@ video {
   width: 8rem;
 }
 
-.w-48 {
-  width: 12rem;
-}
-
 .w-6 {
   width: 1.5rem;
 }
@@ -812,6 +808,10 @@ video {
 
 .w-\[30\%\] {
   width: 30%;
+}
+
+.w-\[48\%\] {
+  width: 48%;
 }
 
 .w-full {
@@ -1515,6 +1515,10 @@ video {
 
   .md\:w-1\/2 {
     width: 50%;
+  }
+
+  .md\:w-48 {
+    width: 12rem;
   }
 
   .md\:w-\[80vw\] {
