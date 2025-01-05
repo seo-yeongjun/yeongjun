@@ -63,6 +63,12 @@
 </head>
 <body>
 <div layout:fragment="content">
+    <div id="loadingSpinner"
+         class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <!-- 회전하는 원 모양 -->
+        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="ml-4 text-white font-medium">업로드 중...</p>
+    </div>
     <div th:if="${error}" id="errorModal" class="fixed inset-0 flex items-center justify-center z-50">
         <!-- Background Overlay -->
         <div class="absolute inset-0 bg-black opacity-50"></div>
@@ -97,7 +103,8 @@
                      rounded-xl bg-white relative"
               ondragover="handleDragOver(event)"
               ondrop="handleDrop(event)"
-              id="uploadForm">
+              id="uploadForm"
+              onsubmit="showSpinner()">
 
             <!-- 이름(provider) 입력 필드 -->
             <div class="mb-4">
@@ -187,9 +194,13 @@
             </tbody>
         </table>
     </div>
-
-    <!-- 기존 스크립트들... -->
     <script>
+        function showSpinner() {
+            // 스피너를 화면에 표시
+            const spinner = document.getElementById('loadingSpinner');
+            spinner.classList.remove('hidden');
+        }
+
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
             if (modal) {

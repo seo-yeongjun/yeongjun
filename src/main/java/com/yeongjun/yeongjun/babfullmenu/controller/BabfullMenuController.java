@@ -123,8 +123,6 @@ public class BabfullMenuController {
             // BabfullMenu 리스트를 데이터베이스에 삽입
             babfullMenuService.insertBabfullMenus(babfullMenus);
 
-            // 성공 메시지 설정
-            redirectAttributes.addFlashAttribute("success", "메뉴가 성공적으로 업로드되었습니다.");
             return "redirect:/babfullmenu";
         } catch (Exception e) {
             log.error("메뉴 업로드 중 오류 발생: ", e);
