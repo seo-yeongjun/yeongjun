@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+        layout:decorate="~{babfullmenu/layout}"
+        lang="ko">
+<head>
+    <title th:text="${title} ?: '홈 페이지'">홈 페이지</title>
+    <style>
+        /* 테이블 공통 스타일 */
+        table {
+            table-layout: fixed; /* 컬럼 너비 고정 */
+            margin: 0 auto; /* 가운데 정렬 */
+            border-collapse: collapse;
+            width: 80%; /* 원하는 폭 조절 */
+            background-color: #FFFFFF;
+            /* 살짝 그림자 효과 */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            /* 테두리 색상 */
+            border: 1px solid #E5E7EB;
+        }
+
+        thead tr {
+            /* 헤더는 조금 더 진한 배경 */
+            background-color: #F3F4F6;
+        }
+
+        th, td {
+            border: 1px solid #E5E7EB;
+            padding: 0.75rem;
+            text-align: center;
+            white-space: nowrap;
+            font-weight: normal; /* 기본 폰트 굵기 */
+            vertical-align: middle;
+        }
+
+        /* 짝수 행에 살짝 다른 배경색 (테이블에 줄무늬 효과) */
+        tbody tr:nth-child(even) {
+            background-color: #F9FAFB;
+        }
+
+        /* auto-resize 공통 클래스 */
+        .auto-resize {
+            font-size: 16px; /* 기본 폰트 사이즈 */
+            vertical-align: middle; /* 세로 정렬 */
+        }
+
+        /* 조식 구분 행 - 파스텔 오렌지 톤 */
+        tr.breakfast-header > td {
+            background-color: #ddc2c2;
+            font-weight: 600; /* 구분 행은 약간 두껍게 */
+        }
+        /* 중식 구분 행 - 파스텔 그린 톤 */
+        tr.lunch-header > td {
+            background-color: #bcdfbc;
+            font-weight: 600;
+        }
+
+        /* 제공자 문구 색상(원래 text-green-500 사용 중) */
+        .provider-text {
+            color: #ea7f06; /* Tailwind의 emerald-500 쯤 되는 컬러 */
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div th:if="${error}" id="errorModal" class="fixed inset-0 flex items-center justify-center z-50">
+        <!-- Background Overlay -->
+        <div class="absolute inset-0 bg-black opacity-50"></div>
+        <!-- Modal Content -->
+        <div class="bg-white rounded-lg shadow-lg z-10 p-6 max-w-sm w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-red-600">오류</h3>
+                <button onclick="closeModal('errorModal')" class="text-gray-600 hover:text-gray-800">&times;
+                </button>
+            </div>
+            <p th:text="${error}"></p>
+            <div class="mt-4 text-right">
+                <button onclick="closeModal('errorModal')"
+                        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- babfullmenu.size() == 0 인 경우(= 오늘 메뉴가 비어있을 때) -->
+    <div th:if="${babfullmenu.size() == 0}" class="text-center">
+        <p class="mb-4 text-lg font-semibold text-red-500">
+            아직 이번주 메뉴를 업로드한 사람이 없어요!<br/>
+            메뉴사진을 업로드해 기여해주세요!
+        </p>
+
+        <!-- 업로드 폼 시작 -->
+        <form th:action="@{/babfullmenu/upload}"
+              method="post"
+              enctype="multipart/form-data"
+              class="mx-auto w-full max-w-md p-6 border-4 border-dashed border-gray-300
+                     rounded-xl bg-white relative"
+              ondragover="handleDragOver(event)"
+              ondrop="handleDrop(event)"
+              id="uploadForm">
+
+            <!-- 이름(provider) 입력 필드 -->
+            <div class="mb-4">
+                <label for="provider" class="block mb-2 font-medium text-gray-700">
+                    이름:
+                </label>
+                <input type="text"
+                       name="provider"
+                       id="provider"
+                       placeholder="이름을 입력해주세요"
+                       class="w-full p-2 border border-gray-300 rounded-md"
+                       required/>
+            </div>
+
+            <!-- 실제 파일 선택 input -->
+            <input type="file"
+                   name="file"
+                   id="fileInput"
+                   class="hidden"
+                   accept="image/*"
+                   onchange="handleFileSelection(event)"/>
+
+            <!-- 드래그 앤 드롭 영역 -->
+            <div class="mb-4 p-6 bg-gray-50 rounded-md cursor-pointer"
+                 id="dropZone"
+                 onclick="document.getElementById('fileInput').click()">
+                <p id="dropZoneText" class="text-gray-400">
+                    여기를 클릭하거나, 파일을 끌어오거나,
+                    이미지를 복사 후 <strong>Ctrl+V</strong>로 붙여넣을 수 있습니다.
+                </p>
+            </div>
+
+            <!-- 미리보기(썸네일) 영역 (초기에 hidden) -->
+            <div id="previewContainer" class="mb-4 hidden">
+                <img id="previewImg" alt="선택된 이미지 미리보기" class="mx-auto h-48 object-contain"/>
+                <p class="text-blue-500 mt-2 text-sm">
+                    이 이미지를 업로드합니다.
+                </p>
+            </div>
+
+            <!-- 업로드 버튼 -->
+            <button type="submit"
+                    class="block w-full py-2 bg-blue-500 text-white font-semibold
+                           rounded-md hover:bg-blue-600"
+                    id="uploadBtn"
+                    disabled>
+                업로드
+            </button>
+        </form>
+        <!-- 업로드 폼 끝 -->
+    </div>
+    <!-- babfullmenu.size() > 0 인 경우(= 오늘 메뉴가 있을 때) -->
+    <div th:if="${babfullmenu.size() > 0}" class="text-center">
+        <p class="mb-4 text-lg font-semibold provider-text"
+           th:text="'★'+${babfullmenu[0].provider}+'★'+'님이 제공해주신 메뉴표입니다.'"></p>
+        <table class="w-full">
+            <thead>
+            <tr>
+                <th class="auto-resize"
+                    th:each="menuItem : ${babfullmenu}"
+                    th:text="${#dates.format(menuItem.getFormatedMenuDt(), 'MM-dd(E)')}">
+                    날짜
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- 조식 메뉴 -->
+            <tr class="breakfast-header">
+                <td class="px-2 py-2 auto-resize" colspan="5">조식</td>
+            </tr>
+            <tr th:each="i : ${#numbers.sequence(1,9)}" class="breakfast-row">
+                <td class="px-2 py-2 w-[20%] auto-resize" th:each="menuItem : ${babfullmenu}">
+                    <span th:text="${#strings.isEmpty(menuItem['morning_menu' + i]) ? '' : menuItem['morning_menu' + i]}">
+                    </span>
+                </td>
+            </tr>
+            <!-- 점심 메뉴 -->
+            <tr class="lunch-header">
+                <td class="px-2 py-2 auto-resize" colspan="5">중식</td>
+            </tr>
+            <tr th:each="i : ${#numbers.sequence(1,9)}" class="lunch-row">
+                <td class="px-2 py-2 w-[20%] auto-resize" th:each="menuItem : ${babfullmenu}">
+                <span th:text="${#strings.isEmpty(menuItem['lunch_menu' + i]) ? '' : menuItem['lunch_menu' + i]}">
+                </span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 기존 스크립트들... -->
+    <script>
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 드래그 영역 진입시 기본 이벤트 방지
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // 드롭 이벤트 처리
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                // 단일 파일만 처리
+                setFile(files[0]);
+            }
+        }
+
+        // 파일 선택 이벤트 처리 (input으로 직접 선택했을 때)
+        function handleFileSelection(e) {
+            const file = e.target.files[0];
+            if (file) {
+                setFile(file);
+            }
+        }
+
+        // 붙여넣기(Clipboard) 이벤트 처리
+        document.addEventListener('paste', function (e) {
+            const clipboardFiles = e.clipboardData.files;
+            if (clipboardFiles && clipboardFiles.length > 0) {
+                setFile(clipboardFiles[0]);
+            }
+        });
+
+        // 실제로 파일을 세팅하고 미리보기 이미지를 표시하는 함수
+        function setFile(file) {
+            // 이미지인지 확인 (MIME 타입)
+            if (!file.type.startsWith('image/')) {
+                alert('이미지 파일만 업로드할 수 있습니다.');
+                return;
+            }
+
+            // input에 파일 세팅
+            document.getElementById('fileInput').files = createFileList(file);
+
+            // 썸네일 표시
+            previewImage(file);
+
+            // 드롭영역 비활성화 (추가 선택 불가능)
+            disableDropZone();
+
+            // 업로드 버튼 활성화
+            document.getElementById('uploadBtn').disabled = false;
+        }
+
+        // FileList 객체를 생성해서 input에 세팅하기 위해 사용하는 헬퍼 함수
+        function createFileList(file) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            return dataTransfer.files;
+        }
+
+        // 이미지 미리보기 (DataURL 사용)
+        function previewImage(file) {
+            const previewContainer = document.getElementById('previewContainer');
+            const previewImg = document.getElementById('previewImg');
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewImg.src = e.target.result;
+                // 미리보기 컨테이너 표시
+                previewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 추가 이미지를 업로드하지 못하도록 드롭영역 / 문구 비활성
+        function disableDropZone() {
+            const dropZone = document.getElementById('dropZone');
+            dropZone.classList.add('hidden');
+        }
+
+        /**
+         * 테이블 내 auto-resize 클래스를 가진 셀(td/th)에 대하여
+         * 내용이 넘치면 폰트를 줄이는 로직.
+         * - minFontSize, maxIteration 등을 조절해볼 수 있음
+         */
+        function autoResizeText() {
+            const cells = document.querySelectorAll('td.auto-resize, th.auto-resize');
+            const minFontSize = 8;   // 원하는 최소 폰트 크기
+            const maxFontSize = 16;  // 원하는 최대 폰트 크기 (필요 시 조정)
+
+            cells.forEach(cell => {
+                // (1) 일단 최소 폰트 크기로 설정
+                let currentFontSize = minFontSize;
+                cell.style.fontSize = currentFontSize + 'px';
+
+                // (2) 셀이 넘치지 않고 && 아직 최대치에 도달하지 않았다면 계속 폰트를 1씩 올림
+                while (cell.scrollWidth <= cell.clientWidth && currentFontSize < maxFontSize) {
+                    currentFontSize++;
+                    cell.style.fontSize = currentFontSize + 'px';
+                }
+
+                // (3) 위 루프를 빠져나왔을 때, scrollWidth가 초과된 상태거나 maxFontSize를 넘은 상태면
+                //     바로 직전 크기(1 줄이기)로 되돌림
+                if (cell.scrollWidth > cell.clientWidth || currentFontSize > maxFontSize) {
+                    currentFontSize--;
+                    cell.style.fontSize = currentFontSize + 'px';
+                }
+            });
+        }
+
+        function removeEmptyRows() {
+            // 전체 테이블에서 <tbody> 내의 모든 <tr>을 조회
+            const table = document.querySelector('table.w-full');
+            if (!table) return;
+
+            const rows = table.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                // (1) "조식", "중식" 구분용 헤더(tr)인지 체크 (colspan=5 등)
+                //     -> 이런 헤더는 제거 대상에서 제외
+                const specialTd = row.querySelector('td[colspan="5"]');
+                if (specialTd) {
+                    return; // "조식"/"중식" 등 구분 Row는 무조건 남김
+                }
+
+                // (2) 일반 메뉴 row라면, 각 td의 텍스트를 확인
+                const tds = row.querySelectorAll('td');
+                // td가 하나도 없으면(이상한 경우) 그냥 return
+                if (tds.length === 0) return;
+
+                // 모든 td가 비어있는지 확인
+                let allEmpty = true;
+                tds.forEach(td => {
+                    const text = td.textContent.trim();
+                    if (text.length > 0) {
+                        allEmpty = false;
+                    }
+                });
+
+                // (3) 전부 비어있으면 해당 tr 제거
+                if (allEmpty) {
+                    row.remove();
+                }
+            });
+        }
+
+        // DOM이 모두 로드된 후 실행
+        window.addEventListener('DOMContentLoaded', () => {
+            // 1) 먼저 내용 없는 <tr>을 제거
+            removeEmptyRows();
+            // 2) 그리고 폰트 자동 리사이즈 처리
+            autoResizeText();
+        });
+        window.addEventListener('resize', autoResizeText);
+    </script>
+</div>
+</body>
+</html>

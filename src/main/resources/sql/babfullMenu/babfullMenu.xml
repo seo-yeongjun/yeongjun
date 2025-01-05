@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="babfullMenu.babfullMenu">
+    <select id="selectMenuByDate" parameterType="java.time.LocalDate" resultType="com.yeongjun.yeongjun.babfullmenu.model.BabfullMenu">
+        select menu_id,
+               start_dt,
+               end_dt,
+               menu_dt,
+               provider,
+               morning_menu1,
+               morning_menu2,
+               morning_menu3,
+               morning_menu4,
+               morning_menu5,
+               morning_menu6,
+               morning_menu7,
+               morning_menu8,
+               morning_menu9,
+               lunch_menu1,
+               lunch_menu2,
+               lunch_menu3,
+               lunch_menu4,
+               lunch_menu5,
+               lunch_menu6,
+               lunch_menu7,
+               lunch_menu8,
+               lunch_menu9
+        from babfull_menu
+        where #{date} between start_dt AND end_dt;
+    </select>
+
+    <insert id="insertBabfullMenu" parameterType="com.yeongjun.yeongjun.babfullmenu.model.BabfullMenu">
+        insert into babfull_menu (start_dt, end_dt, menu_dt, provider, morning_menu1, morning_menu2, morning_menu3,
+                                  morning_menu4, morning_menu5, morning_menu6, morning_menu7, morning_menu8,
+                                  morning_menu9, lunch_menu1, lunch_menu2, lunch_menu3, lunch_menu4, lunch_menu5,
+                                  lunch_menu6, lunch_menu7, lunch_menu8, lunch_menu9)
+        values (#{start_dt}, #{end_dt}, #{menu_dt}, #{provider}, #{morning_menu1}, #{morning_menu2}, #{morning_menu3},
+                #{morning_menu4}, #{morning_menu5}, #{morning_menu6}, #{morning_menu7}, #{morning_menu8}, #{morning_menu9},
+                #{lunch_menu1}, #{lunch_menu2}, #{lunch_menu3}, #{lunch_menu4}, #{lunch_menu5}, #{lunch_menu6}, #{lunch_menu7},
+                #{lunch_menu8}, #{lunch_menu9});
+    </insert>
+</mapper>
