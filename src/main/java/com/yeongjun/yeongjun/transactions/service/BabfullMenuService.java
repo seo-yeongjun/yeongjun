@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Year;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import java.time.DayOfWeek;
@@ -57,6 +59,26 @@ public class BabfullMenuService {
         for (BabfullMenu menu : babfullMenus) {
             log.debug("Inserting menu: {}", menu);
             babfullMenuDAO.insertBabfullMenu(menu);
+        }
+    }
+
+    public LocalDate parseMonthDay(String dateString) {
+        // "12월16일" 과 같은 문자열에서 월, 일을 추출
+        // (공백 제거와 특수문자 제거는 이미 위에서 끝냈다고 가정)
+        try {
+            int idxOfMonth = dateString.indexOf("월");
+            int idxOfDay = dateString.indexOf("일");
+
+            int month = Integer.parseInt(dateString.substring(0, idxOfMonth));
+            int day = Integer.parseInt(dateString.substring(idxOfMonth + 1, idxOfDay));
+
+            // 해는 현재 연도로 가정(필요시 다른 로직으로 보정)
+            int year = Year.now().getValue();
+
+            return LocalDate.of(year, month, day);
+        } catch (NumberFormatException | DateTimeParseException e) {
+            // 파싱 실패 시 null 리턴 등 예외처리
+            return null;
         }
     }
 }

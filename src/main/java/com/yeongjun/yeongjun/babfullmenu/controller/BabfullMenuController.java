@@ -67,31 +67,59 @@ public class BabfullMenuController {
             // Document AI를 사용하여 메뉴 파싱
             MenuDTO menuDTO = documentAIService.processDocumentToMenuDTO(file);
 
-            // 날짜 문자열 파싱
-            // 날짜 문자열 파싱
-            String startDtString = menuDTO.getStart_dt().trim();       // 예: "12월 16일"
-            startDtString = startDtString.replaceAll("\\(.*\\)", "").trim(); // 결과: "12월 20일"
-            startDtString = startDtString.replaceAll("\\s+", "");      // 모든 공백 제거
-            startDtString = startDtString.replaceAll("[^\\d월일]", ""); // 숫자, '월', '일' 이외의 문자 제거
+            // 1) 먼저 start_dt와 end_dt에 대해 null / 빈 문자열 체크
+            String rawStartDt = menuDTO.getStart_dt();
+            if (rawStartDt == null) rawStartDt = "";
+            rawStartDt = rawStartDt.trim();
 
-            String endDtString = menuDTO.getEnd_dt().trim();           // 예: "12월 20일(금)"
-            endDtString = endDtString.replaceAll("\\(.*\\)", "").trim(); // 결과: "12월 20일"
-            endDtString = endDtString.replaceAll("\\s+", "");         // 모든 공백 제거
-            endDtString = endDtString.replaceAll("[^\\d월일]", "");   // 숫자, '월', '일' 이외의 문자 제거
+            String rawEndDt = menuDTO.getEnd_dt();
+            if (rawEndDt == null) rawEndDt = "";
+            rawEndDt = rawEndDt.trim();
 
-            // 기본 연도 설정 (현재 연도 또는 특정 연도)
-            int year = LocalDate.now().getYear(); // 또는 원하는 연도 입력
+            // 2) 위에서 받은 rawStartDt / rawEndDt가 비어있지 않을 때만 정규식 처리
+            String startDtString = "";
+            String endDtString = "";
 
-            // DateTimeFormatter 설정
-            DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-                    .appendPattern("M월d일")
-                    .parseDefaulting(ChronoField.YEAR, year)
-                    .toFormatter(Locale.KOREAN);
+            // start_dt가 빈 문자열이 아닐 경우
+            if (!rawStartDt.isEmpty()) {
+                startDtString = rawStartDt
+                        .replaceAll("\\(.*\\)", "")    // 괄호 안 내용 제거
+                        .replaceAll("\\s+", "")       // 모든 공백 제거
+                        .replaceAll("[^\\d월일]", ""); // 숫자, '월', '일' 제외 모두 제거
+            }
 
-            // LocalDate로 변환
-            LocalDate start_dt = LocalDate.parse(startDtString, formatter);
-            LocalDate end_dt = LocalDate.parse(endDtString, formatter);
+            // end_dt가 빈 문자열이 아닐 경우
+            if (!rawEndDt.isEmpty()) {
+                endDtString = rawEndDt
+                        .replaceAll("\\(.*\\)", "")
+                        .replaceAll("\\s+", "")
+                        .replaceAll("[^\\d월일]", "");
+            }
 
+            // 3) 문자열 파싱해서 LocalDate 생성
+            LocalDate startDate = null;
+            LocalDate endDate = null;
+
+            if (!startDtString.isEmpty()) {
+                startDate = babfullMenuService.parseMonthDay(startDtString);
+            }
+            if (!endDtString.isEmpty()) {
+                endDate = babfullMenuService.parseMonthDay(endDtString);
+            }
+
+            // 4) startDate 혹은 endDate 중 하나가 비었을 경우, 다른 날짜 기준 ±5일 설정
+            //    (비즈니스 로직에 따라 바꿀 수 있음)
+            if (startDate == null && endDate != null) {
+                startDate = endDate.minusDays(5);
+            } else if (endDate == null && startDate != null) {
+                endDate = startDate.plusDays(5);
+            }
+
+            // 둘 다 비어있으면 디폴트값 설정 (예: 오늘 날짜 ~ 오늘+5일)
+            if (startDate == null && endDate == null) {
+                startDate = LocalDate.now();
+                endDate = LocalDate.now().plusDays(5);
+            }
             // 메뉴 리스트 추출
             List<String> lunchDayList1 = menuDTO.getLunch_day1();
             List<String> lunchDayList2 = menuDTO.getLunch_day2();
@@ -106,8 +134,8 @@ public class BabfullMenuController {
 
             // BabfullMenu 리스트 생성
             List<BabfullMenu> babfullMenus = new BabfullMenu().convertToBabfullMenuList(
-                    start_dt,
-                    end_dt,
+                    startDate,
+                    endDate,
                     provider,
                     lunchDayList1,
                     lunchDayList2,
