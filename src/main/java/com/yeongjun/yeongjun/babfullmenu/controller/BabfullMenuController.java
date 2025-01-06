@@ -70,6 +70,7 @@ public class BabfullMenuController {
             // 날짜 문자열 파싱
             // 날짜 문자열 파싱
             String startDtString = menuDTO.getStart_dt().trim();       // 예: "12월 16일"
+            startDtString = startDtString.replaceAll("\\(.*\\)", "").trim(); // 결과: "12월 20일"
             startDtString = startDtString.replaceAll("\\s+", "");      // 모든 공백 제거
             startDtString = startDtString.replaceAll("[^\\d월일]", ""); // 숫자, '월', '일' 이외의 문자 제거
 
