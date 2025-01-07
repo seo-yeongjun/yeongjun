@@ -37,4 +37,7 @@ public class ToolsController {
     public String letterCount() {
         return "tools/letterCount";
     }
+
+    @GetMapping("textCompare")
+    public String textCompare() {return "tools/textCompare";}
 }
