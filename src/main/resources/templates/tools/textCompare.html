@@ -4,58 +4,169 @@
         layout:decorate="~{tools/layout}">
 <head>
     <title th:text="${title} ?: '도구상자'">홈 페이지</title>
-    <!-- Tailwind CSS가 이미 연결되어 있다고 가정합니다. -->
+    <script th:src="@{/diff_match_patch.js}"></script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // 비교하기 버튼 클릭 핸들러 등을 작성할 수 있습니다.
-            const compareBtn = document.getElementById("compareBtn");
-            compareBtn.addEventListener("click", () => {
-                const message1 = document.getElementById("message1").value;
-                const message2 = document.getElementById("message2").value;
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
-                // 여기에 비교 로직을 추가하세요.
-                console.log("문단1:", message1);
-                console.log("문단2:", message2);
-                alert("비교하기 버튼을 눌렀습니다!");
+        function getLineDiffs(text1, text2) {
+            const dmp = new diff_match_patch();
+
+            const a = dmp.diff_linesToChars_(text1, text2);
+            const chars1 = a.chars1;
+            const chars2 = a.chars2;
+            const lineArray = a.lineArray; // 실제 줄 정보
+
+            let diffs = dmp.diff_main(chars1, chars2, false);
+
+            dmp.diff_cleanupSemantic(diffs);
+
+            dmp.diff_charsToLines_(diffs, lineArray);
+
+            return diffs;
+        }
+
+        function generateLineDiffHTML(diffs) {
+            let html1 = "";
+            let html2 = "";
+
+            let deletedLinesCount = 0;
+            let insertedLinesCount = 0;
+
+            diffs.forEach(diff => {
+                const op = diff[0];
+                const text = diff[1];
+
+                const lines = text.split('\n');
+
+                lines.forEach((line, index) => {
+                    if (!line && index === lines.length - 1) {
+                        return;
+                    }
+
+                    // escape
+                    const safeLine = escapeHtml(line);
+
+                    switch (op) {
+                        case -1: // 삭제
+                            deletedLinesCount++;
+                            html1 += `<div class="bg-red-200 line-through">${safeLine}</div>`;
+                            break;
+                        case 0:  // 동일
+                            html1 += `<div>${safeLine}</div>`;
+                            html2 += `<div>${safeLine}</div>`;
+                            break;
+                        case 1:  // 추가
+                            insertedLinesCount++;
+                            html2 += `<div class="bg-green-200">${safeLine}</div>`;
+                            break;
+                    }
+                });
+            });
+
+            return {
+                html1,
+                html2,
+                deletedLinesCount,
+                insertedLinesCount
+            };
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const compareBtn = document.getElementById("compareBtn");
+
+            const resultOrgDiv = document.getElementById("resultOrg");
+            const resultCompareDiv = document.getElementById("resultCompare");
+
+            const orgLabel = document.getElementById("orgLabel");
+            const compareLabel = document.getElementById("compareLabel");
+
+            const syncScroll = (src, dest) => {
+                dest.scrollTop = src.scrollTop;
+            };
+            resultOrgDiv.addEventListener("scroll", () => {
+                syncScroll(resultOrgDiv, resultCompareDiv);
+            });
+            resultCompareDiv.addEventListener("scroll", () => {
+                syncScroll(resultCompareDiv, resultOrgDiv);
+            });
+
+            compareBtn.addEventListener("click", () => {
+                const message1 = document.getElementById("messageOrg").value;
+                const message2 = document.getElementById("messageCompare").value;
+
+                const resultDiv = document.getElementById("result");
+
+                if (message1.trim() === message2.trim()) {
+                    orgLabel.innerText = `원본 문단 비교 결과 (삭제 0줄)`;
+                    compareLabel.innerText = `비교 문단 비교 결과 (추가 0줄)`;
+                    resultOrgDiv.innerHTML = `<div class="text-gray-600">차이점이 없습니다.</div>`;
+                    resultCompareDiv.innerHTML = `<div class="text-gray-600">차이점이 없습니다.</div>`;
+                    resultDiv.classList.remove("hidden");
+                    return;
+                }
+
+                const lineDiffs = getLineDiffs(message1, message2);
+
+                const {
+                    html1,
+                    html2,
+                    deletedLinesCount,
+                    insertedLinesCount
+                } = generateLineDiffHTML(lineDiffs);
+
+                orgLabel.innerText = `원본 문단 비교 결과 (삭제 ${deletedLinesCount}줄)`;
+                compareLabel.innerText = `비교 문단 비교 결과 (추가 ${insertedLinesCount}줄)`;
+
+                resultOrgDiv.innerHTML = html1;
+                resultCompareDiv.innerHTML = html2;
+                resultDiv.classList.remove("hidden");
             });
         });
     </script>
+
+    <style>
+        .diff-container {
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
 </head>
 <body>
 <div layout:fragment="content">
-    <!-- 제목 -->
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">두 문단의 차이점을 비교해드립니다.</h1>
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">두 문단(줄 단위) 비교</h1>
 
-    <!-- 내용 감싸는 카드 -->
     <div class="bg-white rounded-lg shadow p-6">
-        <!-- flex 컨테이너에 space-x-4 추가하여 두 텍스트영역 사이에 가로 여백 생성 -->
         <div class="flex w-full space-x-4">
             <div class="w-full">
-                <label for="message1" class="block mb-2 font-semibold text-gray-700">비교 문단1</label>
+                <label for="messageOrg" class="block mb-2 font-semibold text-gray-700">원본 문단</label>
                 <textarea
-                        id="message1"
-                        rows="4"
+                        id="messageOrg"
+                        rows="6"
                         class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300
-                               focus:ring-blue-500 focus:border-blue-500
-                               dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400
-                               dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="여기에 글자를 입력해주세요.."></textarea>
+                               focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="여기에 여러 줄로 작성해보세요."></textarea>
             </div>
             <div class="w-full">
-                <label for="message2" class="block mb-2 font-semibold text-gray-700">비교 문단2</label>
+                <label for="messageCompare" class="block mb-2 font-semibold text-gray-700">비교 문단</label>
                 <textarea
-                        id="message2"
-                        rows="4"
+                        id="messageCompare"
+                        rows="6"
                         class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300
-                               focus:ring-blue-500 focus:border-blue-500
-                               dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400
-                               dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="여기에 글자를 입력해주세요.."></textarea>
+                               focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="여기에 여러 줄로 작성해보세요."></textarea>
             </div>
         </div>
 
-        <!-- 비교하기 버튼 -->
         <div class="mt-6 w-full flex">
             <button
                     id="compareBtn"
@@ -64,33 +175,31 @@
             </button>
         </div>
 
-        <div id="result" class="hidden">
+        <div id="result" class="hidden mt-6">
             <div class="flex w-full space-x-4">
+                <!-- 원본 결과 -->
                 <div class="w-full">
-                    <label for="result-message1" class="block mb-2 font-semibold text-gray-700">차이점이 없습니다.</label>
-                    <textarea
-                            id="result-message1"
-                            rows="4"
-                            class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300
-                               focus:ring-blue-500 focus:border-blue-500
-                               dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400
-                               dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="여기에 글자를 입력해주세요.."></textarea>
+                    <label id="orgLabel" class="block mb-2 font-semibold text-gray-700">
+                        원본 문단 비교 결과
+                    </label>
+                    <div id="resultOrg"
+                         class="diff-container border rounded p-2 text-sm text-gray-900
+                                dark:bg-gray-700 dark:text-white">
+                    </div>
                 </div>
+                <!-- 비교 결과 -->
                 <div class="w-full">
-                    <label for="result-message2" class="block mb-2 font-semibold text-gray-700">차이점이 없습니다.</label>
-                    <textarea
-                            id="result-message2"
-                            rows="4"
-                            class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300
-                               focus:ring-blue-500 focus:border-blue-500
-                               dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400
-                               dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="여기에 글자를 입력해주세요.."></textarea>
+                    <label id="compareLabel" class="block mb-2 font-semibold text-gray-700">
+                        비교 문단 비교 결과
+                    </label>
+                    <div id="resultCompare"
+                         class="diff-container border rounded p-2 text-sm text-gray-900
+                                dark:bg-gray-700 dark:text-white">
+                    </div>
                 </div>
             </div>
+        </div>
     </div>
-</div>
 </div>
 </body>
 </html>
