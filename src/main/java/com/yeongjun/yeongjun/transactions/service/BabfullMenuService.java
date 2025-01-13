@@ -7,12 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Year;
-import java.time.format.DateTimeParseException;
-import java.util.List;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Year;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +28,7 @@ public class BabfullMenuService {
      */
     @Transactional(readOnly = true)
     public List<BabfullMenu> getRelevantMenu() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         DayOfWeek dayOfWeek = today.getDayOfWeek();
         LocalDate dateToUse;
 
