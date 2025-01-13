@@ -3,13 +3,95 @@
         xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
         layout:decorate="~{tools/layout}">
 <head>
-    <title th:text="${title} ?: '도구상자'">홈 페이지</title>
+    <meta charset="UTF-8">
+    <title>문단 비교 예시 (확장)</title>
+
     <!-- diff-match-patch 라이브러리 (필수) -->
     <script th:src="@{/diff_match_patch.js}"></script>
 
+    <style>
+        /* 공백 시각화용 스타일 (·, ↹ 등) */
+        .whitespace-char {
+            color: #aaa;
+        }
+
+        /* 줄번호 스타일 */
+        .line-number {
+            display: inline-block;
+            width: 2.5em;
+            text-align: right;
+            margin-right: 0.5em;
+            color: #666;
+            user-select: none; /* 표준 속성 */
+            -webkit-user-select: none; /* Safari/Chrome 웹킷 계열 */
+            -moz-user-select: none; /* 구버전 파이어폭스 */
+            -ms-user-select: none; /* IE/Edge 레거시 */
+        }
+
+        .whitespace-char {
+            user-select: none;
+        }
+
+        /* diff에서 사용될 예시 */
+        .bg-red-100 {
+            background-color: #fee2e2; /* 연한 빨강 배경 */
+        }
+
+        .bg-red-300 {
+            background-color: #fca5a5; /* 더 진한 빨강 배경 */
+        }
+
+        .bg-green-100 {
+            background-color: #d1fae5; /* 연한 초록 배경 */
+        }
+
+        .bg-green-300 {
+            background-color: #6ee7b7; /* 더 진한 초록 배경 */
+        }
+
+        .line-through {
+            text-decoration: line-through;
+        }
+
+        .mr-1 {
+            margin-right: 0.25rem;
+        }
+    </style>
+
     <script>
+
+        function wrapDiffs(rawDiffs) {
+            // rawDiffs: [ diff_match_patch.Diff, diff_match_patch.Diff, ...]
+            return rawDiffs.map(diff => {
+                return {
+                    op: diff[0],
+                    text: diff[1]
+                };
+            });
+        }
+
         /**
-         * HTML 이스케이프 유틸 함수
+         * 전역 옵션 객체
+         * - ignoreCase        : 대소문자 무시
+         * - ignoreWhitespace  : 불필요한 공백 무시 (문장 앞뒤, 중복 공백)
+         * - visualizeSpaces   : 공백 시각화 (스페이스 -> ·, 탭 -> ↹)
+         * - showLineNumbers   : 줄 번호 표시
+         * - compareMode       : 'line' or 'paragraph'
+         */
+        const diffOptions = {
+            compareMode: 'line',
+            showLineNumbers: true,
+            visualizeSpaces: true,
+            ignoreCase: false,
+            ignoreWhitespace: false
+        };
+
+        /**
+         * UI 체크박스에서 옵션 읽어오기
+         */
+
+        /**
+         * HTML 이스케이프
          */
         function escapeHtml(str) {
             return str
@@ -21,186 +103,225 @@
         }
 
         /**
-         * (1) 줄 단위 diff
-         *    - dmp.diff_linesToChars_ -> dmp.diff_main -> dmp.diff_charsToLines_
-         *    - 결과: [ [op, text], [op, text], ... ] 에서 text 안에 여러 줄이 포함될 수 있으므로
-         *             \n 으로 다시 분리해 line별로 나눈 후 리턴
+         * 공백을 시각적으로 표시: space -> ·, tab -> ↹
          */
-        function getLineDiffs(text1, text2) {
-            const dmp = new diff_match_patch();
-            // 1) line diff 전처리
-            const a = dmp.diff_linesToChars_(text1, text2);
-            // 2) 실제 diff 계산
-            let diffs = dmp.diff_main(a.chars1, a.chars2, false);
-            // 3) 의미론적 정리(가급적 깔끔하게)
-            dmp.diff_cleanupSemantic(diffs);
-            // 4) 다시 실제 문자열로 복원
-            dmp.diff_charsToLines_(diffs, a.lineArray);
-
-            /**
-             * diff 결과 예시:
-             *  [
-             *    [-1, "hello\n"],  (삭제된 줄)
-             *    [ 0, "world\n"],  (동일한 줄)
-             *    [ 1, "abc\nxyz\n"] (추가된 여러 줄)
-             *  ]
-             *
-             * 각 text에 \n이 포함되어 여러 줄이 한 번에 나타날 수 있으므로
-             * \n 으로 다시 쪼개어 line별 배열로 변환
-             */
-            const finalLines = [];
-            diffs.forEach(diff => {
-                const op = diff[0];
-                const text = diff[1] || "";
-                // text를 줄 단위로 나누되, 마지막 공백 라인(빈 문자열)은 무시
-                const splitted = text.split('\n');
-
-                // splitted의 마지막이 빈 문자열일 수 있으므로 제거
-                // (diff_match_patch가 마지막에 \n을 붙이기도 함)
-                if (splitted[splitted.length - 1].trim() === "") {
-                    splitted.pop();
-                }
-
-                splitted.forEach(lineStr => {
-                    finalLines.push({
-                        op,
-                        line: lineStr  // 해당 줄 텍스트
-                    });
-                });
-            });
-            return finalLines;
+        function visualizeSpacesInText(text) {
+            if (!diffOptions.visualizeSpaces) {
+                return text;
+            }
+            return text
+                .replace(/ /g, '<span class="whitespace-char">·</span>')
+                .replace(/\t/g, '<span class="whitespace-char">↹</span>');
         }
 
         /**
-         * (2) '단어' 단위 diff (두 개의 줄이 부분적으로만 다른 경우)
-         *     - lineA, lineB 를 각각 단어로 쪼개서 diff
-         *     - 삭제 단어/추가 단어만 더 진한 색상으로 표시
+         * 사용자 입력 전처리
+         *  - (옵션) 대소문자 무시, 불필요한 공백 제거
          */
-        function diffWordsInLine(lineA, lineB) {
+        function preprocessInput(text) {
+            let result = text;
+            if (diffOptions.ignoreCase) {
+                result = result.toLowerCase();
+            }
+
+            if (diffOptions.ignoreWhitespace) {
+                // 여러 줄을 \n으로 나눈 뒤, 각 줄의 앞뒤 공백 제거 + 중간 연속 공백 -> 하나로
+                const lines = result.split('\n').map(line => {
+                    let trimmed = line.trim();
+                    trimmed = trimmed.replace(/\s{2,}/g, ' ');
+                    return trimmed;
+                });
+                result = lines.join('\n');
+            }
+
+            return result;
+        }
+
+        /**
+         * (1) 문단(Paragraph) 단위로 텍스트를 쪼개는 함수
+         *     - 2개 이상의 연속 개행(\n\n...)을 만나면 하나의 문단이 끝난 것으로 간주
+         *     - 마지막에 빈 문자열이 생기지 않도록 처리
+         */
+        function splitIntoParagraphs(text) {
+            // 정규식으로 2개 이상의 줄바꿈(\n{2,})을 기준으로 split
+            let paragraphs = text.split(/\n{2,}/);
+            // 앞뒤 불필요한 공백, 빈 문단 제거
+            paragraphs = paragraphs.map(p => p.trim()).filter(p => p.length > 0);
+            return paragraphs;
+        }
+
+        /**
+         * diff-match-patch를 이용해, 배열(문단 or 라인) 단위로 diff를 계산
+         * 최종 결과는 [ [op, text], ... ] 형태
+         */
+        function getDiffsByArray(arrayA, arrayB) {
             const dmp = new diff_match_patch();
+            // 먼저 arrayA, arrayB를 join('\n') 하여 '라인' 처리처럼 diff
+            const joinedA = arrayA.join('\n');
+            const joinedB = arrayB.join('\n');
 
-            // 단어 기준 split
-            const wordsA = lineA.split(/\s+/);
-            const wordsB = lineB.split(/\s+/);
+            const a = dmp.diff_linesToChars_(joinedA, joinedB);
+            let diffs = dmp.diff_main(a.chars1, a.chars2, false);
+            dmp.diff_cleanupSemantic(diffs);
+            dmp.diff_charsToLines_(diffs, a.lineArray);
 
-            // join으로 '\n' 붙여서 linesToChars_ 재활용
-            const textA = wordsA.join('\n');
-            const textB = wordsB.join('\n');
+            // 이제 diffs는 문단(또는 라인) 하나씩을 가지게 되지만,
+            // diff_match_patch 결과엔 \n이 포함될 수 있으므로 다시 split
+            const final = [];
+            const normalizedDiffs = wrapDiffs(diffs);
+            normalizedDiffs.forEach(({op, text}) => {
+                const splitted = text.split('\n');
+                // 마지막 공백 제거
+                if (splitted[splitted.length - 1].trim() === "") {
+                    splitted.pop();
+                }
+                splitted.forEach(item => {
+                    final.push({op, text: item});
+                });
+            });
+            return final;
+        }
 
-            // diff
-            const a = dmp.diff_linesToChars_(textA, textB);
-            let wordDiffs = dmp.diff_main(a.chars1, a.chars2);
+        /**
+         * (2) 줄 단위 diff를 위해 split
+         */
+        function getLineDiffs(textA, textB) {
+            const linesA = textA.split('\n');
+            const linesB = textB.split('\n');
+            return getDiffsByArray(linesA, linesB); // 배열 단위 diff
+        }
+
+        /**
+         * (3) 문단 단위 diff를 위해 split
+         */
+        function getParagraphDiffs(textA, textB) {
+            const paragraphsA = splitIntoParagraphs(textA);
+            const paragraphsB = splitIntoParagraphs(textB);
+            return getDiffsByArray(paragraphsA, paragraphsB); // 배열 단위 diff
+        }
+
+        /**
+         * (4) 부분 변경된 항목( -1, 1 )은 단어 단위 diff를 적용
+         *    - 예: 한 문단(혹은 한 라인)이 부분만 변경된 경우
+         */
+        function diffWords(originalText, newText) {
+            const dmp = new diff_match_patch();
+            // 단어 기준 split -> join('\n') -> linesToChars -> diff
+            const wordsA = originalText.split(/\s+/);
+            const wordsB = newText.split(/\s+/);
+            const joinedA = wordsA.join('\n');
+            const joinedB = wordsB.join('\n');
+
+            const a = dmp.diff_linesToChars_(joinedA, joinedB);
+            let wordDiffs = dmp.diff_main(a.chars1, a.chars2, false);
             dmp.diff_cleanupSemantic(wordDiffs);
             dmp.diff_charsToLines_(wordDiffs, a.lineArray);
 
-            // wordDiffs: [ [op, "단어들.."], ... ]
-            // 여기에 대해 HTML 생성
+            // wordDiffs : [ [op, "단어 단위 텍스트"] , ... ]
             let resultA = "";
             let resultB = "";
-
-            wordDiffs.forEach(d => {
-                const op = d[0];
-                const chunk = d[1];
-
-                // chunk 안에 '\n' 있을 수 있으므로 다시 split
-                const chunkWords = chunk.split('\n');
-                // 마지막 공백 제거
-                if (chunkWords[chunkWords.length - 1].trim() === "") {
-                    chunkWords.pop();
-                }
-
+            normalizedWordDiffs = wrapDiffs(wordDiffs);
+            normalizedWordDiffs.forEach(({op, text}) => {
+                const chunkWords = text.split('\n').filter(s => s.trim() !== '');
                 chunkWords.forEach(w => {
-                    const safeW = escapeHtml(w);
+                    let safeW = escapeHtml(w);
+                    safeW = visualizeSpacesInText(safeW);
                     switch (op) {
-                        case -1: // 삭제
-                            // 더 진한 빨간색 (예: bg-red-300)
+                        case -1:
+                            // 삭제
                             resultA += `<span class="bg-red-300 line-through mr-1">${safeW}</span>`;
                             break;
-                        case 0:  // 동일
+                        case 0:
+                            // 동일
                             resultA += `<span class="mr-1">${safeW}</span>`;
                             resultB += `<span class="mr-1">${safeW}</span>`;
                             break;
-                        case 1:  // 추가
-                            // 더 진한 초록색 (예: bg-green-300)
+                        case 1:
+                            // 추가
                             resultB += `<span class="bg-green-300 mr-1">${safeW}</span>`;
                             break;
                     }
                 });
             });
 
-            return { resultA, resultB };
+            return {resultA, resultB};
         }
 
         /**
-         * (3) 줄 단위로 diff 결과를 돌며
-         *     - op=0 은 완전 동일 → 그냥 출력
-         *     - op=-1 단독 → 완전 삭제된 줄(옅은 빨강)
-         *     - op=1  단독 → 완전 추가된 줄(옅은 초록)
-         *     - op=-1 뒤에 곧바로 op=1 이 오는 경우(한 줄이 부분 변경된 경우)
-         *       --> 두 줄을 짝지어 단어 diff 후, 해당 줄 전체에 옅은 배경 + 변경된 단어는 진한 색상
+         * (5) 최종 HTML 만들기
+         * - diffs: getParagraphDiffs() or getLineDiffs() 결과
+         * - op=0 은 완전 동일
+         * - op=-1, 다음이 op=1 이면 부분 변경
+         * - op=-1 단독 -> 완전 삭제, op=1 단독 -> 완전 추가
          */
-        function generateLineAndWordDiffHTML(lines) {
+        function generateFinalDiffHTML(diffs) {
             let htmlLeft = "";
             let htmlRight = "";
 
             let i = 0;
-            // 삭제/추가된 줄(단어) 카운트
-            let deletedWordsCount = 0;
-            let insertedWordsCount = 0;
+            // 줄 번호/문단 번호
+            let leftLineNum = 1;
+            let rightLineNum = 1;
 
-            while (i < lines.length) {
-                const current = lines[i];
-                const { op, line } = current;
+            while (i < diffs.length) {
+                const current = diffs[i];
+                const {op, text} = current;
+                const escaped = escapeHtml(text);
+                const visual = visualizeSpacesInText(escaped);
 
                 if (op === 0) {
-                    // 동일 줄
-                    // 그냥 출력 (배경 없이)
-                    htmlLeft += `<div>${escapeHtml(line)}</div>`;
-                    htmlRight += `<div>${escapeHtml(line)}</div>`;
-                    i++;
-                }
-                else if (op === -1) {
-                    // 삭제된 줄
-                    // 다음 줄이 1(추가)라면, "수정된 줄"로 보고 단어 diff
-                    const next = lines[i + 1];
-                    if (next && next.op === 1) {
-                        // (a) line(원본) vs next.line(새로운)
-                        const lineA = line;
-                        const lineB = next.line;
-
-                        // 단어 diff
-                        const { resultA, resultB } = diffWordsInLine(lineA, lineB);
-
-                        // 줄 자체 배경: 옅은 빨강 / 옅은 초록
-                        htmlLeft += `<div class="bg-red-100">${resultA}</div>`;
-                        htmlRight += `<div class="bg-green-100">${resultB}</div>`;
-
-                        // 단어 diff에서 삭제/추가된 단어 수 세기
-                        // (diffWordsInLine 내부에서 count를 리턴하려면, 조금 더 코드를 수정하면 됨)
-                        // 여기서는 간단히, HTML에서 bg-red-300 / bg-green-300 찾는 방식 등으로 파싱 가능.
-                        // 일단 생략하거나, 별도의 로직으로 계산 가능.
-
-                        // i를 2 증가 (-1, 1 두 줄을 소비)
-                        i += 2;
+                    // 동일
+                    if (diffOptions.showLineNumbers) {
+                        htmlLeft += `<div><span class="line-number">${leftLineNum++}</span>${visual}</div>`;
+                        htmlRight += `<div><span class="line-number">${rightLineNum++}</span>${visual}</div>`;
                     } else {
-                        // (b) 완전 삭제된 줄
-                        htmlLeft += `<div class="bg-red-100 line-through">${escapeHtml(line)}</div>`;
-                        // 우측은 빈 줄
-                        htmlRight += `<div></div>`;
+                        htmlLeft += `<div>${visual}</div>`;
+                        htmlRight += `<div>${visual}</div>`;
+                    }
+                    i++;
+                } else if (op === -1) {
+                    // 삭제
+                    const next = diffs[i + 1];
+                    if (next && next.op === 1) {
+                        // 바로 뒤가 추가라면 "부분 변경"으로 간주
+                        const {resultA, resultB} = diffWords(text, next.text);
+                        // 배경색: 왼쪽은 옅은 빨강, 오른쪽은 옅은 초록
+                        // 줄번호 표시
+                        if (diffOptions.showLineNumbers) {
+                            htmlLeft += `<div class="bg-red-100"><span class="line-number">${leftLineNum++}</span>${resultA}</div>`;
+                            htmlRight += `<div class="bg-green-100"><span class="line-number">${rightLineNum++}</span>${resultB}</div>`;
+                        } else {
+                            htmlLeft += `<div class="bg-red-100">${resultA}</div>`;
+                            htmlRight += `<div class="bg-green-100">${resultB}</div>`;
+                        }
+                        i += 2; // -1, +1 2개를 함께 처리
+                    } else {
+                        // 완전 삭제
+                        if (diffOptions.showLineNumbers) {
+                            htmlLeft += `<div class="bg-red-100 line-through"><span class="line-number">${leftLineNum++}</span>${visual}</div>`;
+                            htmlRight += `<div><span class="line-number">${rightLineNum++}</span></div>`;
+                        } else {
+                            htmlLeft += `<div class="bg-red-100 line-through">${visual}</div>`;
+                            htmlRight += `<div></div>`;
+                        }
                         i++;
                     }
-                }
-                else if (op === 1) {
-                    // 추가된 줄
-                    // 바로 이전이 -1이었는지는 이미 위에서 처리
-                    // 여기서는 "단독 추가"
-                    htmlLeft += `<div></div>`;
-                    htmlRight += `<div class="bg-green-100">${escapeHtml(line)}</div>`;
+                } else if (op === 1) {
+                    // 추가
+                    // 이전이 -1이라면 이미 처리됨
+                    // 여기서는 단독 추가
+                    if (diffOptions.showLineNumbers) {
+                        htmlLeft += `<div><span class="line-number">${leftLineNum++}</span></div>`;
+                        htmlRight += `<div class="bg-green-100"><span class="line-number">${rightLineNum++}</span>${visual}</div>`;
+                    } else {
+                        htmlLeft += `<div></div>`;
+                        htmlRight += `<div class="bg-green-100">${visual}</div>`;
+                    }
                     i++;
                 }
             }
 
-            return { htmlLeft, htmlRight };
+            return {htmlLeft, htmlRight};
         }
 
         // =============================================================================
@@ -212,61 +333,67 @@
 
             const orgLabel = document.getElementById("orgLabel");
             const compareLabel = document.getElementById("compareLabel");
+            const resultDiv = document.getElementById("result");
 
             // 스크롤 동기화
-            const syncScroll = (src, dest) => {
+            function syncScroll(src, dest) {
                 dest.scrollTop = src.scrollTop;
-            };
-            resultOrgDiv.addEventListener("scroll", () => {
-                syncScroll(resultOrgDiv, resultCompareDiv);
-            });
-            resultCompareDiv.addEventListener("scroll", () => {
-                syncScroll(resultCompareDiv, resultOrgDiv);
-            });
+            }
+
+            resultOrgDiv.addEventListener("scroll", () => syncScroll(resultOrgDiv, resultCompareDiv));
+            resultCompareDiv.addEventListener("scroll", () => syncScroll(resultCompareDiv, resultOrgDiv));
 
             compareBtn.addEventListener("click", () => {
-                const message1 = document.getElementById("messageOrg").value;
-                const message2 = document.getElementById("messageCompare").value;
-                const resultDiv = document.getElementById("result");
 
-                if (message1.trim() === message2.trim()) {
+                // 2) 입력 값 읽어오기 & 옵션별 전처리
+                const rawA = document.getElementById("messageOrg").value;
+                const rawB = document.getElementById("messageCompare").value;
+                const textA = preprocessInput(rawA);
+                const textB = preprocessInput(rawB);
+
+                if (textA === textB) {
                     // 완전히 동일
-                    orgLabel.innerText = `원본 문단 비교 결과 (삭제 0줄)`;
-                    compareLabel.innerText = `비교 문단 비교 결과 (추가 0줄)`;
+                    orgLabel.innerText = `원본 문단 비교 결과 (삭제 0)`;
+                    compareLabel.innerText = `비교 문단 비교 결과 (추가 0)`;
                     resultOrgDiv.innerHTML = `<div class="text-gray-600">차이점이 없습니다.</div>`;
                     resultCompareDiv.innerHTML = `<div class="text-gray-600">차이점이 없습니다.</div>`;
                     resultDiv.classList.remove("hidden");
                     return;
                 }
 
-                // 1) 줄 단위 diff
-                const lineDiffs = getLineDiffs(message1, message2);
+                // 3) diff 계산
+                let diffs;
+                if (diffOptions.compareMode === 'paragraph') {
+                    // 문단 단위 비교
+                    diffs = getParagraphDiffs(textA, textB);
+                } else {
+                    // 라인 단위 비교 (기본값)
+                    diffs = getLineDiffs(textA, textB);
+                }
 
-                // 2) 줄 별로 돌면서, 수정된 줄에 대해서만 단어 diff
-                const { htmlLeft, htmlRight } = generateLineAndWordDiffHTML(lineDiffs);
+                // 4) 최종 HTML 생성
+                const {htmlLeft, htmlRight} = generateFinalDiffHTML(diffs);
 
-                // (추가/삭제 줄 수) 계산
-                const deletedLinesCount = lineDiffs.filter(d => d.op === -1).length;
-                const insertedLinesCount = lineDiffs.filter(d => d.op === 1).length;
+                // 5) 통계 (몇 줄/몇 문단이 삭제/추가되었는지)
+                const deletedCount = diffs.filter(d => d.op === -1).length;
+                const insertedCount = diffs.filter(d => d.op === 1).length;
+                orgLabel.innerText = `원본 문단 비교 결과 (삭제 ${deletedCount})`;
+                compareLabel.innerText = `비교 문단 비교 결과 (추가 ${insertedCount})`;
 
-                orgLabel.innerText = `원본 문단 비교 결과 (삭제 ${deletedLinesCount}줄)`;
-                compareLabel.innerText = `비교 문단 비교 결과 (추가 ${insertedLinesCount}줄)`;
-
-                // 결과 HTML 반영
+                // 6) 결과 반영
                 resultOrgDiv.innerHTML = htmlLeft;
                 resultCompareDiv.innerHTML = htmlRight;
-
-                // 결과 영역 노출
                 resultDiv.classList.remove("hidden");
             });
         });
     </script>
+
 </head>
 <body>
-<div layout:fragment="content" class="w-full md:pt-6 md:px-4 flex-grow max-w-screen-lg mx-auto px-4 sm:px-6 lg:px-8">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">두 문단(단어 단위) 비교</h1>
+<div layout:fragment="content" class="w-full md:pt-6 md:px-4 flex-grow max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">문단 비교</h1>
 
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-white rounded-lg shadow p-6 space-y-4">
         <!-- 입력 영역 -->
         <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 w-full">
             <!-- 원본 문단 -->
@@ -275,9 +402,9 @@
                 <textarea
                         id="messageOrg"
                         rows="6"
-                        class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300
-                           focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="여기에 여러 줄로 작성해보세요."></textarea>
+                        class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border
+                           border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="여기에 여러 줄, 또는 여러 문단으로 작성해보세요."></textarea>
             </div>
             <!-- 비교 문단 -->
             <div class="w-full md:w-1/2">
@@ -285,9 +412,9 @@
                 <textarea
                         id="messageCompare"
                         rows="6"
-                        class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300
-                           focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="여기에 여러 줄로 작성해보세요."></textarea>
+                        class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border
+                           border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="여기에 여러 줄, 또는 여러 문단으로 작성해보세요."></textarea>
             </div>
         </div>
 
@@ -296,7 +423,7 @@
             <button
                     id="compareBtn"
                     class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded mx-auto">
-                단어 단위 비교하기
+                비교하기
             </button>
         </div>
 
@@ -310,7 +437,7 @@
                     </label>
                     <div
                             id="resultOrg"
-                            class="h-[300px] overflow-y-auto whitespace-pre-wrap break-words
+                            class="h-[300px] overflow-auto whitespace-pre
                                border rounded p-2 text-sm text-gray-900
                                dark:bg-gray-700 dark:text-white">
                     </div>
@@ -322,13 +449,14 @@
                     </label>
                     <div
                             id="resultCompare"
-                            class="h-[300px] overflow-y-auto whitespace-pre-wrap break-words
+                            class="h-[300px] overflow-auto whitespace-pre
                                border rounded p-2 text-sm text-gray-900
                                dark:bg-gray-700 dark:text-white">
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 </body>
