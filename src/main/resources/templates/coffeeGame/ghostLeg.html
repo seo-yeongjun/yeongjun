@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorate="~{coffeeGame/layout}">
+<head>
+    <title th:text="${title} ?: '사다리타기 🪜'"></title>
+</head>
+<body>
+<div layout:fragment="content">
+    <canvas id="ghostLegCanvas" style="width:100%; height:100vw; max-height:60vh;"></canvas>
+    <div>
+        사다리 타기를 개발중에 있습니다.
+        곧 완성될 예정입니다.
+    </div>
+    <script>
+        const canvas = document.getElementById('ghostLegCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // canvas background white
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+
+        function drawLine(startX, startY, endX, endY) {
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+        }
+
+        function drawGhostLeg() {
+            const lineCount = 5;
+            const lineLength = width / (lineCount + 1);
+            const lineGap = lineLength / 2;
+            const lineStartY = 0;
+            const lineEndY = height;
+
+            for (let i = 0; i < lineCount; i++) {
+                const startX = lineLength * (i + 1);
+                const startY = lineStartY;
+                const endX = lineLength * (i + 1);
+                const endY = lineEndY;
+
+                drawLine(startX, startY, endX, endY);
+            }
+        }
+
+        drawGhostLeg();
+    </script>
+</div>
+</body>
+</html>

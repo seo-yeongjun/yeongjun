@@ -26,4 +26,8 @@ public class CategoryService {
     public List<Category> getToolsCategory() {
         return categoryDAO.selectAllToolsCategory();
     }
+
+    public List<Category> getCoffeeGameCategory() {
+        return categoryDAO.selectAllCoffeeGameCategory();
+    }
 }
