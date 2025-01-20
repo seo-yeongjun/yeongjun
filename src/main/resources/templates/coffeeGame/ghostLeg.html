@@ -6,47 +6,554 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <canvas id="ghostLegCanvas" style="width:100%; height:100vw; max-height:60vh;"></canvas>
-    <div>
-        사다리 타기를 개발중에 있습니다.
-        곧 완성될 예정입니다.
+    <!-- 설정 영역 -->
+    <div id="settingBoard" class="container mx-auto py-8">
+        <div class="flex justify-center items-center">
+            <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md flex flex-col items-center">
+                <!-- 참가자 수 입력 -->
+                <div class="flex items-center space-x-2 mb-4">
+                    <label for="playerCount" class="font-medium text-gray-700">참가자 수</label>
+                    <input
+                            type="number"
+                            id="playerCount"
+                            class="w-16 text-center border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value="5"
+                    >
+                    <button
+                            id="playerCountBtn"
+                            class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition duration-200 focus:outline-none"
+                    >
+                        적용/초기화
+                    </button>
+                </div>
+
+                <!-- 이름/결과 입력 영역 -->
+                <div id="labelArea" class="hidden w-full">
+                    <div class="flex justify-between">
+                        <!-- 이름 리스트 -->
+                        <div id="nameList" class="flex flex-col items-center space-y-2 w-1/2 pr-2">
+                            <!-- JS에서 동적 생성 -->
+                        </div>
+                        <!-- 결과 리스트 -->
+                        <div id="resultList" class="flex flex-col items-center space-y-2 w-1/2 pl-2">
+                            <!-- JS에서 동적 생성 -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 hidden" id="gameBtnArea">
+                    <button
+                            id="startGame"
+                            class="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600 transition duration-200 focus:outline-none mr-2"
+                    >
+                        게임 시작
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 실제 사다리 게임 보드 (결과 표시) -->
+    <div id="gameBoard" class="hidden container mx-auto mt-4 bg-white rounded-lg shadow-md">
+        <!-- 초기화 버튼 -->
+        <div class="flex justify-end mb-4">
+            <button
+                    id="resetGame"
+                    class="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition duration-200 focus:outline-none"
+            >
+                초기화
+            </button>
+        </div>
+        <canvas id="gameCanvas" class="w-full h-[50vh] border border-gray-300"></canvas>
     </div>
     <script>
-        const canvas = document.getElementById('ghostLegCanvas');
-        const ctx = canvas.getContext('2d');
+        /***********************************************************
+         * [1] 초기 화면 제어 (이름/결과 Input 생성, 초기화 버튼 등)
+         ***********************************************************/
+        window.onload = () => {
+            const playerCount = document.getElementById('playerCount');
+            const playerCountBtn = document.getElementById('playerCountBtn');
 
-        const width = canvas.width;
-        const height = canvas.height;
+            const nameList = document.getElementById('nameList');
+            const resultList = document.getElementById('resultList');
+            const labelArea = document.getElementById('labelArea');
 
-        // canvas background white
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, width, height);
+            const gameBtnArea = document.getElementById('gameBtnArea');
+            const startGame = document.getElementById('startGame');
 
-        function drawLine(startX, startY, endX, endY) {
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
-        }
+            const settingBoard = document.getElementById('settingBoard');
+            const gameBoard = document.getElementById('gameBoard');
 
-        function drawGhostLeg() {
-            const lineCount = 5;
-            const lineLength = width / (lineCount + 1);
-            const lineGap = lineLength / 2;
-            const lineStartY = 0;
-            const lineEndY = height;
+            const gameCanvas = document.getElementById('gameCanvas');
+            const resetGame = document.getElementById('resetGame');
 
-            for (let i = 0; i < lineCount; i++) {
-                const startX = lineLength * (i + 1);
-                const startY = lineStartY;
-                const endX = lineLength * (i + 1);
-                const endY = lineEndY;
+            // [적용/초기화] 버튼 클릭 시, 이름/결과 Input 생성
+            playerCountBtn.addEventListener('click', () => {
+                labelArea.classList.remove('hidden');
+                gameBtnArea.classList.remove('hidden');
 
-                drawLine(startX, startY, endX, endY);
+                const count = parseInt(playerCount.value, 10);
+                // 기존에 남아있던 input 제거
+                nameList.innerHTML = '<label class="font-medium text-gray-700">플레이어 이름</label>';
+                resultList.innerHTML = '<label class="font-medium text-gray-700">결과</label>';
+
+                // nameInputs
+                for (let i = 0; i < count; i++) {
+                    const nameInput = document.createElement('input');
+                    nameInput.type = 'text';
+                    nameInput.value = `플레이어${i + 1}`;
+                    nameInput.className = 'w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500';
+                    // 클릭 시 기본값 지우기
+                    nameInput.addEventListener('click', () => {
+                        nameInput.value = '';
+                    });
+                    nameList.appendChild(nameInput);
+                }
+
+                // resultInputs
+                for (let i = 0; i < count; i++) {
+                    const resultInput = document.createElement('input');
+                    resultInput.type = 'text';
+                    resultInput.value = `O`;
+                    resultInput.className = 'w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500';
+                    // 클릭 시 기본값 지우기
+                    resultInput.addEventListener('click', () => {
+                        resultInput.value = '';
+                    });
+                    resultList.appendChild(resultInput);
+                }
+            });
+
+            // 초기화 버튼
+            resetGame.addEventListener('click', () => {
+                settingBoard.classList.remove('hidden');
+                gameBoard.classList.add('hidden');
+
+                // settingBoard 초기화
+                playerCount.value = 5;
+                labelArea.classList.add('hidden');
+                gameBtnArea.classList.add('hidden');
+                nameList.innerHTML = '';
+                resultList.innerHTML = '';
+
+                // gameBoard 초기화 (canvas 등)
+                drawnPaths = [];
+                animatingPaths = [];
+            });
+
+            // [게임 시작] 버튼
+            startGame.addEventListener('click', () => {
+                const names = document.querySelectorAll('#nameList input');
+                const results = document.querySelectorAll('#resultList input');
+                const nameArr = [];
+                const resultArr = [];
+
+                names.forEach(name => nameArr.push(name.value));
+                results.forEach(result => resultArr.push(result.value));
+
+                // 설정 영역 감추고, Canvas 영역 표시
+                settingBoard.classList.add('hidden');
+                gameBoard.classList.remove('hidden');
+
+                // 사다리 게임 실행
+                runLadderGame(nameArr, resultArr);
+            });
+        };
+
+
+        /***********************************************************
+         * [2] 사다리 로직 + Canvas
+         ***********************************************************/
+        let ctx;
+        let canvasWidth, canvasHeight;
+
+
+        // 사다리 맵(가로줄) 정보: ladderMap[row][col] => boolean
+        let ladderMap = [];
+        // 세로줄 개수
+        let verticalCount = 0;
+        // 가로줄(행) 개수 (원하는 만큼 조정)
+        let rowCount = 15;
+
+        const topMargin = 50;    // 이름 표시 영역보다 살짝 여유 있게
+        const bottomMargin = 50; // 결과 표시 영역보다 살짝 여유 있게
+
+        // 라인 색상/두께
+        const lineColor = '#999';
+        const lineWidth = 2;
+
+        // 이미 그려진 경로(애니메이션이 끝난 후에도 유지) 목록
+        // [{ points: [ {x, y}, ... ], color: '#f00' }]
+        let drawnPaths = [];
+
+        // 애니메이션 중인 경로들
+        // [{ points: [...], color: '', currentIndex: 0, finalIndex: (도착col) }]
+        let animatingPaths = [];
+
+        // 이름/결과를 클릭하기 위한 영역 저장
+        // 이름: [{ x1, y1, x2, y2, colIndex }]
+        let nameBoxes = [];
+
+        // 매번 다른 색상으로 경로를 그리기 위해, 임의 색상 목록 or randomColor
+        const pathColors = ['red', 'blue', 'green', 'orange', 'purple', 'teal', 'hotpink', 'brown'];
+        let colorIndex = 0;
+
+        /**
+         * 사다리(가로줄) 정보 초기화
+         */
+        function initLadder(count) {
+            verticalCount = count;
+            ladderMap = [];
+            for (let r = 0; r < rowCount; r++) {
+                const row = new Array(verticalCount - 1).fill(false);
+                for (let c = 0; c < verticalCount - 1; c++) {
+                    // 이미 이전 col이 true면, 이번 col은 무조건 false로 (중복 방지)
+                    if (c > 0 && row[c - 1] === true) {
+                        row[c] = false;
+                        continue;
+                    }
+
+                    // 랜덤하게 true/false
+                    if (Math.random() < 0.4) {
+                        row[c] = true;
+                    } else {
+                        row[c] = false;
+                    }
+                }
+                ladderMap.push(row);
             }
         }
 
-        drawGhostLeg();
+        /**
+         * Canvas 크기 및 배경 초기화
+         */
+        function initCanvas() {
+            const gameCanvas = document.getElementById('gameCanvas');
+
+            ctx = gameCanvas.getContext('2d');
+
+            canvasWidth = gameCanvas.offsetWidth;
+            canvasHeight = gameCanvas.offsetHeight;
+
+            // 실제 픽셀 크기 지정
+            gameCanvas.width = canvasWidth;
+            gameCanvas.height = canvasHeight;
+
+            // 배경 지우기
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            // 클릭 영역 배열/경로들 초기화 (단, 이미 그려진 경로는 유지해야 하므로 비우지 않음)ㅋ
+            nameBoxes = [];
+        }
+
+        /**
+         * 사다리(세로줄/가로줄) 그리기
+         */
+        function drawLadder() {
+            const usableHeight = canvasHeight - topMargin - bottomMargin;
+            // rowCount+1 로 나눈 높이 간격
+            const gapY = usableHeight / (rowCount + 1);
+
+            const gapX = canvasWidth / (verticalCount + 1);
+
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = lineWidth;
+
+            for (let i = 1; i <= verticalCount; i++) {
+                const x = gapX * i;
+                ctx.beginPath();
+                // 세로줄은 topMargin에서 시작 → canvasHeight - bottomMargin에서 끝
+                ctx.moveTo(x, topMargin);
+                ctx.lineTo(x, canvasHeight - bottomMargin);
+                ctx.stroke();
+            }
+
+            // [B] 가로줄
+            for (let r = 0; r < rowCount; r++) {
+                for (let c = 0; c < verticalCount - 1; c++) {
+                    if (ladderMap[r][c]) {
+                        const x1 = gapX * (c + 1);
+                        const x2 = gapX * (c + 2);
+
+                        // row r에 해당하는 y좌표는 topMargin + gapY*(r+1)
+                        const y = topMargin + gapY * (r + 1);
+
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y);
+                        ctx.lineTo(x2, y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        /**
+         * Canvas 상단에 이름들 그리기 + 클릭 영역 저장
+         */
+        function drawNames(nameArr) {
+            const gapX = canvasWidth / (verticalCount + 1);
+            ctx.font = '16px sans-serif';
+            ctx.fillStyle = '#000';
+
+            for (let i = 0; i < nameArr.length; i++) {
+                const xCenter = gapX * (i + 1);
+                const text = nameArr[i];
+
+                // 텍스트 너비 측정
+                const textWidth = ctx.measureText(text).width;
+                // topMargin보다 살짝 위쪽에 표시 → (topMargin - 10) 정도?
+                const textX = xCenter - (textWidth / 2);
+                const textY = topMargin - 10;
+
+                ctx.fillText(text, textX, textY);
+
+                // 클릭 영역 저장(조금 여유롭게 높이 20px 가정)
+                nameBoxes.push({
+                    x1: textX,
+                    y1: textY - 15,
+                    x2: textX + textWidth,
+                    y2: textY + 5,
+                    colIndex: i
+                });
+            }
+        }
+
+        /**
+         * Canvas 하단에 결과들 표시 (단순 텍스트)
+         * - 가로줄(세로줄)과 동일한 x 위치에 표시
+         */
+        function drawResults(resultArr) {
+            const gapX = canvasWidth / (verticalCount + 1);
+            ctx.font = '16px sans-serif';
+            ctx.fillStyle = '#333';
+
+            for (let i = 0; i < resultArr.length; i++) {
+                const xCenter = gapX * (i + 1);
+                const text = resultArr[i];
+
+                const textWidth = ctx.measureText(text).width;
+                const textX = xCenter - (textWidth / 2);
+                const textY = canvasHeight - bottomMargin + 20;
+
+                ctx.fillText(text, textX, textY);
+            }
+        }
+
+        /**
+         * colIndex(0-based) 에 해당하는 경로의 모든 좌표를 계산해서 반환
+         * - [ { x, y }, { x, y }, ... ] 형태
+         * - 맨 위( y=0 )부터 → 가로줄/세로줄 → 맨 아래( y=canvasHeight )
+         */
+        function getPathPoints(colIndex) {
+            const points = [];
+            const usableHeight = canvasHeight - topMargin - bottomMargin;
+            const gapY = usableHeight / (rowCount + 1);
+            const gapX = canvasWidth / (verticalCount + 1);
+
+            // 현재 세로줄 colIndex
+            let c = colIndex;
+
+            // 시작 X/Y
+            let currentX = gapX * (c + 1);
+            let currentY = topMargin;  // 꼭대기가 아니라 topMargin 지점에서 시작
+
+            // 첫 점
+            points.push({x: currentX, y: currentY});
+
+            // rowCount개의 '행'을 따라 내려가며 좌우 이동
+            for (let r = 0; r < rowCount; r++) {
+                const nextY = topMargin + gapY * (r + 1);
+                // 1) 세로로 내려가기
+                points.push({x: currentX, y: nextY});
+
+                // 2) 가로줄 체크
+                // 왼쪽
+                if (c > 0 && ladderMap[r][c - 1]) {
+                    // 왼쪽 이동
+                    const leftX = gapX * c;
+                    points.push({x: leftX, y: nextY});
+                    c--;
+                    currentX = leftX;
+                }
+                // 오른쪽
+                else if (c < verticalCount - 1 && ladderMap[r][c]) {
+                    // 오른쪽 이동
+                    const rightX = gapX * (c + 2);
+                    points.push({x: rightX, y: nextY});
+                    c++;
+                    currentX = rightX;
+                }
+            }
+
+            // 맨 아래까지
+            points.push({x: currentX, y: canvasHeight - bottomMargin});
+
+            // 최종 도착 colIndex 반환도 해야 하므로, c 값도 return
+            return {path: points, finalCol: c};
+        }
+
+        /**
+         * pathPoints를 "애니메이션"으로 그리기
+         * - setInterval or requestAnimationFrame
+         * - 매 프레임마다 nextPoint로 선을 연장
+         */
+        function animatePath(pathPoints, color, finalColIndex, name, result) {
+            // animatingPaths에 등록
+            animatingPaths.push({
+                points: pathPoints,
+                color,
+                currentIndex: 0,
+                finalCol: finalColIndex,
+                name,
+                result
+            });
+
+            // 혹시 애니메이션 루프가 돌고 있지 않다면, 시작
+            if (!animationRunning) {
+                animationRunning = true;
+                requestAnimationFrame(drawAnimationFrame);
+            }
+        }
+
+        // 현재 애니메이션 루프 동작 중인지 확인
+        let animationRunning = false;
+
+        /**
+         * 모든 경로(이미 그려진 + 애니메이션 중)를 그리기 위해
+         * 매 프레임마다 실행될 함수
+         */
+        function drawAnimationFrame() {
+            // 1) 우선 전체 Canvas를 다시 초기화
+            initCanvas();
+            // 2) Ladder, Names, Results 다시 그림
+            drawLadder();
+            drawNames(currentNameArr);
+            drawResults(currentResultArr);
+
+            // 3) 이미 그려진 경로들(drawnPaths)은 즉시 전체 선으로 그림
+            drawnPaths.forEach(pathObj => {
+                drawFullPath(pathObj.points, pathObj.color);
+            });
+
+            // 4) 애니메이션 중인 경로들(animatingPaths)은 currentIndex까지만 그림
+            //    그리고 currentIndex를 1씩 증가
+            for (let i = 0; i < animatingPaths.length; i++) {
+                const ap = animatingPaths[i];
+                drawPartialPath(ap.points, ap.color, ap.currentIndex);
+
+                // 인덱스 증가 에니메이션 속도 조절
+                ap.currentIndex += 0.2;
+                // 만약 pathPoints 끝까지 다 그렸다면, 이 경로는 drawnPaths에 추가
+                if (ap.currentIndex >= ap.points.length) {
+                    // 최종 도착 시점에 alert (원치 않으면 주석 처리)
+
+                    // 전체 경로를 drawnPaths에 추가
+                    drawnPaths.push({points: ap.points, color: ap.color});
+                    // animatingPaths에서 제거
+                    animatingPaths.splice(i, 1);
+                    i--;
+                }
+            }
+
+            // 5) 아직 애니메이션 중인 경로가 있으면 다시 requestAnimationFrame
+            if (animatingPaths.length >= 0) {
+                requestAnimationFrame(drawAnimationFrame);
+            } else {
+                // 애니메이션이 모두 끝남
+                animationRunning = false;
+            }
+        }
+
+        /**
+         * 이미 완료된 경로(전체)를 한 번에 그리기
+         */
+        function drawFullPath(points, color) {
+            if (!points || points.length < 2) return;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
+        }
+
+        /**
+         * 애니메이션 중인 경로를 현재 인덱스까지 부분적으로 그리기
+         */
+        function drawPartialPath(points, color, currentIndex) {
+            if (!points || points.length < 2) return;
+            if (currentIndex < 1) currentIndex = 1; // 최소 1개 선분은 그려야 함
+            if (currentIndex > points.length) currentIndex = points.length;
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < currentIndex; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
+        }
+
+        // 현재 그려질 이름/결과 배열을 저장해두고, 매 프레임마다 그리기 위해 전역에 보관
+        let currentNameArr = [];
+        let currentResultArr = [];
+
+        /**
+         * 최종 실행 함수
+         */
+        function runLadderGame(nameArr, resultArr) {
+            currentNameArr = nameArr;
+            currentResultArr = resultArr;
+
+            // 1) 사다리 정보 초기화
+            initLadder(nameArr.length);
+
+            // 2) Canvas 초기화
+            initCanvas();
+
+            // 3) 사다리 그리기
+            drawLadder();
+
+            // 4) 이름, 결과 표시
+            drawNames(nameArr);
+            drawResults(resultArr);
+
+            // 5) 클릭 이벤트(이름 클릭) 등록
+            const gameCanvas = document.getElementById('gameCanvas');
+            gameCanvas.addEventListener('click', (event) => {
+                const rect = gameCanvas.getBoundingClientRect();
+                const clickX = event.clientX - rect.left;
+                const clickY = event.clientY - rect.top;
+
+                // nameBoxes 확인
+                for (let box of nameBoxes) {
+                    if (
+                        clickX >= box.x1 && clickX <= box.x2 &&
+                        clickY >= box.y1 && clickY <= box.y2
+                    ) {
+                        // colIndex = box.colIndex
+                        // 1) 경로 계산
+                        const {path, finalCol} = getPathPoints(box.colIndex);
+
+                        // 2) 새 경로에 대해 애니메이션 시작
+                        //    - 색상은 pathColors에서 순환 사용 or 랜덤
+                        const color = pathColors[colorIndex % pathColors.length];
+                        colorIndex++;
+
+                        animatePath(path, color, finalCol, nameArr[box.colIndex], resultArr);
+
+                        // 다른 이름 박스도 확인 안 하도록 종료
+                        break;
+                    }
+                }
+            });
+        }
     </script>
 </div>
 </body>
