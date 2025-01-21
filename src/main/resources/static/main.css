@@ -854,14 +854,6 @@ video {
   min-width: 20rem;
 }
 
-.min-w-\[500px\] {
-  min-width: 500px;
-}
-
-.min-w-\[400px\] {
-  min-width: 400px;
-}
-
 .max-w-2xl {
   max-width: 42rem;
 }
@@ -938,10 +930,6 @@ video {
 
 .items-center {
   align-items: center;
-}
-
-.justify-end {
-  justify-content: flex-end;
 }
 
 .justify-center {
