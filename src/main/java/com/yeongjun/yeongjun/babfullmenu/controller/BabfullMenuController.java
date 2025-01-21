@@ -4,6 +4,7 @@ import com.yeongjun.yeongjun.babfullmenu.entity.MenuDTO;
 import com.yeongjun.yeongjun.babfullmenu.model.BabfullMenu;
 import com.yeongjun.yeongjun.babfullmenu.service.DocumentAIService;
 import com.yeongjun.yeongjun.transactions.service.BabfullMenuService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,11 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 
 
 @Controller
@@ -28,6 +27,8 @@ import java.util.Locale;
 public class BabfullMenuController {
     private final BabfullMenuService babfullMenuService;
     private final DocumentAIService documentAIService;
+    // ip별 업로드 횟수 제한을 위한 Map
+    private final Map<String, Integer> uploadCountMap = new HashMap<>();
 
     public BabfullMenuController(BabfullMenuService babfullMenuService, DocumentAIService documentAIService) {
         this.babfullMenuService = babfullMenuService;
@@ -44,7 +45,8 @@ public class BabfullMenuController {
     public String uploadBabfullMenuImage(
             @RequestParam("file") MultipartFile file,
             @RequestParam("provider") String provider,
-            RedirectAttributes redirectAttributes
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request
     ) {
         try {
             // 오늘 메뉴가 이미 존재하는지 확인
@@ -66,6 +68,25 @@ public class BabfullMenuController {
 
             // Document AI를 사용하여 메뉴 파싱
             MenuDTO menuDTO = documentAIService.processDocumentToMenuDTO(file);
+
+            if (!menuDTO.getIs_menu().contains("주")) {
+                // ip 횟수 제한 체크
+                String ip = request.getRemoteAddr();
+
+                if (uploadCountMap.containsKey(ip)) {
+                    int count = uploadCountMap.get(ip);
+                    if (count >= 3) {
+                        redirectAttributes.addFlashAttribute("error", "error 999");
+                        return "redirect:/babfullmenu";
+                    }
+                    uploadCountMap.put(ip, count + 1);
+                } else {
+                    uploadCountMap.put(ip, 1);
+                }
+
+                redirectAttributes.addFlashAttribute("error", "이미지 파싱 중 오류가 발생했습니다. 영준이에게 이미지와 함께 제보해주세요.");
+                return "redirect:/babfullmenu";
+            }
 
             // 1) 먼저 start_dt와 end_dt에 대해 null / 빈 문자열 체크
             String rawStartDt = menuDTO.getStart_dt();
@@ -152,8 +173,23 @@ public class BabfullMenuController {
             // BabfullMenu 리스트를 데이터베이스에 삽입
             babfullMenuService.insertBabfullMenus(babfullMenus);
 
+            uploadCountMap.clear();
+
             return "redirect:/babfullmenu";
         } catch (Exception e) {
+            // ip 횟수 제한 체크
+            String ip = request.getRemoteAddr();
+
+            if (uploadCountMap.containsKey(ip)) {
+                int count = uploadCountMap.get(ip);
+                if (count >= 3) {
+                    redirectAttributes.addFlashAttribute("error", "error 999");
+                    return "redirect:/babfullmenu";
+                }
+                uploadCountMap.put(ip, count + 1);
+            } else {
+                uploadCountMap.put(ip, 1);
+            }
             log.error("메뉴 업로드 중 오류 발생: ", e);
             redirectAttributes.addFlashAttribute("error", "이미지 파싱 중 오류가 발생했습니다. 영준이에게 이미지와 함께 제보해주세요.");
             return "redirect:/babfullmenu";
