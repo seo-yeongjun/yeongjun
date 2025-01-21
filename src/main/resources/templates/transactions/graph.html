@@ -228,6 +228,9 @@
             const incomeCategoryIds = incomeData.map(item => item.category_id);
             const incomeIncomeExpenseGb = incomeData.map(item => item.income_expense_gb);
 
+            const totalIncome = incomeAmounts.reduce((acc, cur) => acc + cur, 0);
+            document.getElementById('totalIncome').innerText = `총 수입: ${totalIncome.toLocaleString()}원`;
+
             const incomeChartData = {
                 labels: incomeLabels,
                 datasets: [{
@@ -248,6 +251,9 @@
             const expenseColors = expenseData.map((_, index) => predefinedColors[index % predefinedColors.length]);
             const expenseCategoryIds = expenseData.map(item => item.category_id);
             const expenseIncomeExpenseGb = expenseData.map(item => item.income_expense_gb);
+
+            const totalExpense = expenseAmounts.reduce((acc, cur) => acc + cur, 0);
+            document.getElementById('totalExpense').innerText = `총 지출: ${totalExpense.toLocaleString()}원`;
 
             const expenseChartData = {
                 labels: expenseLabels,
@@ -300,6 +306,7 @@
             <div class="relative w-full max-w-md h-80 flex justify-center">
                 <canvas id="incomeChart" class="w-full h-full"></canvas>
             </div>
+            <div id="totalIncome"></div>
             <div id="incomeLegend" class="custom-legend"></div>
         </div>
         <!-- 지출 그래프 컨테이너 -->
@@ -307,6 +314,7 @@
             <div class="relative w-full max-w-md h-80 flex justify-center">
                 <canvas id="expenseChart" class="w-full h-full"></canvas>
             </div>
+            <div id="totalExpense"></div>
             <div id="expenseLegend" class="custom-legend"></div>
         </div>
     </div>
