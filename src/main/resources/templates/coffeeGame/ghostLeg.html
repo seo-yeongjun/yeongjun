@@ -54,9 +54,9 @@
     </div>
 
     <!-- 실제 사다리 게임 보드 (결과 표시) -->
-    <div id="gameBoard" class="hidden container mx-auto mt-4 bg-white rounded-lg shadow-md">
+    <div id="gameBoard" class="md:max-w-[82vw] hidden mx-auto mt-4 bg-white rounded-lg shadow-md">
         <!-- 초기화 버튼 -->
-        <div class="flex justify-end mb-4">
+        <div class="flex justify-center mb-4">
             <button
                     id="resetGame"
                     class="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition duration-200 focus:outline-none"
@@ -64,7 +64,9 @@
                 초기화
             </button>
         </div>
-        <canvas id="gameCanvas" class="w-full h-[50vh] border border-gray-300"></canvas>
+        <div class="overflow-x-auto">
+        <canvas id="gameCanvas" class="mx-auto h-[50vh] border border-gray-300"></canvas>
+        </div>
     </div>
     <script>
         /***********************************************************
@@ -126,23 +128,12 @@
 
             // 초기화 버튼
             resetGame.addEventListener('click', () => {
-                settingBoard.classList.remove('hidden');
-                gameBoard.classList.add('hidden');
-
-                // settingBoard 초기화
-                playerCount.value = 5;
-                labelArea.classList.add('hidden');
-                gameBtnArea.classList.add('hidden');
-                nameList.innerHTML = '';
-                resultList.innerHTML = '';
-
-                // gameBoard 초기화 (canvas 등)
-                drawnPaths = [];
-                animatingPaths = [];
+                window.location.reload();
             });
 
             // [게임 시작] 버튼
             startGame.addEventListener('click', () => {
+
                 const names = document.querySelectorAll('#nameList input');
                 const results = document.querySelectorAll('#resultList input');
                 const nameArr = [];
@@ -155,7 +146,11 @@
                 settingBoard.classList.add('hidden');
                 gameBoard.classList.remove('hidden');
 
+                const count = parseInt(playerCount.value, 10);
+                gameCanvas.style.width = (count * 90) + 'px';
+
                 // 사다리 게임 실행
+                initCanvas();             // <= 여기서 실제로 canvasWidth / canvasHeight 확정
                 runLadderGame(nameArr, resultArr);
             });
         };
@@ -228,24 +223,22 @@
          * Canvas 크기 및 배경 초기화
          */
         function initCanvas() {
-            const gameCanvas = document.getElementById('gameCanvas');
-
             ctx = gameCanvas.getContext('2d');
 
-            canvasWidth = gameCanvas.offsetWidth;
+            // style로 지정된 width를 실제 숫자로 가져오거나,
+            // 또는 offsetWidth 등을 한 번만 쓰도록
+            canvasWidth = parseInt(gameCanvas.style.width, 10);
+            // 높이는 Tailwind h-[50vh] 등으로 잡고 있다면 offsetHeight 사용
             canvasHeight = gameCanvas.offsetHeight;
 
-            // 실제 픽셀 크기 지정
             gameCanvas.width = canvasWidth;
             gameCanvas.height = canvasHeight;
 
-            // 배경 지우기
-            ctx.fillStyle = '#ffffff';
+            // 초기 배경
+            ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-            // 클릭 영역 배열/경로들 초기화 (단, 이미 그려진 경로는 유지해야 하므로 비우지 않음)ㅋ
-            nameBoxes = [];
         }
+
 
         /**
          * 사다리(세로줄/가로줄) 그리기
@@ -289,35 +282,104 @@
         }
 
         /**
+         * 텍스트를 그릴 때, maxWidth보다 길면 폰트를 1씩 감소시키며 맞춰주는 함수
+         * - 반환값: 최종 확정된 폰트 크기(px)
+         */
+        function fitTextToWidth(ctx, text, maxWidth, initialFontSize, minFontSize) {
+            let fontSize = initialFontSize;
+
+            // 최초 폰트 지정
+            ctx.font = `${fontSize}px sans-serif`;
+            let textWidth = ctx.measureText(text).width;
+
+            // textWidth가 maxWidth를 초과하면 폰트를 줄여나감
+            while (textWidth > maxWidth && fontSize > minFontSize) {
+                fontSize--;
+                ctx.font = `${fontSize}px sans-serif`;
+                textWidth = ctx.measureText(text).width;
+            }
+
+            return fontSize;
+        }
+
+        /**
          * Canvas 상단에 이름들 그리기 + 클릭 영역 저장
          */
         function drawNames(nameArr) {
             const gapX = canvasWidth / (verticalCount + 1);
-            ctx.font = '16px sans-serif';
-            ctx.fillStyle = '#000';
+
+            // 각 버튼의 최대 폭은 gapX를 거의 다 쓰게 할 수도, 일부만 쓰게 할 수도 있습니다.
+            // 예: "버튼 자체는 gapX * 0.8" 정도로 하여 약간 여백 남기기
+            const maxButtonWidthRatio = 0.8;
+            // 초기/최소 폰트 사이즈 지정 (원하는 값으로 조절 가능)
+            const initialFontSize = 16;
+            const minFontSize = 8;
+
+            // 버튼의 위아래/좌우 여백
+            const paddingX = 10;
+            const paddingY = 5;
+
+            // nameBoxes는 전역 배열(클릭 영역용)이라 가정
+            nameBoxes = [];
 
             for (let i = 0; i < nameArr.length; i++) {
-                const xCenter = gapX * (i + 1);
                 const text = nameArr[i];
 
-                // 텍스트 너비 측정
-                const textWidth = ctx.measureText(text).width;
-                // topMargin보다 살짝 위쪽에 표시 → (topMargin - 10) 정도?
-                const textX = xCenter - (textWidth / 2);
-                const textY = topMargin - 10;
+                // 우선 버튼 전체 폭을 구합니다.
+                const buttonMaxWidth = gapX * maxButtonWidthRatio;
 
-                ctx.fillText(text, textX, textY);
+                // 1) 폰트 크기를 계산 (너비에 맞춰 줄이기)
+                //    measureText 하기 위해 ctx.font 를 설정해야 하므로,
+                //    fitTextToWidth 함수에서 내부적으로 계속 font를 바꿉니다.
+                let fontSize = fitTextToWidth(ctx, text, buttonMaxWidth - paddingX * 2, initialFontSize, minFontSize);
 
-                // 클릭 영역 저장(조금 여유롭게 높이 20px 가정)
+                // fitTextToWidth 끝난 뒤 최종 폰트 크기로 다시 설정해야 함
+                ctx.font = `${fontSize}px sans-serif`;
+                let textWidth = ctx.measureText(text).width;
+                let textHeight = fontSize; // 대략 폰트 크기를 높이로 잡습니다.
+
+                // 2) 버튼의 실제 폭/높이
+                //    = 글자 폭 + 좌우 패딩, 글자 높이 + 상하 패딩
+                const buttonWidth = textWidth + paddingX * 2;
+                const buttonHeight = textHeight + paddingY * 2;
+
+                // 3) 버튼의 좌표 (xCenter는 해당 col의 중앙)
+                const xCenter = gapX * (i + 1);
+
+                // 여기서는 버튼 상단을 topMargin보다 조금 위(또는 약간 아래) 잡고 싶다면
+                // -10 정도만 빼도 되고, 원하는 위치에 배치
+                const buttonX = xCenter - buttonWidth / 2;
+                const buttonY = topMargin - (buttonHeight + 10);
+
+                // 4) 버튼 배경 그리기
+                ctx.fillStyle = '#EEEEEE';        // 버튼 배경색
+                ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                // 원한다면 테두리도 가능
+                ctx.strokeStyle = '#999999';
+                ctx.strokeRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                // 5) 텍스트 그리기
+                ctx.fillStyle = '#333333';
+                // 텍스트 시작점: 버튼 왼쪽 + paddingX, 버튼 위 + paddingY + (약간 아래)
+                const textStartX = buttonX + paddingX;
+                const textStartY = buttonY + paddingY + textHeight * 0.8;
+                // (canvas에서는 텍스트가 baseline 기준이므로, 약간 0.8 ~ 0.9 곱해서 아래로 맞춤)
+
+                ctx.fillText(text, textStartX, textStartY);
+
+                // 6) 클릭 영역 저장
+                // 실제로는 버튼 전체가 클릭 영역이므로
                 nameBoxes.push({
-                    x1: textX,
-                    y1: textY - 15,
-                    x2: textX + textWidth,
-                    y2: textY + 5,
+                    x1: buttonX,
+                    y1: buttonY,
+                    x2: buttonX + buttonWidth,
+                    y2: buttonY + buttonHeight,
                     colIndex: i
                 });
             }
         }
+
 
         /**
          * Canvas 하단에 결과들 표시 (단순 텍스트)
@@ -325,20 +387,39 @@
          */
         function drawResults(resultArr) {
             const gapX = canvasWidth / (verticalCount + 1);
-            ctx.font = '16px sans-serif';
-            ctx.fillStyle = '#333';
+
+            // 초기/최소 폰트
+            const initialFontSize = 16;
+            const minFontSize = 8;
 
             for (let i = 0; i < resultArr.length; i++) {
-                const xCenter = gapX * (i + 1);
                 const text = resultArr[i];
 
-                const textWidth = ctx.measureText(text).width;
-                const textX = xCenter - (textWidth / 2);
-                const textY = canvasHeight - bottomMargin + 20;
+                // 최대 폭 설정 (gapX * 0.8 정도)
+                const maxTextWidth = gapX * 0.8;
 
+                // 폰트 크기 맞추기
+                let fontSize = fitTextToWidth(ctx, text, maxTextWidth, initialFontSize, minFontSize);
+
+                // 최종 폰트 설정
+                ctx.font = `${fontSize}px sans-serif`;
+                ctx.fillStyle = '#333';
+
+                // 측정
+                let textWidth = ctx.measureText(text).width;
+                let textHeight = fontSize;
+
+                // 하단에 배치 (중앙 정렬)
+                const xCenter = gapX * (i + 1);
+                const textX = xCenter - (textWidth / 2);
+                // bottomMargin 아래쪽에 글자를 표시하면 짤리므로, 약간 위로 올림
+                const textY = canvasHeight - bottomMargin + textHeight;
+
+                // 그리기
                 ctx.fillText(text, textX, textY);
             }
         }
+
 
         /**
          * colIndex(0-based) 에 해당하는 경로의 모든 좌표를 계산해서 반환
@@ -423,44 +504,40 @@
          * 모든 경로(이미 그려진 + 애니메이션 중)를 그리기 위해
          * 매 프레임마다 실행될 함수
          */
+        // [수정] 더 이상 매 프레임마다 initCanvas() 호출하지 말고
+//       맨 위에 있던 initCanvas()와 배경 채우는 부분은 제외.
         function drawAnimationFrame() {
-            // 1) 우선 전체 Canvas를 다시 초기화
-            initCanvas();
+            // 1) 배경 지우기
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
             // 2) Ladder, Names, Results 다시 그림
             drawLadder();
             drawNames(currentNameArr);
             drawResults(currentResultArr);
 
-            // 3) 이미 그려진 경로들(drawnPaths)은 즉시 전체 선으로 그림
+            // 3) 이미 그려진 경로(drawnPaths) 그리기
             drawnPaths.forEach(pathObj => {
                 drawFullPath(pathObj.points, pathObj.color);
             });
 
-            // 4) 애니메이션 중인 경로들(animatingPaths)은 currentIndex까지만 그림
-            //    그리고 currentIndex를 1씩 증가
+            // 4) 진행 중인 애니메이션 경로(animatingPaths) 그리기
             for (let i = 0; i < animatingPaths.length; i++) {
                 const ap = animatingPaths[i];
                 drawPartialPath(ap.points, ap.color, ap.currentIndex);
-
-                // 인덱스 증가 에니메이션 속도 조절
                 ap.currentIndex += 0.2;
-                // 만약 pathPoints 끝까지 다 그렸다면, 이 경로는 drawnPaths에 추가
-                if (ap.currentIndex >= ap.points.length) {
-                    // 최종 도착 시점에 alert (원치 않으면 주석 처리)
 
-                    // 전체 경로를 drawnPaths에 추가
+                // 경로 끝까지 그렸으면, drawnPaths로 옮기고 제거
+                if (ap.currentIndex >= ap.points.length) {
                     drawnPaths.push({points: ap.points, color: ap.color});
-                    // animatingPaths에서 제거
                     animatingPaths.splice(i, 1);
                     i--;
                 }
             }
 
-            // 5) 아직 애니메이션 중인 경로가 있으면 다시 requestAnimationFrame
-            if (animatingPaths.length >= 0) {
+            // 5) 여전히 애니메이션 경로가 남아있으면 계속 루프
+            if (animatingPaths.length > 0) {
                 requestAnimationFrame(drawAnimationFrame);
             } else {
-                // 애니메이션이 모두 끝남
                 animationRunning = false;
             }
         }
