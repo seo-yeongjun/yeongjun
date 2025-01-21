@@ -49,6 +49,15 @@ public class BabfullMenuController {
             HttpServletRequest request
     ) {
         try {
+            String ip = request.getRemoteAddr();
+            if (uploadCountMap.containsKey(ip)) {
+                int count = uploadCountMap.get(ip);
+                if (count >= 3) {
+                    redirectAttributes.addFlashAttribute("error", "error 999");
+                    return "redirect:/babfullmenu";
+                }
+            }
+
             // 오늘 메뉴가 이미 존재하는지 확인
             if (!babfullMenuService.getRelevantMenu().isEmpty()) {
                 redirectAttributes.addFlashAttribute("info", "오늘의 메뉴가 이미 등록되었습니다.");
@@ -70,16 +79,8 @@ public class BabfullMenuController {
             MenuDTO menuDTO = documentAIService.processDocumentToMenuDTO(file);
 
             if (!menuDTO.getIs_menu().contains("주")) {
-                // ip 횟수 제한 체크
-                String ip = request.getRemoteAddr();
-
                 if (uploadCountMap.containsKey(ip)) {
-                    int count = uploadCountMap.get(ip);
-                    if (count >= 3) {
-                        redirectAttributes.addFlashAttribute("error", "error 999");
-                        return "redirect:/babfullmenu";
-                    }
-                    uploadCountMap.put(ip, count + 1);
+                    uploadCountMap.compute(ip, (k, count) -> count + 1);
                 } else {
                     uploadCountMap.put(ip, 1);
                 }
@@ -177,16 +178,9 @@ public class BabfullMenuController {
 
             return "redirect:/babfullmenu";
         } catch (Exception e) {
-            // ip 횟수 제한 체크
             String ip = request.getRemoteAddr();
-
             if (uploadCountMap.containsKey(ip)) {
-                int count = uploadCountMap.get(ip);
-                if (count >= 3) {
-                    redirectAttributes.addFlashAttribute("error", "error 999");
-                    return "redirect:/babfullmenu";
-                }
-                uploadCountMap.put(ip, count + 1);
+                uploadCountMap.compute(ip, (k, count) -> count + 1);
             } else {
                 uploadCountMap.put(ip, 1);
             }
