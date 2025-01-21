@@ -13,12 +13,21 @@
                 <!-- 참가자 수 입력 -->
                 <div class="flex items-center space-x-2 mb-4">
                     <label for="playerCount" class="font-medium text-gray-700">참가자 수</label>
+                    <button
+                            id="minusBtn"
+                            class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition duration-200 focus:outline-none"
+                    >
+                        -
+                    </button>
                     <input
                             type="number"
                             id="playerCount"
                             class="w-16 text-center border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value="5"
+                            value="4"
                     >
+                    <button id="plusBtn" class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition duration-200 focus:outline-none">
+                        +
+                    </button>
                     <button
                             id="playerCountBtn"
                             class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition duration-200 focus:outline-none"
@@ -88,6 +97,20 @@
 
             const gameCanvas = document.getElementById('gameCanvas');
             const resetGame = document.getElementById('resetGame');
+
+            const plusBtn = document.getElementById('plusBtn');
+            const minusBtn = document.getElementById('minusBtn');
+
+            plusBtn.addEventListener('click', () => {
+                playerCount.value = parseInt(playerCount.value, 10) + 1;
+            });
+
+            minusBtn.addEventListener('click', () => {
+                playerCount.value = parseInt(playerCount.value, 10) - 1;
+                if (parseInt(playerCount.value, 10) < 1) {
+                    playerCount.value = 1;
+                }
+            });
 
             // [적용/초기화] 버튼 클릭 시, 이름/결과 Input 생성
             playerCountBtn.addEventListener('click', () => {
