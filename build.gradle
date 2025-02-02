@@ -48,7 +48,6 @@ dependencies {
 	implementation 'commons-io:commons-io:2.14.0' // 최신 안정 버전
 	implementation 'commons-fileupload:commons-fileupload:1.5'
 	implementation 'com.google.cloud:google-cloud-document-ai:2.58.0'
-	implementation 'org.springframework.boot:spring-boot-starter-quartz'
 	implementation 'io.ipinfo:ipinfo-api:3.0.0'
 	//implementation 'org.springframework.boot:spring-boot-starter-data-redis' 레디스 필요할 때 추가
 }
