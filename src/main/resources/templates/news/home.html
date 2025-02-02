@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{news/layout}">
+<head>
+    <title th:text="${title} ?: '타이틀로 뉴스 검색'">홈 페이지</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container mx-auto py-6 px-4 lg:px-12">
+        <!-- 검색 폼 -->
+        <form action="#" method="get" class="mb-6">
+            <div class="flex">
+                <input type="text"
+                       name="search"
+                       placeholder="뉴스 검색 (예: 속보)"
+                       th:value="${param.search}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-l focus:outline-none" />
+                <button type="submit"
+                        class="px-4 py-2 bg-blue-500 text-white rounded-r hover:bg-blue-600 focus:outline-none">
+                    검색
+                </button>
+            </div>
+            <button id="openNewsCompanyModal"
+                    class="mt-2 text-sm text-gray-500 border border-gray-300 px-2 py-1 rounded hover:bg-gray-100 focus:outline-none">
+                제공중인 언론사 리스트 보기
+            </button>
+        </form>
+        <!-- 검색 결과 및 건수 -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex">
+                <h2 class="text-2xl font-bold bg-yellow-200"
+                    th:text="${!#strings.isEmpty(param.search) ? param.search : '속보'}"></h2>
+                <h2 class="ml-2 text-2xl font-bold">검색 결과</h2>
+            </div>
+            <span class="text-gray-700 text-lg font-medium"
+                  th:text="'총 ' + ${newsEntities.newsEntities.size()} + ' 건'">
+                총 0 건
+            </span>
+        </div>
+        <!-- 뉴스 기사 카드 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-6 gap-x-8">
+            <!-- 검색 결과가 없을 때 -->
+            <div th:if="${#lists.isEmpty(newsEntities.newsEntities)}" class="col-span-full text-center text-gray-600">
+                검색 결과가 없습니다.
+            </div>
+
+            <!-- 뉴스 기사 카드 -->
+            <div th:each="news : ${newsEntities.newsEntities}"
+                 class="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+                <a th:href="${news.link}" target="_blank" rel="noopener noreferrer"
+                   class="block text-xl font-semibold text-blue-600 hover:underline"
+                   th:utext="${news.title}">뉴스 제목</a>
+                <p class="mt-2 text-gray-700" th:utext="${news.description}">뉴스 설명</p>
+                <div class="mt-4 flex justify-between text-sm text-gray-500">
+                    <span th:text="${news.company}">회사명</span>
+                    <span th:text="${#temporals.format(news.pub_date, 'yyyy-MM-dd HH:mm')}">발행일</span>
+                </div>
+            </div>
+        </div>
+        <div th:if="${param.search != null and param.search != '' and param.search != '속보'}" class="flex items-center justify-center mt-8 space-x-4 mb-4">
+            <a th:href="${newsEntities.start + newsEntities.display <= 1000} ? @{/news(search=${param.search}, start=${newsEntities.start + newsEntities.display}, display=${newsEntities.display})} : '#' "
+               th:classappend="${newsEntities.start + newsEntities.display <= 1000} ? '' : ' opacity-50 cursor-not-allowed pointer-events-none'"
+               class="px-5 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none shadow">
+                기사 더 찾아보기
+            </a>
+        </div>
+    </div>
+    <!-- Modal 영역 -->
+    <div id="newsCompanyModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-80 max-h-[60vh] overflow-y-scroll">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">제공중인 언론사 리스트</h3>
+            <button id="closeNewsCompanyModal" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+        </div>
+        <div>
+            <p class="mb-4 text-sm text-gray-600">
+                현재 아래와 같이 총 <span th:text="${newsCompanyList.size()}">0</span>개의 언론사를 제공 중입니다. 추가하고 싶은 언론사가 있다면,
+                <a href="mailto:zanygeek8371@naver.com" class="text-blue-500 underline">zanygeek8371@naver.com</a> 으로 메일 주시기 바랍니다.
+            </p>
+            <ul>
+                <!-- 언론사 리스트 항목 -->
+                <li th:each="company : ${newsCompanyList}" class="border-b py-2" th:text="${company.company_name}">언론사 이름</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal 토글을 위한 스크립트 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const openModalBtn = document.getElementById('openNewsCompanyModal');
+            const closeModalBtn = document.getElementById('closeNewsCompanyModal');
+            const modal = document.getElementById('newsCompanyModal');
+
+            openModalBtn.addEventListener('click', () => {
+                modal.classList.remove('hidden');
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+
+            // Modal 영역 외부 클릭 시에도 모달 닫기 (선택 사항)
+            modal.addEventListener('click', (e) => {
+                if(e.target === modal){
+                    modal.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

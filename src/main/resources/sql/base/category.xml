@@ -19,12 +19,18 @@
     <select id="selectAllToolsCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
         select category_id, category_name, parent_id, description, path
         from category_by_category_name
-        where parent_name = '도구모음'
+        where parent_name = '도구모음 🛠️🧰'
     </select>
 
     <select id="selectAllCoffeeGameCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
         select category_id, category_name, parent_id, description, path
         from category_by_category_name
         where parent_name = '커피게임 ☕️🎲'
+    </select>
+
+    <select id="selectAllNewsCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
+        select category_id, category_name, parent_id, description, path
+        from category_by_category_name
+        where parent_name = '타이틀 뉴스검색 📰🔍'
     </select>
 </mapper>

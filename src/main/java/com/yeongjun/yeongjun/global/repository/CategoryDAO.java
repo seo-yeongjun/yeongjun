@@ -25,5 +25,9 @@ public class CategoryDAO extends BaseDAO<Category> {
     public List<Category> selectAllToolsCategory() {return selectList("selectAllToolsCategory",null);}
 
     public List<Category> selectAllCoffeeGameCategory() {return selectList("selectAllCoffeeGameCategory",null);}
+
+    public List<Category> selectAllNewsCategory() {
+        return selectList("selectAllNewsCategory",null);
+    }
 }
 

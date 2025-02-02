@@ -91,7 +91,6 @@
     </select>
 
     <select id="selectTransactionsBetweenDates" resultType="com.yeongjun.yeongjun.transactions.model.Transaction">
-        <!--todo 작성하기, graph.html 만들기 후 테스트 진행-->
         SELECT
         transaction_id, username, category_id, category_nm,income_expense_gb, amount, transaction_date, memo, created_at
         FROM transactions A
