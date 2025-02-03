@@ -66,11 +66,8 @@ public class NewsService {
         if (statusCode == HttpStatus.OK && responseBody != null) {
             JsonObject jsonObj = JsonParser.parseString(responseBody).getAsJsonObject();
 
-            log.info("jsonObj: {}", jsonObj);
 
             JsonArray items = jsonObj.getAsJsonArray("items");
-
-            log.info("items: {}", items);
 
             for (int i = 0; i < items.size(); i++) {
                 JsonObject item = items.get(i).getAsJsonObject();
