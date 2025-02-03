@@ -2,6 +2,7 @@ package com.yeongjun.yeongjun.babfullmenu.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.rpc.ApiException;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -15,10 +16,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-
 
 @Service
 @RequiredArgsConstructor
@@ -44,17 +43,19 @@ public class DocumentAIService {
     private final ObjectMapper objectMapper;
 
     /**
-     * 업로드된 MultipartFile 문서를
-     * Google Cloud Document AI (Foundation Model 버전)로 처리
-     * 'entities'에서 'type'과 'mentionText'만 추출하여 MenuDTO 객체로 반환
+     * 업로드된 MultipartFile 문서를 Google Cloud Document AI로 처리하여 MenuDTO로 변환
      */
     public MenuDTO processDocumentToMenuDTO(MultipartFile file) throws IOException {
 
-        // 1) 클라이언트 설정
+        // Jackson의 최대 문자열 길이 제한을 늘리기
+        objectMapper.getFactory().setStreamReadConstraints(
+                StreamReadConstraints.builder().maxStringLength(Integer.MAX_VALUE).build()
+        );
+
+        // 1) DocumentProcessorService 클라이언트 설정
         DocumentProcessorServiceSettings.Builder builder =
                 DocumentProcessorServiceSettings.newBuilder();
-        
-        // 서비스 계정 키 JSON 문자열을 사용하여 인증 설정
+
         if (credentialsFilePath != null && !credentialsFilePath.isEmpty()) {
             GoogleCredentials credentials = GoogleCredentials.fromStream(
                     new ByteArrayInputStream(credentialsFilePath.getBytes(StandardCharsets.UTF_8))
@@ -85,45 +86,39 @@ public class DocumentAIService {
                     .setRawDocument(rawDocument)
                     .build();
 
-            // 5) Document AI API 호출 (Foundation Model)
+            // 5) Document AI API 호출
             ProcessResponse response = client.processDocument(request);
-
-            // 6) 결과 Document 객체
             Document document = response.getDocument();
 
-            // 7) Protobuf Document를 JSON으로 변환
-            String fullJson = JsonFormat.printer().print(document);
+            // 6) Protobuf Document를 JSON으로 변환 (메모리 최적화)
+            StringWriter writer = new StringWriter();
+            JsonFormat.printer().appendTo(document, writer);
+            JsonNode rootNode = objectMapper.readTree(writer.toString());
 
-            // 8) JSON 파싱하여 'entities' 추출
-            JsonNode rootNode = objectMapper.readTree(fullJson);
+            // 7) JSON 파싱하여 'entities' 추출
             JsonNode entitiesNode = rootNode.path("entities");
 
             if (entitiesNode.isMissingNode() || !entitiesNode.isArray()) {
-                logger.warn("'entities' field is missing or not an array in the response.");
+                logger.warn("'entities' 필드가 존재하지 않거나 배열이 아닙니다.");
                 return new MenuDTO(); // 빈 MenuDTO 반환
             }
 
-            // 9) MenuDTO 객체 초기화
+            // 8) MenuDTO 객체 초기화
             MenuDTO menuDTO = new MenuDTO();
 
-            // 10) 엔티티 순회 및 MenuDTO 매핑
+            // 9) 엔티티 순회 및 MenuDTO 매핑
             for (JsonNode entityNode : entitiesNode) {
                 String type = entityNode.path("type").asText();
                 String mentionText = entityNode.path("mentionText").asText();
 
-                // 상위 엔티티인지, 하위 엔티티인지 확인
                 JsonNode propertiesNode = entityNode.path("properties");
                 if (propertiesNode.isArray() && !propertiesNode.isEmpty()) {
-                    // 하위 엔티티 처리
                     for (JsonNode subEntityNode : propertiesNode) {
                         String subType = subEntityNode.path("type").asText();
                         String subMentionText = subEntityNode.path("mentionText").asText();
-
-                        // MenuDTO에 매핑
                         mapSubEntityToMenuDTO(menuDTO, subType, subMentionText);
                     }
                 } else {
-                    // 상위 엔티티 처리
                     mapEntityToMenuDTO(menuDTO, type, mentionText);
                 }
             }
@@ -155,7 +150,6 @@ public class DocumentAIService {
                 break;
             case "lunch":
             case "morning":
-                // 상위 엔티티는 별도의 작업이 필요 없으므로 처리하지 않습니다.
                 logger.debug("Skipping parent entity type: {}", type);
                 break;
             default:
