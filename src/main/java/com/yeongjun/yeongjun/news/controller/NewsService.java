@@ -7,11 +7,9 @@ import com.yeongjun.yeongjun.news.entity.NewsCompany;
 import com.yeongjun.yeongjun.news.entity.NewsEntitiesWithStart;
 import com.yeongjun.yeongjun.news.entity.NewsEntity;
 import com.yeongjun.yeongjun.news.repository.NewsCompanyDAO;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,19 +28,17 @@ public class NewsService {
 
     private final String clientId;
     private final String clientSecret;
-
-    @Getter
-    private final List<NewsCompany> newsCompanyList;
+    private final NewsCompanyDAO newsCompanyDAO;
 
     public NewsService(
             NewsCompanyDAO newsCompanyDAO,
             @Value("${naver.client.id}") String clientId,
             @Value("${naver.client.secret}") String clientSecret,
-            ArrayList<NewsCompany> newsCompanyList
+            ArrayList<NewsCompany> newsCompanyList, NewsCompanyDAO newsCompanyDAO1
     ) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
-        this.newsCompanyList = newsCompanyDAO.selectAllCompany();
+        this.newsCompanyDAO = newsCompanyDAO1;
 
         // 안전하게 값이 세팅된 상태이므로 바로 헤더에 추가 가능
         headers.add("X-Naver-Client-Id", this.clientId);
@@ -107,12 +103,17 @@ public class NewsService {
     }
 
     private String getCompany(String originallink) {
-        for (NewsCompany newsCompany : newsCompanyList) {
+
+        for (NewsCompany newsCompany : getNewsCompanyList()) {
             if (originallink.contains(newsCompany.getPart_of_link())) {
                 return newsCompany.getCompany_name();
             }
         }
         return "기타";
+    }
+
+    public List<NewsCompany> getNewsCompanyList() {
+        return newsCompanyDAO.selectAllCompany();
     }
 
     public LocalDateTime parsePubDateToLocalDateTime(String pubDate) {
@@ -122,12 +123,5 @@ public class NewsService {
         // ZonedDateTime으로 먼저 파싱한 다음 LocalDateTime으로 변환
         ZonedDateTime zonedDateTime = ZonedDateTime.parse(pubDate, formatter);
         return zonedDateTime.toLocalDateTime();
-    }
-
-    //1시간에 한번씩 newsCompanyList를 갱신
-    @Scheduled(cron = "0 0 * * * *")
-    public void updateNewsCompanyList() {
-        newsCompanyList.clear();
-        newsCompanyList.addAll(new NewsCompanyDAO().selectAllCompany());
     }
 }
