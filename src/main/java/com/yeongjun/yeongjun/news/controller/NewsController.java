@@ -26,7 +26,6 @@ public class NewsController {
                                   @RequestParam(required = false, defaultValue = "100") int display,
                                   Model model) {
         if ("속보".equals(search)) {
-            //todo 속보일 경우 DB에서 가져오기
                 model.addAttribute("newsEntities", newsService.getNewsBySearch(search, new NewsEntitiesWithStart(display, start)));
         } else {
             model.addAttribute("newsEntities", newsService.getNewsBySearch(search, new NewsEntitiesWithStart(display, start)));
