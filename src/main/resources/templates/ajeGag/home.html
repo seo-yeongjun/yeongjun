@@ -2,10 +2,376 @@
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{ajeGag/layout}">
 <head>
     <title th:text="${title} ?: '아재개그 박물관'">홈 페이지</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script> <!-- 학교 테스트-->
 </head>
 <body>
 <div layout:fragment="content">
-    아재개그 박물관은 현재 준비 중입니다.
+    <header class="text-center py-10">
+        <h1 class="text-5xl font-extrabold bg-gradient-to-r from-yellow-300 to-red-500 bg-clip-text text-transparent">
+            힙한 아재개그 박물관
+        </h1>
+        <!-- todo 소개글, 이미지를 클릭시 나오게하기, 랜덤으로 20개씩 호출, scrollbar 아래 도착하면 20개 더 호출 방식으로-->
+    </header>
+
+    <div class="max-w-4xl mx-auto space-y-8">
+        <!-- 아재개그 항목 1 -->
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    컴퓨터가 추운 이유는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    윈도우가 열려 있어서!
+                </div>
+            </div>
+        </div>
+
+        <!-- 아재개그 항목 2 -->
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:-rotate-2">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    수학 선생님이 가장 좋아하는 파이는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    파이!
+                </div>
+            </div>
+        </div>
+
+        <!-- 아재개그 항목 3 -->
+        <div class="joke-item flex items-center bg-white bg-opacity-90 p-5 rounded-lg shadow-2xl transform transition duration-300 hover:scale-105 hover:rotate-3">
+            <div class="w-24 h-24 mr-5 flex-shrink-0">
+                <img src="xbox-placeholder.png" alt="장식 이미지" class="w-full h-full object-cover border-4 border-dashed border-gray-500 rounded-full">
+            </div>
+            <div class="flex-1">
+                <h2 class="joke-question text-2xl cursor-pointer text-blue-600 font-semibold">
+                    바나나가 웃는 이유는?
+                </h2>
+                <div class="joke-answer mt-3 p-3 bg-gray-100 rounded-lg shadow-inner hidden">
+                    껍질이 웃겨서!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 부드러운 페이드 인 효과 함수
+        function fadeIn(el) {
+            el.style.opacity = 0;
+            el.style.display = "block";
+            let last = +new Date();
+            const tick = function() {
+                el.style.opacity = +el.style.opacity + (new Date() - last) / 400;
+                last = +new Date();
+                if (+el.style.opacity < 1) {
+                    (window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16);
+                }
+            };
+            tick();
+        }
+
+        // 부드러운 페이드 아웃 효과 함수
+        function fadeOut(el) {
+            el.style.opacity = 1;
+            let last = +new Date();
+            const tick = function() {
+                el.style.opacity = +el.style.opacity - (new Date() - last) / 400;
+                last = +new Date();
+                if (+el.style.opacity > 0) {
+                    (window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16);
+                } else {
+                    el.style.display = "none";
+                }
+            };
+            tick();
+        }
+
+        // 각 질문에 클릭 이벤트 부여 (답 토글)
+        document.querySelectorAll('.joke-question').forEach(function(question) {
+            question.addEventListener('click', function() {
+                var answer = this.nextElementSibling;
+                if (window.getComputedStyle(answer).display === 'none') {
+                    fadeIn(answer);
+                } else {
+                    fadeOut(answer);
+                }
+            });
+        });
+
+        // 각 아재개그 카드에 무작위 회전 효과 적용 (예측불가능한 느낌)
+        document.querySelectorAll('.joke-item').forEach(function(card) {
+            const randomDeg = Math.floor(Math.random() * 11) - 5; // -5 ~ +5 도 사이의 무작위 회전
+            // 기존 hover 효과와 함께 적용할 수 있도록 기존 transform 값에 추가합니다.
+            card.style.transform += ` rotate(${randomDeg}deg)`;
+        });
+    </script>
 </div>
 </body>
 </html>
