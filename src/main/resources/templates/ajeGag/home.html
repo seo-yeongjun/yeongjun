@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{ajeGag/layout}">
 <head>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <title th:text="${title} ?: '아재개그 박물관'">홈 페이지</title>
-    <!-- 추가 CSS 스타일: 배너 높이, 텍스트 그라데이션 등 -->
     <style>
         /* 배너 스타일링 */
-        #contentHeader{
+        #contentHeader {
             position: relative;
             overflow: hidden;
-            height: 300px; /* 배너 높이 조정 */
         }
         #contentHeader img {
             position: absolute;
@@ -19,7 +18,7 @@
             object-fit: cover;
             z-index: -1;
         }
-        /* 텍스트 그라데이션 (Tailwind와 중복될 경우 우선순위 적용) */
+        /* 텍스트 그라데이션 */
         h1 {
             background: linear-gradient(to right, #FCD34D, #EF4444);
             -webkit-background-clip: text;
@@ -30,34 +29,108 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        /* Carousel (divList) 스타일 */
+        #carouselContainer {
+            position: relative;
+            overflow: hidden;
+            margin: 20px auto;
+            max-width: 100%;
+            height: 150px; /* 적당한 높이 */
+        }
+        #divList {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 100%;
+        }
+        .carousel-item {
+            min-width: 100%;
+            flex-shrink: 0;
+            padding: 10px;
+            box-sizing: border-box;
+            background: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 5;
+        }
+        #prevButton {
+            left: 10px;
+        }
+        #nextButton {
+            right: 10px;
+        }
+        /* End message style */
+        #carouselEndMessage {
+            position: absolute;
+            right: 20px;
+            bottom: 10px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: none;
+            z-index: 6;
+        }
+        /* Humor 콘텐츠 표시 영역 */
+        #humorContentDisplay {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        /* 헤더 내 스와이프 안내문구 */
+        #swipeInstruction {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
     </style>
 </head>
 <body>
 <div layout:fragment="content">
-    <header id="contentHeader" class="text-center py-10 flex flex-col items-center justify-center">
-        <img src="/ajeGag/daemoon.jpg"
-             alt="banner"
-             class="absolute inset-0 w-full h-full object-cover z-0">
-
-        <!-- 어두운 오버레이 -->
+    <!-- 헤더 영역 -->
+    <header id="contentHeader" class="text-center py-10 flex flex-col items-center justify-center h-[80vh]">
+        <img src="/ajeGag/daemoon.jpg" alt="banner" class="absolute inset-0 w-full h-full object-cover z-0">
         <div class="absolute inset-0 bg-white bg-opacity-60 z-0"></div>
-
-        <!-- 텍스트/버튼 영역 -->
         <div class="relative z-10 text-white px-4">
-            <!-- 필요하다면 기존의 그라디언트 스타일은 제거하거나, 아래처럼 text-white 대신 직접 적용 -->
             <h1 class="text-4xl font-extrabold">아재개그 박물관</h1>
             <h2 class="text-2xl font-extrabold mt-4">
-                이 공간은 웃음 알렉산리아 도서관을 표방합니다.<br>웃음 재판관인 서영준이 직접 엄선한 웃긴 아재개그와 짤들을 만나보세요.
+                이 공간은 웃음 알렉산리아 도서관을 표방합니다.<br>
+                웃음 재판관인 서영준이 직접 엄선한 웃긴 아재개그와 짤들을 만나보세요.
             </h2>
-            <button id="humorDataSubmit"
-                    type="button"
-                    class="mt-6 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500">
+            <button id="humorDataSubmit" type="button" class="mt-6 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500">
                 재판관에게 자료제공하기
             </button>
+            <!-- 관리자 권한일 때만 자료 작성하기 버튼 보임 -->
+            <button id="humorWrite" type="button" class="mt-6 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500"
+                    th:if="${isAdmin}">
+                자료 작성하기
+            </button>
+            <!-- 좌우 스와이프 안내문구 -->
+            <p id="swipeInstruction">좌우로 스와이프 하거나 좌우 버튼을 클릭하세요.</p>
+            <!-- Carousel 영역 (헤더 내부) -->
+            <section id="carouselContainer" class="mt-4">
+                <button id="prevButton" class="carousel-nav">‹</button>
+                <div id="divList"></div>
+                <button id="nextButton" class="carousel-nav">›</button>
+                <div id="carouselEndMessage">끝</div>
+            </section>
         </div>
     </header>
 
-    <!-- 자료 제출 모달 (기본적으로 숨김 처리) -->
+    <!-- 자료 제출 모달 (기본 숨김) -->
     <div id="humorDataSubmitModal" class="z-50 fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
         <div class="bg-white p-6 rounded shadow-lg w-11/12 md:w-1/2">
             <h3 class="text-2xl font-bold mb-4">자료 제공하기</h3>
@@ -71,18 +144,24 @@
                     <textarea id="humorContent" class="w-full border border-gray-300 p-2 rounded" placeholder="내용을 입력하세요" rows="4"></textarea>
                 </div>
                 <div class="flex justify-end">
-                    <button type="button" id="closeModal" class="mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">취소</button>
-                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">제출</button>
+                    <button type="button" id="closeModal" class="mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                        취소
+                    </button>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        제출
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 아재개그 라이브러리 섹션 -->
-    <div id="humorLibrary" class="container mx-auto my-10 px-4">
+    <!-- 개별 아재개그 콘텐츠 표시 영역 -->
+    <section id="humorContentDisplay" class="mt-8">
+        <!-- 선택된 콘텐츠가 여기에 로드됩니다. -->
+    </section>
 
-    </div>
     <script>
+        // 모달 관련 기능
         const humorDataSubmitButton = document.getElementById('humorDataSubmit');
         const humorDataSubmitModal = document.getElementById('humorDataSubmitModal');
         const closeModalButton = document.getElementById('closeModal');
@@ -90,16 +169,98 @@
         humorDataSubmitButton.addEventListener('click', () => {
             humorDataSubmitModal.classList.remove('hidden');
         });
-
         closeModalButton.addEventListener('click', () => {
             humorDataSubmitModal.classList.add('hidden');
         });
-
-        // 모달 외부 클릭 시 모달 닫기
         humorDataSubmitModal.addEventListener('click', (e) => {
             if(e.target === humorDataSubmitModal) {
                 humorDataSubmitModal.classList.add('hidden');
             }
+        });
+
+        // Carousel (divList) 관련 기능
+        const divList = document.getElementById('divList');
+        let currentIndex = 0;
+        let items = [];
+
+        // /ajegag/getList 에서 목록을 가져와서 carousel에 추가
+        fetch('/ajegag/getList')
+            .then(response => response.json())
+            .then(data => {
+                // data는 { id: ... } 형식의 객체 배열이라고 가정합니다.
+                items = data;
+                data.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.classList.add('carousel-item');
+                    itemDiv.textContent = "ID: " + item.id;
+                    itemDiv.dataset.id = item.id;
+                    // 클릭 시 ajegag/getHumor?id={id} 로 콘텐츠를 불러옴
+                    itemDiv.addEventListener('click', () => {
+                        fetch('/ajegag/getHumor?id=' + item.id)
+                            .then(resp => resp.text())
+                            .then(content => {
+                                document.getElementById('humorContentDisplay').innerHTML = content;
+                            });
+                    });
+                    divList.appendChild(itemDiv);
+                });
+                updateCarousel();
+            })
+            .catch(err => {
+                console.error('Error fetching humor list:', err);
+            });
+
+        // Carousel 업데이트: 현재 인덱스에 맞게 이동
+        function updateCarousel() {
+            const offset = -currentIndex * divList.clientWidth;
+            divList.style.transform = 'translateX(' + offset + 'px)';
+            // 마지막 항목일 경우 "끝" 메시지 표시
+            const endMessage = document.getElementById('carouselEndMessage');
+            if (currentIndex >= items.length - 1) {
+                endMessage.style.display = 'block';
+            } else {
+                endMessage.style.display = 'none';
+            }
+        }
+
+        // 좌우 버튼 이벤트
+        document.getElementById('nextButton').addEventListener('click', () => {
+            if (currentIndex < items.length - 1) {
+                currentIndex++;
+                updateCarousel();
+            }
+        });
+        document.getElementById('prevButton').addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCarousel();
+            }
+        });
+
+        // 모바일 스와이프 기능
+        let startX = 0;
+        let isSwiping = false;
+
+        divList.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isSwiping = true;
+        });
+        divList.addEventListener('touchmove', (e) => {
+            if (!isSwiping) return;
+            const currentX = e.touches[0].clientX;
+            const diffX = startX - currentX;
+            if(diffX > 50 && currentIndex < items.length - 1) { // 왼쪽 스와이프
+                currentIndex++;
+                updateCarousel();
+                isSwiping = false;
+            } else if(diffX < -50 && currentIndex > 0) { // 오른쪽 스와이프
+                currentIndex--;
+                updateCarousel();
+                isSwiping = false;
+            }
+        });
+        divList.addEventListener('touchend', () => {
+            isSwiping = false;
         });
     </script>
 </div>

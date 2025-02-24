@@ -25,8 +25,6 @@ public class CategoryService {
     private List<Category> coffeeGameCategory;
     @Getter
     private List<Category> newsCategory;
-    @Getter
-    private List<Category> ajeGagCategory;
 
     public CategoryService(CategoryDAO categoryDAO) {
         this.categoryDAO = categoryDAO;
@@ -51,6 +49,5 @@ public class CategoryService {
         toolsCategory = categoryDAO.selectAllToolsCategory();
         coffeeGameCategory = categoryDAO.selectAllCoffeeGameCategory();
         newsCategory = categoryDAO.selectAllNewsCategory();
-        ajeGagCategory = categoryDAO.selectAllAjeGagCategory();
     }
 }
