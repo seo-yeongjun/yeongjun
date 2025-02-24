@@ -122,9 +122,9 @@
             <p id="swipeInstruction">좌우로 스와이프 하거나 좌우 버튼을 클릭하세요.</p>
             <!-- Carousel 영역 (헤더 내부) -->
             <section id="carouselContainer" class="mt-4">
-                <button id="prevButton" class="carousel-nav">‹</button>
+                <button id="prevButton" class="carousel-nav" aria-label="이전">‹</button>
                 <div id="divList"></div>
-                <button id="nextButton" class="carousel-nav">›</button>
+                <button id="nextButton" class="carousel-nav" aria-label="다음">›</button>
                 <div id="carouselEndMessage">끝</div>
             </section>
         </div>
@@ -183,23 +183,27 @@
         let currentIndex = 0;
         let items = [];
 
-        // /ajegag/getList 에서 목록을 가져와서 carousel에 추가
-        fetch('/ajegag/getList')
+        // /ajeGag/getList 에서 목록을 가져와서 carousel에 추가
+        fetch('/ajeGag/getList')
             .then(response => response.json())
             .then(data => {
-                // data는 { id: ... } 형식의 객체 배열이라고 가정합니다.
+                // data는 Ajegag 객체 배열로, 각 객체는 ajegag_text_id, title, detail 등을 포함합니다.
                 items = data;
                 data.forEach(item => {
                     const itemDiv = document.createElement('div');
                     itemDiv.classList.add('carousel-item');
-                    itemDiv.textContent = "ID: " + item.id;
-                    itemDiv.dataset.id = item.id;
-                    // 클릭 시 ajegag/getHumor?id={id} 로 콘텐츠를 불러옴
+                    // id 대신 ajegag_text_id 사용
+                    itemDiv.textContent = "ID: " + item.ajegag_text_id;
+                    itemDiv.dataset.id = item.ajegag_text_id;
+                    // 클릭 시 /ajeGag/getHumor?id={ajegag_text_id} 로 JSON 자료를 받아와서 HTML 구성
                     itemDiv.addEventListener('click', () => {
-                        fetch('/ajegag/getHumor?id=' + item.id)
-                            .then(resp => resp.text())
+                        fetch('/ajeGag/getHumor?id=' + item.ajegag_text_id)
+                            .then(resp => resp.json())
                             .then(content => {
-                                document.getElementById('humorContentDisplay').innerHTML = content;
+                                document.getElementById('humorContentDisplay').innerHTML =
+                                    `<h3>${content.title}</h3>
+                                     <p>${content.detail}</p>
+                                     <p><small>${content.created_at ? content.created_at : ''}</small></p>`;
                             });
                     });
                     divList.appendChild(itemDiv);
@@ -216,11 +220,7 @@
             divList.style.transform = 'translateX(' + offset + 'px)';
             // 마지막 항목일 경우 "끝" 메시지 표시
             const endMessage = document.getElementById('carouselEndMessage');
-            if (currentIndex >= items.length - 1) {
-                endMessage.style.display = 'block';
-            } else {
-                endMessage.style.display = 'none';
-            }
+            endMessage.style.display = currentIndex >= items.length - 1 ? 'block' : 'none';
         }
 
         // 좌우 버튼 이벤트
@@ -262,6 +262,9 @@
         divList.addEventListener('touchend', () => {
             isSwiping = false;
         });
+
+        // 브라우저 리사이즈 시 carousel 업데이트
+        window.addEventListener('resize', updateCarousel);
     </script>
 </div>
 </body>
