@@ -38,6 +38,10 @@ public class FileService {
         return amazonS3.getUrl(bucketName, key).toString();
     }
 
+    public String getLocalFileUrl(String bucketName, String key) {
+        return "/files/getFile?bucketName=" + bucketName + "&key=" + key;
+    }
+
     public FileResponse getFileStreamingResponse(String bucketName, String key) {
         S3Object s3Object = amazonS3.getObject(bucketName, key);
         S3ObjectInputStream inputStream = s3Object.getObjectContent();

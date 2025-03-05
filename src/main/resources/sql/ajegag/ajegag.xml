@@ -14,4 +14,9 @@
         from ajegag_text
         where ajegag_text_id = #{ajegag_text_id}
     </select>
+
+    <insert id="insertAjegag" parameterType="com.yeongjun.yeongjun.ajeGag.model.Ajegag">
+        INSERT INTO ajegag_text (title, detail, created_at)
+        VALUES (#{title}, #{detail}, NOW())
+    </insert>
 </mapper>

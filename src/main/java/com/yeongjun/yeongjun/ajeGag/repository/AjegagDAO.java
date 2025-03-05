@@ -20,4 +20,9 @@ public class AjegagDAO extends BaseDAO<Ajegag> {
     public Ajegag findById(Long id) {
         return selectOne("findById", id);
     }
+
+    // 신규 자료 등록 메서드
+    public int insertAjegag(Ajegag ajegag) {
+        return insert("insertAjegag", ajegag);
+    }
 }

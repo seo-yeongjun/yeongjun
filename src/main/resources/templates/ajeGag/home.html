@@ -2,16 +2,19 @@
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{ajeGag/layout}">
 <head>
     <title th:text="${title} ?: '아재개그 박물관'">홈 페이지</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <style>
         /* Carousel 컨테이너: 전체 화면 너비 적용 */
         #carouselContainer {
             position: relative;
             overflow: hidden;
             width: 100vw; /* 전체 뷰포트 너비 */
+            height: 100%;
         }
         /* 슬라이드를 flex로 배치 */
         #divList {
             display: flex;
+            height: 100%;
             transition: transform 0.5s ease-in-out;
         }
         /* 각 슬라이드의 폭을 뷰포트 크기로 설정 */
@@ -35,7 +38,7 @@
         /* Header 슬라이드 전용 스타일 */
         .header-slide {
             position: relative;
-            height: 80vh;
+            height: 100%;
             color: white;
         }
         .header-slide img {
@@ -70,7 +73,16 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
+        .ck.ck-editor {
+            min-height: 62vh;
+        }
+        .ck-editor__editable{
+            min-height: 62vh;
+        }
     </style>
+    <!-- CKEditor 5 CDN (무료 버전) -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/35.3.0/classic/ckeditor.js"></script>
 </head>
 <body>
 <div layout:fragment="content">
@@ -96,7 +108,9 @@
                             th:if="${isAdmin}">
                         자료 작성하기
                     </button>
-                    <p id="swipeInstruction" class="mt-2 text-sm" style="background-color: rgb(160 7 247 / 50%)">좌우로 스와이프 하거나 좌우 버튼을 클릭하세요.</p>
+                    <p id="swipeInstruction" class="mt-2 text-sm" style="background-color: rgb(160 7 247 / 50%)">
+                        좌우로 스와이프 하거나 좌우 버튼을 클릭하세요.
+                    </p>
                 </div>
             </div>
         </div>
@@ -104,22 +118,52 @@
     </section>
 
     <!-- 자료 제출 모달 (기본 숨김) -->
-    <div id="humorDataSubmitModal" class="z-50 fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div id="humorDataSubmitModal" class="z-100 fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
         <div class="bg-white p-6 rounded shadow-lg w-11/12 md:w-1/2">
             <h3 class="text-2xl font-bold mb-4">자료 제공하기</h3>
             <form id="submitHumorForm">
+<!--                <div class="mb-4">-->
+<!--                    <label for="humorTitle" class="block text-gray-700 mb-2">제목</label>-->
+<!--                    <input id="humorTitle" type="text" class="w-full border border-gray-300 p-2 rounded" placeholder="제목을 입력하세요">-->
+<!--                </div>-->
+<!--                <div class="mb-4">-->
+<!--                    <label for="humorContent" class="block text-gray-700 mb-2">내용</label>-->
+<!--                    <textarea id="humorContent" class="w-full border border-gray-300 p-2 rounded" placeholder="내용을 입력하세요" rows="4"></textarea>-->
+<!--                </div>-->
+<!--                <div class="flex justify-end">-->
+<!--                <button type="button" id="closeModal" class="mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">-->
+<!--                    취소-->
+<!--                </button>-->
+<!--                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">-->
+<!--                        제출-->
+<!--                    </button>-->
+<!--                </div>-->
+                아직, 자료 제공은 받고 있지 않아요.
+                <button type="button" id="closeModal" class="mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    닫기
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="adminWriteModal" class="z-100 fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 hidden" th:if="${isAdmin}">
+        <div class="bg-white w-full h-full p-6 overflow-auto relative">
+            <!-- 우측 상단 닫기 버튼 -->
+            <button type="button" id="closeAdminModal" class="absolute top-4 right-4 bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600">
+                닫기
+            </button>
+            <h3 class="text-3xl font-bold mb-6 text-center">자료 작성하기</h3>
+            <form id="adminWriteForm">
                 <div class="mb-4">
-                    <label for="humorTitle" class="block text-gray-700 mb-2">제목</label>
-                    <input id="humorTitle" type="text" class="w-full border border-gray-300 p-2 rounded" placeholder="제목을 입력하세요">
+                    <label for="adminTitle" class="block text-gray-700 mb-2">제목</label>
+                    <input id="adminTitle" name="title" type="text" class="w-full border border-gray-300 p-2 rounded" placeholder="제목을 입력하세요">
                 </div>
                 <div class="mb-4">
-                    <label for="humorContent" class="block text-gray-700 mb-2">내용</label>
-                    <textarea id="humorContent" class="w-full border border-gray-300 p-2 rounded" placeholder="내용을 입력하세요" rows="4"></textarea>
+                    <label for="adminDetail" class="block text-gray-700 mb-2">내용 (HTML)</label>
+                    <!-- CKEditor가 adminDetail textarea를 대체합니다 -->
+                    <textarea id="adminDetail" name="detail" class="w-full border border-gray-300 p-2 rounded h-96" placeholder="내용을 HTML 형식으로 입력하세요"></textarea>
                 </div>
                 <div class="flex justify-end">
-                    <button type="button" id="closeModal" class="mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-                        취소
-                    </button>
                     <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                         제출
                     </button>
@@ -128,8 +172,9 @@
         </div>
     </div>
 
+
     <script>
-        // 모달 관련 기능
+        // 모달 관련 기능 (일반 사용자용)
         const humorDataSubmitButton = document.getElementById('humorDataSubmit');
         const humorDataSubmitModal = document.getElementById('humorDataSubmitModal');
         const closeModalButton = document.getElementById('closeModal');
@@ -141,7 +186,7 @@
             humorDataSubmitModal.classList.add('hidden');
         });
         humorDataSubmitModal.addEventListener('click', (e) => {
-            if(e.target === humorDataSubmitModal) {
+            if (e.target === humorDataSubmitModal) {
                 humorDataSubmitModal.classList.add('hidden');
             }
         });
@@ -176,12 +221,26 @@
             // 마지막 슬라이드 (end 슬라이드)
             if (index === items.length + 1) {
                 const slide = document.createElement('div');
-                slide.classList.add('carousel-item', 'flex', 'items-center', 'justify-center');
-                slide.innerHTML = `<h2>끝</h2>`;
+                slide.classList.add('carousel-item', 'flex', 'items-center', 'justify-center', 'end-slide');
+                slide.innerHTML = `
+        <div class="end-slide-content text-center p-6">
+            <h2 class="text-3xl font-bold mb-4">오늘도 웃음이 가득!</h2>
+            <p class="mb-2">지금까지 모아온 모든 자료를 다 보셨어요.</p>
+            <p class="mb-2">다음에는 재판관 영준이 더 많은 자료를 추가해 뒀길 바래보죠!</p>
+            <button id="restartCarousel" class="mt-4 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500">처음으로 돌아가기</button>
+        </div>
+    `;
                 divList.appendChild(slide);
                 updateCarousel();
+
+                // "처음으로 돌아가기" 버튼 클릭 시 첫 슬라이드로 이동
+                slide.querySelector('#restartCarousel').addEventListener('click', () => {
+                    currentIndex = 0;
+                    updateCarousel();
+                });
                 return;
             }
+
             // 동적 콘텐츠 슬라이드: header 슬라이드 다음부터 index 1 ~ items.length
             const itemIndex = index - 1;
             if (itemIndex < 0 || itemIndex >= items.length) return;
@@ -218,17 +277,9 @@
             const nextButton = document.getElementById('nextButton');
 
             // 첫 슬라이드에서는 왼쪽 버튼 숨기기
-            if (currentIndex === 0) {
-                prevButton.style.display = 'none';
-            } else {
-                prevButton.style.display = 'block';
-            }
+            prevButton.style.display = currentIndex === 0 ? 'none' : 'block';
             // 마지막 슬라이드에서는 오른쪽 버튼 숨기기
-            if (currentIndex === totalSlides - 1) {
-                nextButton.style.display = 'none';
-            } else {
-                nextButton.style.display = 'block';
-            }
+            nextButton.style.display = currentIndex === totalSlides - 1 ? 'none' : 'block';
         }
 
         // "다음" 버튼 클릭 이벤트
@@ -265,7 +316,7 @@
             const currentX = e.touches[0].clientX;
             const diffX = startX - currentX;
             const totalSlides = items.length + 2;
-            if(diffX > 50 && currentIndex < totalSlides - 1) { // 왼쪽 스와이프 시
+            if (diffX > 50 && currentIndex < totalSlides - 1) { // 왼쪽 스와이프 시
                 currentIndex++;
                 if (divList.children.length <= currentIndex) {
                     loadSlide(currentIndex);
@@ -273,7 +324,7 @@
                     updateCarousel();
                 }
                 isSwiping = false;
-            } else if(diffX < -50 && currentIndex > 0) { // 오른쪽 스와이프 시
+            } else if (diffX < -50 && currentIndex > 0) { // 오른쪽 스와이프 시
                 currentIndex--;
                 updateCarousel();
                 isSwiping = false;
@@ -284,6 +335,94 @@
         });
 
         window.addEventListener('resize', updateCarousel);
+    </script>
+
+    <!-- 관리자 전용 스크립트: 관리자일 때만 CKEditor 초기화 및 모달 기능 활성화 -->
+    <script th:if="${isAdmin}">
+        // 커스텀 업로드 어댑터 정의
+        class MyUploadAdapter {
+            constructor(loader) {
+                this.loader = loader;
+            }
+            upload() {
+                return this.loader.file.then(file => new Promise((resolve, reject) => {
+                    const data = new FormData();
+                    data.append('upload', file);
+
+                    fetch('/ajeGag/uploadFile', {
+                        method: 'POST',
+                        body: data
+                    })
+                        .then(response => response.json())
+                        .then(result => {
+                            // CKEditor는 { default: "이미지 URL" } 형태의 응답을 요구합니다.
+                            resolve({ default: result.url });
+                        })
+                        .catch(error => {
+                            console.error('업로드 실패:', error);
+                            reject('Upload failed');
+                        });
+                }));
+            }
+            abort() {
+                // 필요시 업로드 중단 기능 구현
+            }
+        }
+
+
+        // CKEditor 초기화 및 커스텀 업로드 어댑터 등록
+        ClassicEditor
+            .create(document.querySelector('#adminDetail'))
+            .then(editor => {
+                editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+                    return new MyUploadAdapter(loader);
+                };
+                window.editor = editor;
+            })
+            .catch(error => {
+                console.error(error);
+            });
+
+        // 관리자 모달 열기/닫기 및 폼 제출 처리
+        const adminWriteButton = document.getElementById('humorWrite'); // 기존 관리자 버튼
+        const adminWriteModal = document.getElementById('adminWriteModal');
+        const closeAdminModalButton = document.getElementById('closeAdminModal');
+        const adminWriteForm = document.getElementById('adminWriteForm');
+
+        adminWriteButton.addEventListener('click', () => {
+            adminWriteModal.classList.remove('hidden');
+        });
+        closeAdminModalButton.addEventListener('click', () => {
+            adminWriteModal.classList.add('hidden');
+        });
+        adminWriteModal.addEventListener('click', (e) => {
+            if(e.target === adminWriteModal) {
+                adminWriteModal.classList.add('hidden');
+            }
+        });
+
+        adminWriteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('adminTitle').value;
+            // CKEditor의 데이터를 사용하여 HTML 콘텐츠를 가져옴
+            const detail = window.editor.getData();
+            try {
+                const createResponse = await fetch('/ajeGag/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, detail })
+                });
+                if(createResponse.ok) {
+                    alert('자료가 성공적으로 등록되었습니다.');
+                    adminWriteModal.classList.add('hidden');
+                } else {
+                    alert('자료 등록에 실패했습니다.');
+                }
+            } catch(err) {
+                console.error(err);
+                alert('자료 등록 중 오류가 발생했습니다.');
+            }
+        });
     </script>
 </div>
 </body>
