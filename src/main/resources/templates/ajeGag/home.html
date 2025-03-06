@@ -2,7 +2,6 @@
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{ajeGag/layout}">
 <head>
     <title th:text="${title} ?: '아재개그 박물관'">홈 페이지</title>
-    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <style>
         /* Carousel 컨테이너: 전체 화면 너비 적용 */
         #carouselContainer {
@@ -11,36 +10,47 @@
             width: 100vw; /* 전체 뷰포트 너비 */
             height: 100%;
         }
+
         /* 슬라이드를 flex로 배치 */
         #divList {
             display: flex;
             height: 100%;
             transition: transform 0.5s ease-in-out;
         }
+
         /* 각 슬라이드의 폭을 뷰포트 크기로 설정 */
         .carousel-item {
             width: 100vw;
             flex-shrink: 0;
         }
+
         .carousel-nav {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(0,0,0,0.4);
+            background: rgba(0, 0, 0, 0.4);
             color: white;
             border: none;
             padding: 8px;
             cursor: pointer;
-            z-index: 55;
+            z-index: 40;
         }
-        #prevButton { left: 10px; }
-        #nextButton { right: 10px; }
+
+        #prevButton {
+            left: 10px;
+        }
+
+        #nextButton {
+            right: 10px;
+        }
+
         /* Header 슬라이드 전용 스타일 */
         .header-slide {
             position: relative;
             height: 100%;
             color: white;
         }
+
         .header-slide img {
             position: absolute;
             top: 0;
@@ -50,24 +60,28 @@
             object-fit: cover;
             z-index: -1;
         }
+
         .header-slide .overlay {
             position: absolute;
             inset: 0;
-            background: rgba(255,255,255,0.6);
+            background: rgba(255, 255, 255, 0.6);
             z-index: 0;
         }
+
         .header-slide .content {
             position: relative;
             z-index: 10;
             text-align: center;
             padding: 0 1rem;
         }
+
         /* 텍스트 그라데이션 */
         h1 {
             background: linear-gradient(to right, #917b30, #EF4444);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         h2 {
             background: linear-gradient(to right, #0baa00, #0c5fdd);
             -webkit-background-clip: text;
@@ -77,11 +91,11 @@
         .ck.ck-editor {
             min-height: 62vh;
         }
-        .ck-editor__editable{
+
+        .ck-editor__editable {
             min-height: 62vh;
         }
     </style>
-    <script th:if="${isAdmin}" src="/ckeditor5/ckeditor5.umd.js"></script>
 </head>
 <body>
 <div layout:fragment="content">
@@ -99,11 +113,13 @@
                         이 공간은 웃음 알렉산리아 도서관을 표방합니다.<br>
                         웃음 재판관인 서영준이 직접 엄선한 웃긴 아재개그와 짤들을 만나보세요.
                     </h2>
-                    <button id="humorDataSubmit" type="button" class="mt-6 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500">
+                    <button id="humorDataSubmit" type="button"
+                            class="mt-6 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500">
                         재판관에게 자료제공하기
                     </button>
                     <!-- 관리자 권한일 때만 자료 작성하기 버튼 보임 -->
-                    <button id="humorWrite" type="button" class="mt-6 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500"
+                    <button id="humorWrite" type="button"
+                            class="mt-6 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500"
                             th:if="${isAdmin}">
                         자료 작성하기
                     </button>
@@ -117,50 +133,56 @@
     </section>
 
     <!-- 자료 제출 모달 (기본 숨김) -->
-    <div id="humorDataSubmitModal" class="z-100 fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div id="humorDataSubmitModal"
+         class="z-50 fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
         <div class="bg-white p-6 rounded shadow-lg w-11/12 md:w-1/2">
             <h3 class="text-2xl font-bold mb-4">자료 제공하기</h3>
             <form id="submitHumorForm">
-<!--                <div class="mb-4">-->
-<!--                    <label for="humorTitle" class="block text-gray-700 mb-2">제목</label>-->
-<!--                    <input id="humorTitle" type="text" class="w-full border border-gray-300 p-2 rounded" placeholder="제목을 입력하세요">-->
-<!--                </div>-->
-<!--                <div class="mb-4">-->
-<!--                    <label for="humorContent" class="block text-gray-700 mb-2">내용</label>-->
-<!--                    <textarea id="humorContent" class="w-full border border-gray-300 p-2 rounded" placeholder="내용을 입력하세요" rows="4"></textarea>-->
-<!--                </div>-->
-<!--                <div class="flex justify-end">-->
-<!--                <button type="button" id="closeModal" class="mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">-->
-<!--                    취소-->
-<!--                </button>-->
-<!--                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">-->
-<!--                        제출-->
-<!--                    </button>-->
-<!--                </div>-->
+                <!--                <div class="mb-4">-->
+                <!--                    <label for="humorTitle" class="block text-gray-700 mb-2">제목</label>-->
+                <!--                    <input id="humorTitle" type="text" class="w-full border border-gray-300 p-2 rounded" placeholder="제목을 입력하세요">-->
+                <!--                </div>-->
+                <!--                <div class="mb-4">-->
+                <!--                    <label for="humorContent" class="block text-gray-700 mb-2">내용</label>-->
+                <!--                    <textarea id="humorContent" class="w-full border border-gray-300 p-2 rounded" placeholder="내용을 입력하세요" rows="4"></textarea>-->
+                <!--                </div>-->
+                <!--                <div class="flex justify-end">-->
+                <!--                <button type="button" id="closeModal" class="mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">-->
+                <!--                    취소-->
+                <!--                </button>-->
+                <!--                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">-->
+                <!--                        제출-->
+                <!--                    </button>-->
+                <!--                </div>-->
                 아직, 자료 제공은 받고 있지 않아요.
-                <button type="button" id="closeModal" class="mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                <button type="button" id="closeModal"
+                        class="mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
                     닫기
                 </button>
             </form>
         </div>
     </div>
 
-    <div id="adminWriteModal" class="z-100 fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 hidden" th:if="${isAdmin}">
+    <div id="adminWriteModal" class="z-50 fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 hidden"
+         th:if="${isAdmin}">
         <div class="bg-white w-full h-full p-6 overflow-auto relative">
             <!-- 우측 상단 닫기 버튼 -->
-            <button type="button" id="closeAdminModal" class="absolute top-4 right-4 bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600">
+            <button type="button" id="closeAdminModal"
+                    class="absolute top-4 right-4 bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600">
                 닫기
             </button>
             <h3 class="text-3xl font-bold mb-6 text-center">자료 작성하기</h3>
             <form id="adminWriteForm">
                 <div class="mb-4">
                     <label for="adminTitle" class="block text-gray-700 mb-2">제목</label>
-                    <input id="adminTitle" name="title" type="text" class="w-full border border-gray-300 p-2 rounded" placeholder="제목을 입력하세요">
+                    <input id="adminTitle" name="title" type="text" class="w-full border border-gray-300 p-2 rounded"
+                           placeholder="제목을 입력하세요">
                 </div>
                 <div class="mb-4">
                     <label for="adminDetail" class="block text-gray-700 mb-2">내용 (HTML)</label>
                     <!-- CKEditor가 adminDetail textarea를 대체합니다 -->
-                    <textarea id="adminDetail" name="detail" class="w-full border border-gray-300 p-2 rounded h-96" placeholder="내용을 HTML 형식으로 입력하세요"></textarea>
+                    <textarea id="adminDetail" name="detail" class="w-full border border-gray-300 p-2 rounded h-96"
+                              placeholder="내용을 HTML 형식으로 입력하세요"></textarea>
                 </div>
                 <div class="flex justify-end">
                     <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
@@ -335,192 +357,47 @@
 
         window.addEventListener('resize', updateCarousel);
     </script>
-
+    <script th:if="${isAdmin}" type="module" src="/js/bundle.js"></script>
     <script th:if="${isAdmin}">
-        const {
-            Alignment,
-            AutoImage,
-            Autosave,
-            Bold,
-            Essentials,
-            FontBackgroundColor,
-            FontColor,
-            FontFamily,
-            FontSize,
-            FullPage,
-            GeneralHtmlSupport,
-            HorizontalLine,
-            HtmlComment,
-            ImageBlock,
-            ImageEditing,
-            ImageInsert,
-            ImageInsertViaUrl,
-            ImageResize,
-            ImageStyle,
-            ImageToolbar,
-            ImageUpload,
-            ImageUtils,
-            Link,
-            List,
-            ListProperties,
-            MediaEmbed,
-            Paragraph,
-            PasteFromOffice,
-            SimpleUploadAdapter,
-            SourceEditing,
-            SpecialCharacters,
-            SpecialCharactersArrows,
-            SpecialCharactersCurrency,
-            SpecialCharactersEssentials,
-            SpecialCharactersLatin,
-            SpecialCharactersMathematical,
-            SpecialCharactersText,
-            Strikethrough,
-            Table,
-            TableCaption,
-            TableCellProperties,
-            TableColumnResize,
-            TableProperties,
-            TableToolbar,
-            Underline,
-            ClassicEditor
-        } = CKEDITOR;
+        const adminWriteButton = document.getElementById('humorWrite'); // 기존 관리자 버튼
+        const adminWriteModal = document.getElementById('adminWriteModal');
+        const closeAdminModalButton = document.getElementById('closeAdminModal');
+        const adminWriteForm = document.getElementById('adminWriteForm');
 
-        class MyUploadAdapter {
-            constructor(loader) {
-                this.loader = loader;
+        adminWriteButton.addEventListener('click', () => {
+            adminWriteModal.classList.remove('hidden');
+        });
+        closeAdminModalButton.addEventListener('click', () => {
+            adminWriteModal.classList.add('hidden');
+        });
+        adminWriteModal.addEventListener('click', (e) => {
+            if (e.target === adminWriteModal) {
+                adminWriteModal.classList.add('hidden');
             }
+        });
 
-            upload() {
-                return this.loader.file.then(file => new Promise((resolve, reject) => {
-                    const data = new FormData();
-                    data.append('upload', file);
-
-                    fetch('/ajeGag/uploadFile', {
-                        method: 'POST',
-                        body: data
-                    })
-                        .then(response => response.json())
-                        .then(result => {
-                            // CKEditor는 { default: "이미지 URL" } 형태를 기대
-                            resolve({ default: result.url });
-                        })
-                        .catch(error => {
-                            console.error('업로드 실패:', error);
-                            reject('Upload failed');
-                        });
-                }));
+        adminWriteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('adminTitle').value;
+            // CKEditor의 데이터를 사용하여 HTML 콘텐츠를 가져옴
+            const detail = window.editor.getData();
+            try {
+                const createResponse = await fetch('/ajeGag/create', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({title, detail})
+                });
+                if (createResponse.ok) {
+                    alert('자료가 성공적으로 등록되었습니다.');
+                    adminWriteModal.classList.add('hidden');
+                } else {
+                    alert('자료 등록에 실패했습니다.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('자료 등록 중 오류가 발생했습니다.');
             }
-
-            abort() {
-                // 필요시 업로드 중단 기능 구현
-            }
-        }
-
-        const editorConfig = {
-            toolbar: {
-                items: [
-                    'sourceEditing',
-                    '|',
-                    'fontSize',
-                    'fontFamily',
-                    'fontColor',
-                    'fontBackgroundColor',
-                    '|',
-                    'bold',
-                    'underline',
-                    'strikethrough',
-                    '|',
-                    'specialCharacters',
-                    'horizontalLine',
-                    'link',
-                    'insertImage',
-                    'mediaEmbed',
-                    'insertTable',
-                    '|',
-                    'alignment',
-                    '|',
-                    'bulletedList',
-                    'numberedList'
-                ],
-                shouldNotGroupWhenFull: true
-            },
-            fontFamily: {
-                supportAllValues: true
-            },
-            fontSize: {
-                options: [10, 12, 14, 'default', 18, 20, 22],
-                supportAllValues: true
-            },
-            htmlSupport: {
-                allow: [
-                    {
-                        name: /^.*$/,
-                        styles: true,
-                        attributes: true,
-                        classes: true
-                    }
-                ]
-            },
-            image: {
-                toolbar: [
-                    'imageTextAlternative',
-                    '|',
-                    'imageStyle:alignBlockLeft',
-                    'imageStyle:block',
-                    'imageStyle:alignBlockRight',
-                    '|',
-                    'resizeImage'
-                ],
-                styles: {
-                    options: ['alignBlockLeft', 'block', 'alignBlockRight']
-                }
-            },
-            initialData:
-                '<h2>Congratulations on setting up CKEditor 5! 🎉</h2>\n<p>\n\tYou\'ve successfully created a CKEditor 5 project. This powerful text editor\n\twill enhance your application, enabling rich text editing capabilities that\n\tare customizable and easy to use.\n</p>\n<h3>What\'s next?</h3>\n<ol>\n\t<li>\n\t\t<strong>Integrate into your app</strong>: time to bring the editing into\n\t\tyour application. Take the code you created and add to your application.\n\t</li>\n\t<li>\n\t\t<strong>Explore features:</strong> Experiment with different plugins and\n\t\ttoolbar options to discover what works best for your needs.\n\t</li>\n\t<li>\n\t\t<strong>Customize your editor:</strong> Tailor the editor\'s\n\t\tconfiguration to match your application\'s style and requirements. Or\n\t\teven write your plugin!\n\t</li>\n</ol>\n<p>\n\tKeep experimenting, and don\'t hesitate to push the boundaries of what you\n\tcan achieve with CKEditor 5. Your feedback is invaluable to us as we strive\n\tto improve and evolve. Happy editing!\n</p>\n<h3>Helpful resources</h3>\n<ul>\n\t<li>📝 <a href="https://portal.ckeditor.com/checkout?plan=free">Trial sign up</a>,</li>\n\t<li>📕 <a href="https://ckeditor.com/docs/ckeditor5/latest/installation/index.html">Documentation</a>,</li>\n\t<li>⭐️ <a href="https://github.com/ckeditor/ckeditor5">GitHub</a> (star us if you can!),</li>\n\t<li>🏠 <a href="https://ckeditor.com">CKEditor Homepage</a>,</li>\n\t<li>🧑‍💻 <a href="https://ckeditor.com/ckeditor-5/demo/">CKEditor 5 Demos</a>,</li>\n</ul>\n<h3>Need help?</h3>\n<p>\n\tSee this text, but the editor is not starting up? Check the browser\'s\n\tconsole for clues and guidance. It may be related to an incorrect license\n\tkey if you use premium features or another feature-related requirement. If\n\tyou cannot make it work, file a GitHub issue, and we will help as soon as\n\tpossible!\n</p>\n',
-            language: 'ko',
-            licenseKey: 'GPL',
-            link: {
-                addTargetToExternalLinks: true,
-                defaultProtocol: 'https://',
-                decorators: {
-                    toggleDownloadable: {
-                        mode: 'manual',
-                        label: 'Downloadable',
-                        attributes: {
-                            download: 'file'
-                        }
-                    }
-                }
-            },
-            list: {
-                properties: {
-                    styles: true,
-                    startIndex: true,
-                    reversed: true
-                }
-            },
-            placeholder: 'Type or paste your content here!',
-            table: {
-                contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties']
-            },
-            extraPlugins: [
-                editor => {
-                    editor.plugins.get('FileRepository').createUploadAdapter = loader => {
-                        return new MyUploadAdapter(loader);
-                    };
-                }
-            ]
-        };
-
-        ClassicEditor.create(document.querySelector('#adminDetail'), editorConfig)
-            .then(editor => {
-                console.log('CKEditor 5 is ready!', editor);
-            })
-            .catch(error => {
-                console.error('CKEditor init failed:', error);
-            });
-
+        });
     </script>
 </div>
 </body>
