@@ -2,8 +2,8 @@
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{ajeGag/layout}">
 <head>
     <title th:text="${title} ?: '아재개그 박물관'">홈 페이지</title>
-    <link th:if="${isAdmin}" rel="stylesheet" href="/ckestyle.css">
-    <link th:if="${isAdmin}" rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/44.3.0/ckeditor5.css" crossorigin>
+    <link rel="stylesheet" href="/ckestyle.css">
+    <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/44.3.0/ckeditor5.css" crossorigin>
     <style>
         /* Carousel 컨테이너: 전체 뷰포트 너비 및 높이(100vh) 적용 */
         #carouselContainer {
