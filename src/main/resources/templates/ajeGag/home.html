@@ -2,6 +2,8 @@
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{ajeGag/layout}">
 <head>
     <title th:text="${title} ?: '아재개그 박물관'">홈 페이지</title>
+    <link th:if="${isAdmin}" rel="stylesheet" href="/ckestyle.css">
+    <link th:if="${isAdmin}" rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/44.3.0/ckeditor5.css" crossorigin>
     <style>
         /* Carousel 컨테이너: 전체 화면 너비 적용 */
         #carouselContainer {
@@ -88,13 +90,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .ck.ck-editor {
-            min-height: 62vh;
-        }
-
-        .ck-editor__editable {
-            min-height: 62vh;
-        }
     </style>
 </head>
 <body>
@@ -357,7 +352,9 @@
 
         window.addEventListener('resize', updateCarousel);
     </script>
-    <script th:if="${isAdmin}" type="module" src="/js/bundle.js"></script>
+    <script th:if="${isAdmin}" src="https://cdn.ckeditor.com/ckeditor5/44.3.0/ckeditor5.umd.js" crossorigin></script>
+    <script th:if="${isAdmin}" src="https://cdn.ckeditor.com/ckeditor5/44.3.0/translations/ko.umd.js" crossorigin></script>
+    <script th:if="${isAdmin}" src="/ckemain.js"></script>
     <script th:if="${isAdmin}">
         const adminWriteButton = document.getElementById('humorWrite'); // 기존 관리자 버튼
         const adminWriteModal = document.getElementById('adminWriteModal');
