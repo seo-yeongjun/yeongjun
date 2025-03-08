@@ -440,6 +440,16 @@
             isSwiping = false;
         });
         window.addEventListener('resize', updateCarousel);
+
+        // 첫 번째 동적 슬라이드 로드를 시작한 후 5초가 지나도 isLoaded가 false면 강제로 true로 변경
+        setTimeout(() => {
+            if (!isLoaded) {
+                console.warn("Fallback: 5초 후에도 로딩 실패, isLoaded를 강제로 true로 설정합니다.");
+                isLoaded = true;
+                // 대체 콘텐츠 추가나 업데이트 처리 필요시 updateCarousel() 호출
+                updateCarousel();
+            }
+        }, 2500);
     </script>
 
 
