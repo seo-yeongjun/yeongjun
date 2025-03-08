@@ -222,6 +222,7 @@
         // 페이지 로드와 창 크기 변경 시 함수를 호출합니다.
         window.addEventListener('load', updateDivListHeight);
         window.addEventListener('resize', updateDivListHeight);
+
         // 모달 관련 기능 (일반 사용자용)
         const humorDataSubmitButton = document.getElementById('humorDataSubmit');
         const humorDataSubmitModal = document.getElementById('humorDataSubmitModal');
@@ -243,6 +244,7 @@
         const divList = document.getElementById('divList');
         let currentIndex = 0; // 0: header 슬라이드, 1~items.length: 동적 슬라이드, 마지막: end 슬라이드
         let items = [];     // /ajeGag/getList로 받아온 아이디 목록
+        let isLoaded = false;  // 로딩 완료 플래그
 
         // 셔플 함수 (Fisher-Yates)
         function shuffle(array) {
@@ -275,13 +277,13 @@
                 const slide = document.createElement('div');
                 slide.classList.add('carousel-item', 'flex', 'items-center', 'justify-center', 'p-4');
                 slide.innerHTML = `
-                    <div class="end-slide-content text-center p-6">
-                        <h2 class="text-3xl font-bold mb-4">오늘도 웃음이 가득!</h2>
-                        <p class="mb-2">지금까지 모아온 모든 자료를 다 보셨어요.</p>
-                        <p class="mb-2">다음에는 재판관 영준이 더 많은 자료를 추가해 뒀길 바래보죠!</p>
-                        <button id="restartCarousel" class="mt-4 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500">처음으로 돌아가기</button>
-                    </div>
-                `;
+                <div class="end-slide-content text-center p-6">
+                    <h2 class="text-3xl font-bold mb-4">오늘도 웃음이 가득!</h2>
+                    <p class="mb-2">지금까지 모아온 모든 자료를 다 보셨어요.</p>
+                    <p class="mb-2">다음에는 재판관 영준이 더 많은 자료를 추가해 뒀길 바래보죠!</p>
+                    <button id="restartCarousel" class="mt-4 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500">처음으로 돌아가기</button>
+                </div>
+            `;
                 divList.appendChild(slide);
                 updateCarousel();
 
@@ -303,13 +305,17 @@
                     const slide = document.createElement('div');
                     slide.classList.add('carousel-item');
                     slide.innerHTML = `
-                        <div class="scroll-content">
-                            <div class="ck-content main-container">
-                                ${content.detail}
-                            </div>
+                    <div class="scroll-content">
+                        <div class="ck-content main-container">
+                            ${content.detail}
                         </div>
-                    `;
+                    </div>
+                `;
                     divList.appendChild(slide);
+                    // 첫 번째 동적 슬라이드 로드 완료 시 로딩 플래그를 true로 설정
+                    if (index === 1) {
+                        isLoaded = true;
+                    }
                     updateCarousel();
                 })
                 .catch(err => {
@@ -339,9 +345,10 @@
             updateDivListHeight();
         }
 
-
         // "다음" 버튼 클릭 이벤트
         document.getElementById('nextButton').addEventListener('click', () => {
+            // 로딩이 완료되어야 동작
+            if (!isLoaded) return;
             const totalSlides = items.length + 2;
             if (currentIndex < totalSlides - 1) {
                 currentIndex++;
@@ -355,6 +362,8 @@
 
         // "이전" 버튼 클릭 이벤트
         document.getElementById('prevButton').addEventListener('click', () => {
+            // 로딩이 완료되어야 동작
+            if (!isLoaded) return;
             if (currentIndex > 0) {
                 currentIndex--;
                 updateCarousel();
@@ -371,6 +380,8 @@
         });
         divList.addEventListener('touchmove', (e) => {
             if (!isSwiping) return;
+            // 로딩이 완료되어야 동작
+            if (!isLoaded) return;
             const currentX = e.touches[0].clientX;
             const diffX = startX - currentX;
             const totalSlides = items.length + 2;
@@ -393,6 +404,7 @@
         });
         window.addEventListener('resize', updateCarousel);
     </script>
+
     <script th:if="${isAdmin}" src="https://cdn.ckeditor.com/ckeditor5/44.3.0/ckeditor5.umd.js" crossorigin></script>
     <script th:if="${isAdmin}" src="https://cdn.ckeditor.com/ckeditor5/44.3.0/translations/ko.umd.js" crossorigin></script>
     <script th:if="${isAdmin}" src="/ckemain.js"></script>
