@@ -51,7 +51,7 @@ public class FileService {
         }
 
         StreamingResponseBody responseBody = outputStream -> {
-            byte[] buffer = new byte[4096];
+            byte[] buffer = new byte[64 * 1024];
             int bytesRead;
             try {
                 while ((bytesRead = inputStream.read(buffer)) != -1) {
