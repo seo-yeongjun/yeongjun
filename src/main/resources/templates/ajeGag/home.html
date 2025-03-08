@@ -200,34 +200,28 @@
     </div>
 
     <script>
-        function updateDivListHeight() {
-            const header = document.querySelector('header');
-            const footer = document.querySelector('footer');
-            const carouselContainer = document.getElementById('carouselContainer');
-            const divList = document.getElementById('divList');
-
-            // 현재 창 높이에서 헤더와 푸터 높이를 뺀 값을 사용합니다.
-            const availableHeight = window.innerHeight - (header ? header.offsetHeight : 0) - (footer ? footer.offsetHeight : 0);
-
-            // carousel container와 divList의 높이를 업데이트
-            carouselContainer.style.height = availableHeight + 'px';
-            divList.style.height = availableHeight + 'px';
-
-            // 각 슬라이드의 높이도 업데이트 (필요 시)
-            document.querySelectorAll('.carousel-item').forEach(item => {
-                item.style.height = availableHeight + 'px';
-            });
-        }
-
-        // 페이지 로드와 창 크기 변경 시 함수를 호출합니다.
-        window.addEventListener('load', updateDivListHeight);
-        window.addEventListener('resize', updateDivListHeight);
-
-        // 모달 관련 기능 (일반 사용자용)
+        let isLoaded = false;  // 로딩 완료 플래그
+        const divList = document.getElementById('divList');
+        let currentIndex = 0; // 0: header 슬라이드, 1~items.length: 동적 슬라이드, 마지막: end 슬라이드
+        let items = [];     // /ajeGag/getList로 받아온 아이디 목록
         const humorDataSubmitButton = document.getElementById('humorDataSubmit');
         const humorDataSubmitModal = document.getElementById('humorDataSubmitModal');
         const closeModalButton = document.getElementById('closeModal');
 
+
+        fetch('/ajeGag/getList')
+            .then(response => response.json())
+            .then(data => {
+                items = data;
+                shuffle(items);
+                // 첫 번째 동적 슬라이드(인덱스 1)를 미리 로드합니다.
+                if (items.length > 0 && divList.children.length <= 1) {
+                    loadSlide(1);
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching humor list:', err);
+            });
         humorDataSubmitButton.addEventListener('click', () => {
             humorDataSubmitModal.classList.remove('hidden');
         });
@@ -240,11 +234,8 @@
             }
         });
 
-        // Carousel 관련 기능
-        const divList = document.getElementById('divList');
-        let currentIndex = 0; // 0: header 슬라이드, 1~items.length: 동적 슬라이드, 마지막: end 슬라이드
-        let items = [];     // /ajeGag/getList로 받아온 아이디 목록
-        let isLoaded = false;  // 로딩 완료 플래그
+
+
 
         // 셔플 함수 (Fisher-Yates)
         function shuffle(array) {
@@ -275,20 +266,7 @@
             });
         }
 
-        // /ajeGag/getList를 호출해 id 목록을 로드 후 셔플
-        fetch('/ajeGag/getList')
-            .then(response => response.json())
-            .then(data => {
-                items = data;
-                shuffle(items);
-                // 첫 번째 동적 슬라이드(인덱스 1)를 미리 로드합니다.
-                if (items.length > 0 && divList.children.length <= 1) {
-                    loadSlide(1);
-                }
-            })
-            .catch(err => {
-                console.error('Error fetching humor list:', err);
-            });
+
 
         // 동적 슬라이드 로드 함수: 인덱스에 해당하는 콘텐츠를 가져와 슬라이드로 추가
         function loadSlide(index) {
@@ -439,17 +417,30 @@
         divList.addEventListener('touchend', () => {
             isSwiping = false;
         });
-        window.addEventListener('resize', updateCarousel);
 
-        // 첫 번째 동적 슬라이드 로드를 시작한 후 5초가 지나도 isLoaded가 false면 강제로 true로 변경
-        setTimeout(() => {
-            if (!isLoaded) {
-                console.warn("Fallback: 5초 후에도 로딩 실패, isLoaded를 강제로 true로 설정합니다.");
-                isLoaded = true;
-                // 대체 콘텐츠 추가나 업데이트 처리 필요시 updateCarousel() 호출
-                updateCarousel();
-            }
-        }, 2500);
+        function updateDivListHeight() {
+            const header = document.querySelector('header');
+            const footer = document.querySelector('footer');
+            const carouselContainer = document.getElementById('carouselContainer');
+            const divList = document.getElementById('divList');
+
+            // 현재 창 높이에서 헤더와 푸터 높이를 뺀 값을 사용합니다.
+            const availableHeight = window.innerHeight - (header ? header.offsetHeight : 0) - (footer ? footer.offsetHeight : 0);
+
+            // carousel container와 divList의 높이를 업데이트
+            carouselContainer.style.height = availableHeight + 'px';
+            divList.style.height = availableHeight + 'px';
+
+            // 각 슬라이드의 높이도 업데이트 (필요 시)
+            document.querySelectorAll('.carousel-item').forEach(item => {
+                item.style.height = availableHeight + 'px';
+            });
+        }
+
+        // 페이지 로드와 창 크기 변경 시 함수를 호출합니다.
+        window.addEventListener('load', updateDivListHeight);
+        window.addEventListener('resize', updateDivListHeight);
+        window.addEventListener('resize', updateCarousel);
     </script>
 
 
