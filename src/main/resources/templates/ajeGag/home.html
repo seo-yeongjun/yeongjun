@@ -2,28 +2,47 @@
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{ajeGag/layout}">
 <head>
     <title th:text="${title} ?: '아재개그 박물관'">홈 페이지</title>
-    <link th:if="${isAdmin}" rel="stylesheet" href="/ckestyle.css">
-    <link th:if="${isAdmin}" rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/44.3.0/ckeditor5.css" crossorigin>
+    <link rel="stylesheet" href="/ckestyle.css">
+    <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/44.3.0/ckeditor5.css" crossorigin>
     <style>
-        /* Carousel 컨테이너: 전체 화면 너비 적용 */
+        /* Carousel 컨테이너: 전체 뷰포트 너비 및 높이(100vh) 적용 */
         #carouselContainer {
             position: relative;
             overflow: hidden;
-            width: 100vw; /* 전체 뷰포트 너비 */
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
         }
 
-        /* 슬라이드를 flex로 배치 */
+        /* 슬라이드를 flex로 배치하고 고정 높이 적용 */
         #divList {
             display: flex;
-            height: 100%;
+            height: 100vh;
             transition: transform 0.5s ease-in-out;
         }
 
-        /* 각 슬라이드의 폭을 뷰포트 크기로 설정 */
+        /* 각 슬라이드가 전체 뷰포트 크기를 차지하도록 */
         .carousel-item {
             width: 100vw;
+            height: 100vh;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+        }
+
+        /* 슬라이드 내부 콘텐츠 컨테이너: 내용이 많으면 내부 스크롤 */
+        .scroll-content {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 1rem;
         }
 
         .carousel-nav {
@@ -49,6 +68,7 @@
         /* Header 슬라이드 전용 스타일 */
         .header-slide {
             position: relative;
+            width: 100%;
             height: 100%;
             color: white;
         }
@@ -75,6 +95,13 @@
             z-index: 10;
             text-align: center;
             padding: 0 1rem;
+            /* 필요 시 내용이 많으면 내부 스크롤 */
+            overflow-y: auto;
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         /* 텍스트 그라데이션 */
@@ -89,7 +116,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
     </style>
 </head>
 <body>
@@ -102,7 +128,7 @@
             <div class="carousel-item header-slide">
                 <img src="/ajeGag/daemoon.jpg" alt="banner">
                 <div class="overlay"></div>
-                <div class="content flex flex-col items-center justify-center h-full">
+                <div class="content">
                     <h1 class="text-4xl font-extrabold">아재개그 박물관</h1>
                     <h2 class="text-2xl font-extrabold mt-4">
                         이 공간은 웃음 알렉산리아 도서관을 표방합니다.<br>
@@ -118,8 +144,9 @@
                             th:if="${isAdmin}">
                         자료 작성하기
                     </button>
-                    <p id="swipeInstruction" class="mt-2 text-sm" style="background-color: rgb(160 7 247 / 50%)">
-                        좌우로 스와이프 하거나 좌우 버튼을 클릭하세요.
+                    <p id="swipeInstruction" class="mt-2 text-sm" style="background-color: rgba(160,7,247,0.5)">
+                        좌우 버튼을 클릭하세요.<br>
+                        모바일 : 좌우로 스와이프 해보세요.
                     </p>
                 </div>
             </div>
@@ -133,22 +160,6 @@
         <div class="bg-white p-6 rounded shadow-lg w-11/12 md:w-1/2">
             <h3 class="text-2xl font-bold mb-4">자료 제공하기</h3>
             <form id="submitHumorForm">
-                <!--                <div class="mb-4">-->
-                <!--                    <label for="humorTitle" class="block text-gray-700 mb-2">제목</label>-->
-                <!--                    <input id="humorTitle" type="text" class="w-full border border-gray-300 p-2 rounded" placeholder="제목을 입력하세요">-->
-                <!--                </div>-->
-                <!--                <div class="mb-4">-->
-                <!--                    <label for="humorContent" class="block text-gray-700 mb-2">내용</label>-->
-                <!--                    <textarea id="humorContent" class="w-full border border-gray-300 p-2 rounded" placeholder="내용을 입력하세요" rows="4"></textarea>-->
-                <!--                </div>-->
-                <!--                <div class="flex justify-end">-->
-                <!--                <button type="button" id="closeModal" class="mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">-->
-                <!--                    취소-->
-                <!--                </button>-->
-                <!--                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">-->
-                <!--                        제출-->
-                <!--                    </button>-->
-                <!--                </div>-->
                 아직, 자료 제공은 받고 있지 않아요.
                 <button type="button" id="closeModal"
                         class="mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
@@ -188,8 +199,30 @@
         </div>
     </div>
 
-
     <script>
+        function updateDivListHeight() {
+            const header = document.querySelector('header');
+            const footer = document.querySelector('footer');
+            const carouselContainer = document.getElementById('carouselContainer');
+            const divList = document.getElementById('divList');
+
+            // 현재 창 높이에서 헤더와 푸터 높이를 뺀 값을 사용합니다.
+            const availableHeight = window.innerHeight - header.offsetHeight - footer.offsetHeight;
+
+            // carousel container와 divList의 높이를 업데이트
+            carouselContainer.style.height = availableHeight + 'px';
+            divList.style.height = availableHeight + 'px';
+
+            // 각 슬라이드의 높이도 업데이트 (필요 시)
+            document.querySelectorAll('.carousel-item').forEach(item => {
+                item.style.height = availableHeight + 'px';
+            });
+        }
+
+        // 페이지 로드와 창 크기 변경 시 함수를 호출합니다.
+        window.addEventListener('load', updateDivListHeight);
+        window.addEventListener('resize', updateDivListHeight);
+
         // 모달 관련 기능 (일반 사용자용)
         const humorDataSubmitButton = document.getElementById('humorDataSubmit');
         const humorDataSubmitModal = document.getElementById('humorDataSubmitModal');
@@ -211,6 +244,7 @@
         const divList = document.getElementById('divList');
         let currentIndex = 0; // 0: header 슬라이드, 1~items.length: 동적 슬라이드, 마지막: end 슬라이드
         let items = [];     // /ajeGag/getList로 받아온 아이디 목록
+        let isLoaded = false;  // 로딩 완료 플래그
 
         // 셔플 함수 (Fisher-Yates)
         function shuffle(array) {
@@ -226,6 +260,10 @@
             .then(data => {
                 items = data;
                 shuffle(items);
+                // 첫 번째 동적 슬라이드(인덱스 1)를 미리 로드합니다.
+                if (items.length > 0 && divList.children.length <= 1) {
+                    loadSlide(1);
+                }
             })
             .catch(err => {
                 console.error('Error fetching humor list:', err);
@@ -237,15 +275,15 @@
             // 마지막 슬라이드 (end 슬라이드)
             if (index === items.length + 1) {
                 const slide = document.createElement('div');
-                slide.classList.add('carousel-item', 'flex', 'items-center', 'justify-center', 'end-slide');
+                slide.classList.add('carousel-item', 'flex', 'items-center', 'justify-center', 'p-4');
                 slide.innerHTML = `
-        <div class="end-slide-content text-center p-6">
-            <h2 class="text-3xl font-bold mb-4">오늘도 웃음이 가득!</h2>
-            <p class="mb-2">지금까지 모아온 모든 자료를 다 보셨어요.</p>
-            <p class="mb-2">다음에는 재판관 영준이 더 많은 자료를 추가해 뒀길 바래보죠!</p>
-            <button id="restartCarousel" class="mt-4 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500">처음으로 돌아가기</button>
-        </div>
-    `;
+                <div class="end-slide-content text-center p-6">
+                    <h2 class="text-3xl font-bold mb-4">오늘도 웃음이 가득!</h2>
+                    <p class="mb-2">지금까지 모아온 모든 자료를 다 보셨어요.</p>
+                    <p class="mb-2">다음에는 재판관 영준이 더 많은 자료를 추가해 뒀길 바래보죠!</p>
+                    <button id="restartCarousel" class="mt-4 px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500">처음으로 돌아가기</button>
+                </div>
+            `;
                 divList.appendChild(slide);
                 updateCarousel();
 
@@ -265,23 +303,30 @@
                 .then(response => response.json())
                 .then(content => {
                     const slide = document.createElement('div');
-                    slide.classList.add('carousel-item', 'flex', 'items-center', 'justify-center', 'p-4', 'bg-white', 'bg-opacity-80', 'rounded');
+                    slide.classList.add('carousel-item');
                     slide.innerHTML = `
-                        <div>
-                            <h3>${content.title}</h3>
-                            <p>${content.detail}</p>
-                            <p><small>${content.created_at ? content.created_at : ''}</small></p>
+                    <div class="scroll-content">
+                        <div class="ck-content main-container">
+                            ${content.detail}
                         </div>
-                    `;
+                    </div>
+                `;
                     divList.appendChild(slide);
+                    // 첫 번째 동적 슬라이드 로드 완료 시 로딩 플래그를 true로 설정
+                    if (index === 1) {
+                        isLoaded = true;
+                    }
                     updateCarousel();
                 })
                 .catch(err => {
                     console.error('Error fetching humor content:', err);
+                    // 첫 번째 동적 슬라이드 실패 시에도 네비게이션을 위해 isLoaded를 true로 설정
+                    // 삼성 브라우저 버그 새로고침 alert 창
+                    alert('특정 브라우저에 버그가 있습니다. 새로고침 하면 정상 작동합니다.');
+                    // 실패 시 대체 콘텐츠를 표시할 수도 있습니다.
                 });
         }
 
-        // carousel 위치 업데이트 함수 + 네비게이션 버튼 제어
         function updateCarousel() {
             const slideWidth = window.innerWidth;
             const offset = -currentIndex * slideWidth;
@@ -292,14 +337,22 @@
             const prevButton = document.getElementById('prevButton');
             const nextButton = document.getElementById('nextButton');
 
-            // 첫 슬라이드에서는 왼쪽 버튼 숨기기
+            // 첫 슬라이드에서는 왼쪽 버튼 숨기고, 마지막 슬라이드에서는 오른쪽 버튼 숨김
             prevButton.style.display = currentIndex === 0 ? 'none' : 'block';
-            // 마지막 슬라이드에서는 오른쪽 버튼 숨기기
             nextButton.style.display = currentIndex === totalSlides - 1 ? 'none' : 'block';
+
+            // 미리 다음 슬라이드를 로드: 아직 해당 인덱스의 슬라이드가 없으면 미리 불러오기
+            if (currentIndex + 1 < totalSlides && divList.children.length <= currentIndex + 1) {
+                loadSlide(currentIndex + 1);
+            }
+
+            updateDivListHeight();
         }
 
         // "다음" 버튼 클릭 이벤트
         document.getElementById('nextButton').addEventListener('click', () => {
+            // 로딩이 완료되어야 동작
+            if (!isLoaded) return;
             const totalSlides = items.length + 2;
             if (currentIndex < totalSlides - 1) {
                 currentIndex++;
@@ -313,6 +366,8 @@
 
         // "이전" 버튼 클릭 이벤트
         document.getElementById('prevButton').addEventListener('click', () => {
+            // 로딩이 완료되어야 동작
+            if (!isLoaded) return;
             if (currentIndex > 0) {
                 currentIndex--;
                 updateCarousel();
@@ -329,6 +384,8 @@
         });
         divList.addEventListener('touchmove', (e) => {
             if (!isSwiping) return;
+            // 로딩이 완료되어야 동작
+            if (!isLoaded) return;
             const currentX = e.touches[0].clientX;
             const diffX = startX - currentX;
             const totalSlides = items.length + 2;
@@ -349,9 +406,9 @@
         divList.addEventListener('touchend', () => {
             isSwiping = false;
         });
-
         window.addEventListener('resize', updateCarousel);
     </script>
+
     <script th:if="${isAdmin}" src="https://cdn.ckeditor.com/ckeditor5/44.3.0/ckeditor5.umd.js" crossorigin></script>
     <script th:if="${isAdmin}" src="https://cdn.ckeditor.com/ckeditor5/44.3.0/translations/ko.umd.js" crossorigin></script>
     <script th:if="${isAdmin}" src="/ckemain.js"></script>

@@ -43,8 +43,10 @@ public class FileController {
         FileResponse fileResponse = fileService.getFileStreamingResponse(bucketName, key);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + key + "\"")
+                .header(HttpHeaders.CACHE_CONTROL, "max-age=3600, public")
                 .contentType(org.springframework.http.MediaType.parseMediaType(fileResponse.getContentType()))
                 .body(fileResponse.getStreamingResponseBody());
+
     }
 
     @GetMapping("/existsFile")
