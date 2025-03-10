@@ -17,13 +17,10 @@
     font-family: 'Lato';
     line-height: 1.6;
     word-break: break-word;
+    max-width: 800px;
 }
 
 .editor-container_classic-editor .editor-container__editor {
     min-width: 62vh;
     max-width: 62vh;
-}
-
-.image_resized{
-    max-width: 550px;
 }
