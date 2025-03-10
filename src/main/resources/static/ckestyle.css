@@ -23,3 +23,7 @@
     min-width: 62vh;
     max-width: 62vh;
 }
+
+.image_resized{
+    max-width: 550px;
+}
