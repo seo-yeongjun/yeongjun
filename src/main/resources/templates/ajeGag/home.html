@@ -321,8 +321,8 @@
                 .catch(err => {
                     console.error('Error fetching humor content:', err);
                     // 첫 번째 동적 슬라이드 실패 시에도 네비게이션을 위해 isLoaded를 true로 설정
-                    // 삼성 브라우저 버그 새로고침 alert 창
-                    alert('특정 브라우저에 버그가 있습니다. 새로고침 하면 정상 작동합니다.');
+                    // 자동 새로고침
+                    location.reload();
                     // 실패 시 대체 콘텐츠를 표시할 수도 있습니다.
                 });
         }
