@@ -116,6 +116,13 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
+        .ck-content {
+            font-family: 'Lato';
+            line-height: 1.6;
+            word-break: break-word;
+            max-width: 800px !important;
+        }
     </style>
 </head>
 <body>
@@ -146,7 +153,8 @@
                     </button>
                     <p id="swipeInstruction" class="mt-2 text-sm" style="background-color: rgba(160,7,247,0.5)">
                         좌우 버튼을 클릭하세요.<br>
-                        모바일 : 좌우로 스와이프 해보세요.
+                        모바일 : 좌우로 스와이프 해보세요.<br>
+                        PC    : 좌우 키로 컨텐츠 전환 상하 키로 스크롤링
                     </p>
                 </div>
             </div>
@@ -407,6 +415,51 @@
             isSwiping = false;
         });
         window.addEventListener('resize', updateCarousel);
+
+        document.addEventListener('keydown', function(e) {
+            // 사용자가 input 또는 textarea에 포커스되어 있으면 이벤트 처리하지 않음
+            if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+            // 전체 슬라이드 수: header(1) + 동적 슬라이드(items.length) + end(1)
+            const totalSlides = items.length + 2;
+
+            if (e.key === "ArrowLeft") {
+                // 왼쪽 화살표: 이전 슬라이드로 이동
+                if (!isLoaded) return;
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateCarousel();
+                }
+            } else if (e.key === "ArrowRight") {
+                // 오른쪽 화살표: 다음 슬라이드로 이동
+                if (!isLoaded) return;
+                if (currentIndex < totalSlides - 1) {
+                    currentIndex++;
+                    if (divList.children.length <= currentIndex) {
+                        loadSlide(currentIndex);
+                    } else {
+                        updateCarousel();
+                    }
+                }
+            } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                // 위/아래 화살표: 현재 슬라이드 내의 스크롤 조작
+                const currentSlide = divList.children[currentIndex];
+                if (!currentSlide) return;
+                // 스크롤 가능한 컨테이너: 동적 슬라이드의 경우 .scroll-content, header 슬라이드의 경우 .content
+                let scrollContainer = currentSlide.querySelector('.scroll-content');
+                if (!scrollContainer) {
+                    scrollContainer = currentSlide.querySelector('.content');
+                }
+                if (!scrollContainer) return;
+
+                const scrollAmount = 50; // 한 번 키를 누를 때 스크롤할 픽셀 수
+                if (e.key === "ArrowUp") {
+                    scrollContainer.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
+                } else {
+                    scrollContainer.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+                }
+            }
+        });
     </script>
 
     <script th:if="${isAdmin}" src="https://cdn.ckeditor.com/ckeditor5/44.3.0/ckeditor5.umd.js" crossorigin></script>
