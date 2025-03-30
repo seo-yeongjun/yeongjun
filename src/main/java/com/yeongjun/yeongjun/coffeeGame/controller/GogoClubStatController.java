@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class GogoClubStatController {
 
     private final CoffeeGameStatDAO coffeeGameStatDAO;
-    private static final String PASSWORD = "gogo";
+    private static final List<String> PASSWORD = List.of("gogo","1234");
 
     public GogoClubStatController(CoffeeGameStatDAO coffeeGameStatDAO) {
         this.coffeeGameStatDAO = coffeeGameStatDAO;
@@ -34,7 +34,7 @@ public class GogoClubStatController {
 
     @PostMapping("/login")
     public String login(@RequestParam String password, HttpSession session) {
-        if (PASSWORD.equals(password)) {
+        if (PASSWORD.contains(password)) {
             session.setAttribute("authenticated", true);
             return "redirect:/coffeeGame/gogoClubStat/record";
         }
