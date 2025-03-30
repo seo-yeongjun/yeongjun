@@ -1,0 +1,116 @@
+<!-- layout.html -->
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" lang="ko">
+<head>
+  <title th:text="${title} ?: '기본 제목'">기본 제목</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <link th:href="@{/main.css}" rel="stylesheet">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5922960159916303"
+          crossorigin="anonymous"></script>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+<header class="bg-white shadow-md py-4 relative">
+  <div class="container mx-auto flex justify-between items-center px-4">
+    <a th:href="@{/}" class="flex items-center">
+      <img src="/common/logo.png" alt="logo" class="w-20">
+    </a>
+    <div id="center-menu" class="pointer-events-none absolute inset-0 flex justify-center items-center">
+      <span id="current-time" class="text-gray-700 text-lg font-semibold"></span>
+    </div>
+    <div id="login-menu" class="hidden md:flex space-x-4 text-gray-700">
+      <a th:if="${user == null}" th:href="@{/auth/login}" class="hover:text-blue-500 transition">로그인</a>
+      <a th:if="${user != null}" th:href="@{/mypage}" class="hover:text-blue-500 transition">내 페이지</a>
+      <a th:if="${user == null}" th:href="@{/auth/register}" class="hover:text-blue-500 transition">회원가입</a>
+      <a th:if="${user != null}" th:href="@{/auth/logout}" class="hover:text-blue-500 transition">로그아웃</a>
+    </div>
+    <button id="menu-button" class="md:hidden flex items-center text-gray-700 focus:outline-none p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+           stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<div id="mobile-menu"
+     class="fixed inset-0 bg-black bg-opacity-80 text-white hidden z-50 flex flex-col justify-center items-center transition-all duration-300 transform scale-0">
+  <button id="close-menu" class="absolute top-4 right-4 text-gray-300 p-2 hover:bg-gray-600 rounded-full">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+  </button>
+  <div class="flex flex-col items-center space-y-6">
+    <a th:if="${user == null}" th:href="@{/auth/login}"
+       class="flex items-center space-x-2 text-lg hover:text-gray-300 transition">
+      <span>로그인</span>
+    </a>
+    <a th:if="${user != null}" th:href="@{/mypage}"
+       class="flex items-center space-x-2 text-lg hover:text-gray-300 transition">
+      <span>내 페이지</span>
+    </a>
+    <a th:if="${user == null}" th:href="@{/auth/register}"
+       class="flex items-center space-x-2 text-lg hover:text-gray-300 transition">
+      <span>회원가입</span>
+    </a>
+    <a th:if="${user != null}" th:href="@{/auth/logout}"
+       class="flex items-center space-x-2 text-lg hover:text-gray-300 transition">
+      <span>로그아웃</span>
+    </a>
+  </div>
+</div>
+<div id="mobile-category-menu" class="block md:hidden bg-gray-100 py-2 px-2 overflow-x-auto whitespace-nowrap border-b border-gray-300">
+  <ul class="flex">
+    <li th:each="category : ${gogoClubStatCategory}" class="mr-4 last:mr-0">
+      <a class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm font-medium"
+         th:href="@{|/${category.path}|}" th:text="${category.category_name}"></a>
+    </li>
+  </ul>
+</div>
+
+<div class=" ml-1 py-6 flex-grow flex">
+  <aside class="hidden md:block w-60 bg-gray-100 border-r border-gray-300 p-2 min-w-40">
+    <ul class="space-y-2">
+      <li class="p-2 rounded hover:bg-gray-200 cursor-pointer" th:each="category : ${gogoClubStatCategory}">
+        <a class="block w-full h-full" th:href="@{|/${category.path}|}" th:text="${category.category_name}"></a>
+      </li>
+    </ul>
+  </aside>
+  <main layout:fragment="content" class="w-full md:pt-6 md:px-4 flex-grow">
+  </main>
+</div>
+<footer class="bg-gray-800 py-2 text-center text-gray-200">
+  <p>&copy; 2024 영준닷컴. All rights reserved.</p>
+</footer>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const currentTimeElement = document.getElementById('current-time');
+
+    function updateTime() {
+      const now = new Date();
+      const formattedTime = now.toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      currentTimeElement.textContent = formattedTime;
+    }
+
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    const menuButton = document.getElementById('menu-button');
+    const closeMenu = document.getElementById('close-menu');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    const toggleMenu = () => {
+      mobileMenu.classList.toggle('hidden');
+      mobileMenu.classList.toggle('scale-0');
+    };
+
+    menuButton.addEventListener('click', toggleMenu);
+    closeMenu.addEventListener('click', toggleMenu);
+  });
+</script>
+</body>
+</html>

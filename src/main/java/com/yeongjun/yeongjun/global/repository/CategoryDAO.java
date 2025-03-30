@@ -14,20 +14,26 @@ public class CategoryDAO extends BaseDAO<Category> {
 
     //home
     public List<Category> selectAllBaseCategory() {
-        return selectList("selectAllBaseCategory",null);
+        return selectList("selectAllBaseCategory", null);
     }
 
     //transactions
     public List<Category> selectAllTransactionsCategory() {
-        return selectList("selectAllTransactionsCategory",null);
+        return selectList("selectAllTransactionsCategory", null);
     }
 
-    public List<Category> selectAllToolsCategory() {return selectList("selectAllToolsCategory",null);}
+    public List<Category> selectAllToolsCategory() {
+        return selectList("selectAllToolsCategory", null);
+    }
 
-    public List<Category> selectAllCoffeeGameCategory() {return selectList("selectAllCoffeeGameCategory",null);}
+    public List<Category> selectAllCoffeeGameCategory() {
+        return selectList("selectAllCoffeeGameCategory", null);
+    }
 
     public List<Category> selectAllNewsCategory() {
-        return selectList("selectAllNewsCategory",null);
+        return selectList("selectAllNewsCategory", null);
     }
+
+    public List<Category> selectAllGogoClubStatCategory() {return selectList("selectAllGogoClubStatCategory", null);}
 }
 

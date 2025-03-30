@@ -39,4 +39,10 @@
         from category_by_category_name
         where parent_name = '아재개그 박물관 🤣🏛️'
     </select>
+
+    <select id="selectAllGogoClubStatCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
+        select category_id, category_name, parent_id, description, path
+        from category_by_category_name
+        where parent_name = '고고클럽 통계'
+    </select>
 </mapper>

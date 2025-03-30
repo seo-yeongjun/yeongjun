@@ -23,4 +23,12 @@ public class CoffeeGameModelAttributeAdvice {
         }
     }
 
+    @ModelAttribute
+    public void gogoClubtransactionsAttributes(HttpServletRequest request, Model model) {
+        if (request.getRequestURI().startsWith("/coffeeGame/gogoClubStat")) {
+            model.addAttribute("gogoClubStatCategory", categoryService.getGogoClubStatCategory());
+            model.addAttribute("title", "고고클럽 통계");
+        }
+    }
+
 }

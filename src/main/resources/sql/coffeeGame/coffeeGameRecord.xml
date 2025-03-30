@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="coffeeGame.coffeeGameRecord">
+    <select id="selectAllRecords" resultType="com.yeongjun.yeongjun.coffeeGame.entity.CoffeeGameRecord">
+        select id, date, game_name, loser_name, purchase_items, cost
+        from yeongjun.coffee_game_record
+    </select>
+
+    <insert id="insertRecord" parameterType="com.yeongjun.yeongjun.coffeeGame.entity.CoffeeGameRecord">
+        INSERT INTO yeongjun.coffee_game_record (date, game_name, loser_name, purchase_items, cost)
+        VALUES (#{date},
+                #{game_name},
+                #{loser_name},
+                #{purchase_items},
+                #{cost})
+    </insert>
+
+    <select id="selectTotalCostByLoser" resultType="com.yeongjun.yeongjun.coffeeGame.entity.CoffeeGameRecord">
+        select loser_name, sum(cost) as total_cost
+        from yeongjun.coffee_game_record
+        where loser_name = #{loser_name}
+        group by loser_name
+    </select>
+</mapper>
