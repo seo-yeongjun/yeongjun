@@ -1,6 +1,8 @@
 package com.yeongjun.yeongjun.coffeeGame.controller;
 
 import com.yeongjun.yeongjun.coffeeGame.entity.CoffeeGameRecord;
+import com.yeongjun.yeongjun.coffeeGame.entity.LoseRateStat;
+import com.yeongjun.yeongjun.coffeeGame.entity.CostStat;
 import com.yeongjun.yeongjun.coffeeGame.repository.CoffeeGameStatDAO;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/coffeeGame/gogoClubStat")
@@ -62,15 +66,34 @@ public class GogoClubStatController {
         if (session.getAttribute("authenticated") == null) {
             return "redirect:/coffeeGame/gogoClubStat";
         }
-        // 통계 데이터를 모델에 추가
-        model.addAttribute("loserStats", coffeeGameStatDAO.getAllRecords().stream()
-                .map(record -> new Object[]{
-                        record.getLoser_name(),
-                        coffeeGameStatDAO.getTotalCostByLoser(record.getLoser_name())
-                })
-                .distinct()
-                .toList());
-
+        
+        List<CoffeeGameRecord> records = coffeeGameStatDAO.getAllRecords();
+        
+        // 패배 비율 통계 계산
+        Map<String, Integer> loseCountMap = records.stream()
+                .collect(Collectors.groupingBy(CoffeeGameRecord::getLoser_name, Collectors.collectingAndThen(Collectors.counting(), Long::intValue)));
+        
+        int totalGames = records.size();
+        List<LoseRateStat> loseRateStats = loseCountMap.entrySet().stream()
+                .map(entry -> new LoseRateStat(
+                        entry.getKey(),
+                        entry.getValue(),
+                        (double) entry.getValue() / totalGames * 100
+                ))
+                .collect(Collectors.toList());
+        
+        // 금액 총합 통계 계산
+        Map<String, Integer> costMap = records.stream()
+                .collect(Collectors.groupingBy(CoffeeGameRecord::getLoser_name, 
+                        Collectors.summingInt(CoffeeGameRecord::getCost)));
+        
+        List<CostStat> costStats = costMap.entrySet().stream()
+                .map(entry -> new CostStat(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+        
+        model.addAttribute("loseRateStats", loseRateStats);
+        model.addAttribute("costStats", costStats);
+        
         return "coffeeGame/gogoClubStat/stats";
     }
 }
