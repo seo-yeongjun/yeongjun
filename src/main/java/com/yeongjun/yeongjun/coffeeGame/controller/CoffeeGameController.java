@@ -21,4 +21,9 @@ public class CoffeeGameController {
     public String ghostLeg(Model model) {
         return "coffeeGame/ghostLeg";
     }
+
+    @GetMapping("/carrot")
+    public String carrot(Model model) {
+        return "coffeeGame/carrot";
+    }
 }
