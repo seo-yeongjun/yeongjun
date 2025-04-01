@@ -2,7 +2,7 @@
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
       layout:decorate="~{coffeeGame/layout}">
 <head>
-    <title th:text="${title} ?: '당근 게임 🥕'"></title>
+    <title th:text="${title} ?: '당근 기르기 🥕'"></title>
     <style>
         /* 모바일 대응 */
         @media (max-width: 768px) {
@@ -60,6 +60,7 @@
     <div id="settingBoard" class="container mx-auto py-8">
         <div class="flex justify-center items-center">
             <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md flex flex-col items-center">
+                <h1 class="text-2xl">당근 기르기 🥕</h1>
                 <div class="flex items-center space-x-2 mb-4">
                     <label for="playerCount" class="font-medium text-gray-700">참가자 수</label>
                     <button id="minusBtn" class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition duration-200 focus:outline-none">-</button>
@@ -338,8 +339,12 @@
             ctx.fillStyle = 'rgba(0,0,0,0.7)';
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
+            let fontSize = 24;
+            if (window.innerWidth < 768) { // 768px 이하를 모바일로 판단
+                fontSize = 14;
+            }
             ctx.fillStyle = 'white';
-            ctx.font = 'bold 24px sans-serif';
+            ctx.font = `bold ${fontSize}px sans-serif`;
             ctx.textAlign = 'center';
             const textY = canvasHeight * 0.5; // 화면의 3/4 위치
             ctx.fillText(`${winnerName}님의 당근이 가장 크게 자랐어요.`, canvasWidth / 2, textY - 10);
