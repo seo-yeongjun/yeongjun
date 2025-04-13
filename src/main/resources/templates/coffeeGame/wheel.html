@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorate="~{coffeeGame/layout}">
+<head>
+    <title th:text="${title} ?: '행운의 돌림판'"></title>
+    <style>
+        /* 추가적인 Tailwind 클래스나 커스텀 CSS 필요시 여기에 작성 */
+        .pointer {
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 30px solid black; /* 포인터 색상 */
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="flex flex-col items-center space-y-6">
+
+        <!-- 돌림판 영역: 컨테이너는 화면 전체폭(100vw)로 사용하며 최대 400px로 제한하고, 정사각형 비율 유지 -->
+        <div class="relative w-[90vw] max-w-[400px] aspect-square mx-auto">
+            <!-- 캔버스는 컨테이너 크기에 맞게 채워짐 -->
+            <canvas id="rouletteWheel" class="border-4 rounded-full shadow-lg absolute inset-0 w-full h-full"></canvas>
+            <!-- 고정 포인터 (상단 중앙) -->
+            <div class="pointer absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[2px]"></div>
+        </div>
+
+        <!-- 결과 표시 -->
+        <p id="resultText" class="text-2xl font-bold">결과: ???</p>
+
+        <!-- 돌리기 버튼 -->
+        <button id="spinButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded shadow">
+            돌리기
+        </button>
+
+        <!-- 세그먼트 입력 필드 및 ± 버튼: 입력 필드가 많아지면 자동 줄바꿈 -->
+        <div class="flex flex-col items-center space-y-2">
+            <div id="segmentsContainer" class="flex flex-wrap gap-2">
+                <!-- 초기 입력 필드는 JS에서 채워집니다 -->
+            </div>
+            <div class="flex space-x-2">
+                <button id="plusButton" class="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded shadow">+</button>
+                <button id="minusButton" class="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded shadow">-</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ------ 공통 전역 변수 ------
+        const canvas = document.getElementById("rouletteWheel");
+        const ctx = canvas.getContext("2d");
+        let currentAngle = 0;  // 현재 각도 (도 단위)
+
+        // 스핀 관련 변수
+        let spinning = false;
+        let spinStartAngle = 0;
+        let spinStartTime = 0;
+        let spinDuration = 0;
+        let spinRotationDelta = 0;
+        let animationFrameId = null;
+
+        // 미리 정의된 과일 목록 (총 32개: 첫 2개 "배", "귤" 이후 30개)
+        const predefinedFruits = [
+            "배", "귤", "사과", "포도", "수박", "딸기", "자몽", "키위", "복숭아",
+            "파인애플", "망고", "멜론", "레몬", "오렌지", "블루베리", "라임",
+            "석류", "체리", "감", "자두", "무화과", "코코넛", "파파야", "구아바",
+            "크랜베리", "대추", "아보카도", "포멜로", "두리안", "구즈베리",
+            "패션후르츠", "살구"
+        ];
+
+        // ------ 유틸리티 함수 ------
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+        function randomIntegerInRange(min, max) {
+            return Math.floor(randomInRange(min, max + 1));
+        }
+        function easeOutQuad(t) {
+            return t * (2 - t);
+        }
+
+        // 세그먼트 관련
+        let segmentColors = [];
+        let segments = [];
+        function getSegments() {
+            const inputs = document.querySelectorAll(".segment-input");
+            return Array.from(inputs).map(input => input.value);
+        }
+        function getSegmentColors(n) {
+            const colors = [];
+            for (let i = 0; i < n; i++) {
+                const hue = (i * 360) / n;
+                colors.push(`hsl(${hue}, 70%, 60%)`);
+            }
+            return colors;
+        }
+
+        // ------ 돌림판 그리기 ------
+        function drawWheel(angle) {
+            // 캔버스 크기에 맞춰 드로잉
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 5;
+            segments = getSegments();
+            const n = segments.length;
+            if (n === 0) return;
+            const arcAngle = (2 * Math.PI) / n;
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate((angle * Math.PI) / 180);
+
+            for (let i = 0; i < n; i++) {
+                const startAngle = i * arcAngle;
+                const endAngle = startAngle + arcAngle;
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = segmentColors[i];
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "#333";
+                ctx.stroke();
+
+                // 텍스트 그리기 (섹터 중앙)
+                const midAngle = startAngle + arcAngle / 2;
+                const textX = (radius / 1.5) * Math.cos(midAngle);
+                const textY = (radius / 1.5) * Math.sin(midAngle);
+
+                ctx.save();
+                ctx.translate(textX, textY);
+                ctx.rotate(midAngle + Math.PI / 2);
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 18px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(segments[i], 0, 0);
+                ctx.restore();
+            }
+
+            // 외곽 테두리
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // 결과(포인터가 가리키는 섹터) 업데이트
+        function updateCurrentPositionDisplay(angle) {
+            segments = getSegments();
+            const n = segments.length;
+            if (n === 0) {
+                document.getElementById("resultText").innerText = "결과: 없음";
+                return;
+            }
+            const arc = 360 / n;
+            const pointerAngle = 270;  // 상단(90도) 기준
+            let effectiveAngle = ((pointerAngle - (angle % 360)) + 360) % 360;
+            let index = Math.floor(effectiveAngle / arc);
+            if (index >= n) index = n - 1;
+            const text = segments[index];
+            const color = segmentColors[index];
+            document.getElementById("resultText").innerText = "결과: " + text;
+            document.getElementById("resultText").style.color = color;
+        }
+        function highlightFinalResult(angle) {
+            updateCurrentPositionDisplay(angle);
+            const resultTextEl = document.getElementById("resultText");
+            resultTextEl.classList.add("font-extrabold", "scale-110");
+            setTimeout(() => {
+                resultTextEl.classList.remove("font-extrabold", "scale-110");
+            }, 1200);
+        }
+
+        // ------ 스핀(회전) 관련 함수 ------
+        function calculateTotalRotation(currentAngle) {
+            const angleOffset = randomInRange(1, 360);
+            const fullRotations = randomIntegerInRange(10, 20);
+            const fullRotationAngle = fullRotations * 360;
+            return fullRotationAngle + angleOffset - (currentAngle % 360);
+        }
+
+        function animate(time) {
+            let elapsed = time - spinStartTime;
+            let t = elapsed / spinDuration;
+            if (t > 1) t = 1;
+            let easedProgress = easeOutQuad(t);
+            currentAngle = spinStartAngle + easedProgress * spinRotationDelta;
+            drawWheel(currentAngle);
+            updateCurrentPositionDisplay(currentAngle);
+
+            if (t < 1) {
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                spinning = false;
+                highlightFinalResult(currentAngle);
+            }
+        }
+
+        function spinWheel() {
+            let newRotationDelta = calculateTotalRotation(currentAngle);
+            if (!spinning) {
+                spinning = true;
+                spinStartAngle = currentAngle;
+                spinRotationDelta = newRotationDelta;
+                spinStartTime = performance.now();
+                spinDuration = randomInRange(3000, 4000);
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                cancelAnimationFrame(animationFrameId);
+                spinStartAngle = currentAngle;
+                spinRotationDelta = newRotationDelta;
+                spinStartTime = performance.now();
+                spinDuration = randomInRange(3000, 4000);
+                animationFrameId = requestAnimationFrame(animate);
+            }
+        }
+
+        // ------ 세그먼트 초기화 및 이벤트 연결 ------
+        const segmentsContainer = document.getElementById("segmentsContainer");
+
+        function initializeSegments() {
+            const existingInputs = segmentsContainer.querySelectorAll(".segment-input");
+            // 이미 존재하는 필드가 있다면 미리 정의된 목록에 맞게 값 갱신
+            for (let i = 0; i < existingInputs.length && i < 2; i++) {
+                existingInputs[i].value = predefinedFruits[i];
+            }
+            // 필요한 입력 수 만큼 채우기 (최소 2개)
+            for (let i = existingInputs.length; i < 2; i++) {
+                const newInput = document.createElement("input");
+                newInput.type = "text";
+                newInput.value = predefinedFruits[i];
+                newInput.className = "segment-input w-16 text-center border border-gray-300 rounded";
+                newInput.addEventListener("input", refreshWheel);
+                segmentsContainer.appendChild(newInput);
+            }
+            refreshWheel();
+        }
+
+        function refreshWheel() {
+            segments = getSegments();
+            segmentColors = getSegmentColors(segments.length);
+            drawWheel(currentAngle);
+            updateCurrentPositionDisplay(currentAngle);
+        }
+
+        // 창 크기에 맞게 캔버스의 실제 크기를 재설정 (드로잉 왜곡 방지)
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            drawWheel(currentAngle);
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // 초기화
+        initializeSegments();
+        document.querySelectorAll(".segment-input").forEach(input => {
+            input.addEventListener("input", refreshWheel);
+        });
+        resizeCanvas();
+
+        // + 버튼: 추가할 때 미리 정의된 목록 이후라면 "과일1", "과일2" 등으로 이름 부여
+        document.getElementById("plusButton").addEventListener("click", () => {
+            const count = segmentsContainer.children.length;
+            let newName = "";
+            if (count < predefinedFruits.length) {
+                newName = predefinedFruits[count];
+            } else {
+                newName = `과일${count - predefinedFruits.length + 1}`;
+            }
+            const newInput = document.createElement("input");
+            newInput.type = "text";
+            newInput.value = newName;
+            newInput.className = "segment-input w-16 text-center border border-gray-300 rounded";
+            newInput.addEventListener("input", refreshWheel);
+            segmentsContainer.appendChild(newInput);
+            refreshWheel();
+        });
+
+        // - 버튼: 최소 입력 필드가 2개 이상 남도록 제거
+        document.getElementById("minusButton").addEventListener("click", () => {
+            if (segmentsContainer.children.length > 2) {
+                segmentsContainer.removeChild(segmentsContainer.lastElementChild);
+                refreshWheel();
+            }
+        });
+
+        // 돌리기 버튼 이벤트 연결
+        document.getElementById("spinButton").addEventListener("click", spinWheel);
+    </script>
+</div>
+</body>
+</html>

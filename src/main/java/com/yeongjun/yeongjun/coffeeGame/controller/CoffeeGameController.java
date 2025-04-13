@@ -26,4 +26,9 @@ public class CoffeeGameController {
     public String carrot(Model model) {
         return "coffeeGame/carrot";
     }
+
+    @GetMapping("/wheel")
+    public String wheel(Model model) {
+        return "coffeeGame/wheel";
+    }
 }
