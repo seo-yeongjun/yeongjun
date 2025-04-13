@@ -102,7 +102,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = Math.min(centerX, centerY) - 5;
+            const radius = Math.min(centerX, centerY) ; // 여백을 고려하여 반지름 설정
             segments = getSegments();
             const n = segments.length;
             if (n === 0) return;
