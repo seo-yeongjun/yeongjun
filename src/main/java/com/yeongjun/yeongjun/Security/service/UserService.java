@@ -7,17 +7,22 @@ import com.yeongjun.yeongjun.Security.util.JwtProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 @Service
 public class UserService {
 
     private final UserDAO userDAO;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final EmailService emailService;
 
-    public UserService(UserDAO userDAO, PasswordEncoder passwordEncoder, JwtProvider jwtProvider) {
+    public UserService(UserDAO userDAO, PasswordEncoder passwordEncoder, JwtProvider jwtProvider, EmailService emailService) {
         this.userDAO = userDAO;
         this.passwordEncoder = passwordEncoder;
         this.jwtProvider = jwtProvider;
+        this.emailService = emailService;
     }
 
     // 회원가입 처리
@@ -27,17 +32,47 @@ public class UserService {
         }
         user.setRole(Role.USER);
         user.setPassword(passwordEncoder.encode(user.getPassword())); // 비밀번호 암호화
-        user.set_active(true); // 활성화 상태로 설정
-        return userDAO.insertUser(user) > 0; // 저장 성공 여부 반환
+        user.set_active(false); // 이메일 인증 전까지 비활성화
+        user.setEmail_verified(false);
+        user.setEmail_verification_token(UUID.randomUUID().toString());
+        user.setEmail_verification_token_expiry(LocalDateTime.now().plusHours(24)); // 24시간 유효
+        
+        boolean success = userDAO.insertUser(user) > 0;
+        if (success) {
+            emailService.sendVerificationEmail(user.getEmail(), user.getEmail_verification_token());
+        }
+        return success;
+    }
+
+    // 이메일 인증 처리
+    public boolean verifyEmail(String token) {
+        User user = userDAO.getUserByVerificationToken(token);
+        if (user != null && 
+            user.getEmail_verification_token_expiry().isAfter(LocalDateTime.now())) {
+            user.setEmail_verified(true);
+            user.set_active(true);
+            user.setEmail_verification_token(null);
+            user.setEmail_verification_token_expiry(null);
+            return userDAO.updateUser(user) > 0;
+        }
+        return false;
     }
 
     // 로그인 처리
-    public String loginUser(String username, String password) {
+    public String loginUser(String username, String password, boolean rememberMe) {
         User user = userDAO.getUserByUsername(username);
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new IllegalArgumentException("아이디나 비밀번호가 올바르지 않습니다.");
         }
-        // JWT 토큰 생성
-        return jwtProvider.createToken(user.getUsername(), user.getRole());
+        if (!user.isEmail_verified()) {
+            throw new IllegalArgumentException("이메일 인증이 필요합니다.");
+        }
+        // JWT 토큰 생성 (rememberMe에 따라 유효기간 조정)
+        long validityInMilliseconds = rememberMe ? 30L * 24 * 60 * 60 * 1000 : 8L * 60 * 60 * 1000;
+        return jwtProvider.createToken(user.getUsername(), user.getRole(), validityInMilliseconds);
+    }
+
+    public boolean isEmailExists(String email) {
+        return userDAO.getUserByEmail(email) != null;
     }
 }

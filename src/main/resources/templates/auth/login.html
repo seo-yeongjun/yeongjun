@@ -6,7 +6,7 @@
     <title th:text="${title} ?: '홈 페이지'">홈 페이지</title>
 </head>
 <body>
-<div layout:fragment="content" class="w-full max-w-md px-4 mx-auto h-96 p-6">
+<div layout:fragment="content">
     <div class="bg-white p-6 rounded-lg shadow-md">
         <h1 class="text-2xl font-bold mb-6 text-center">로그인</h1>
         <form th:action="@{/auth/login}" method="post" class="flex flex-col space-y-4">
@@ -34,6 +34,18 @@
                 >
             </div>
 
+            <div class="flex items-center">
+                <input
+                        type="checkbox"
+                        id="rememberMe"
+                        name="rememberMe"
+                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                >
+                <label for="rememberMe" class="ml-2 block text-sm text-gray-700">
+                    30일간 로그인 유지
+                </label>
+            </div>
+
             <button
                     type="submit"
                     class="w-full py-2 bg-indigo-600 text-white font-semibold rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
@@ -42,11 +54,18 @@
             </button>
         </form>
 
+        <div th:if="${error}" class="mt-4 text-red-600 text-sm">
+            <span th:text="${error}"></span>
+        </div>
+
         <div th:if="${param.error}" class="mt-4 text-red-600 text-sm">
             로그인 실패: 아이디나 비밀번호를 확인하세요.
         </div>
         <div th:if="${param.logout}" class="mt-4 text-green-600 text-sm">
             로그아웃되었습니다.
+        </div>
+        <div th:if="${param.success}" class="mt-4 text-green-600 text-sm">
+            입력한 이메일로 인증 메일을 보냈습니다. 메일을 확인해 주세요.
         </div>
     </div>
 </div>

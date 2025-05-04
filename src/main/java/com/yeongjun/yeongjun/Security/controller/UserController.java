@@ -7,11 +7,13 @@ import com.yeongjun.yeongjun.Security.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -19,6 +21,9 @@ import java.time.LocalDateTime;
 public class UserController {
 
     private final UserService userService;
+
+    @Value("${spring.profiles.active}")
+    private String activeProfile;
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -34,21 +39,27 @@ public class UserController {
     @PostMapping("/login")
     public String loginUser(@RequestParam("username") String username,
                             @RequestParam("password") String password,
+                            @RequestParam(value = "rememberMe", required = false) boolean rememberMe,
                             HttpServletResponse response,
                             Model model) {
+        log.info("로그인 시도: username={}, rememberMe={}", username, rememberMe);
         try {
-            String token = userService.loginUser(username, password);
+            String token = userService.loginUser(username, password, rememberMe);
+            log.info("로그인 성공: username={}", username);
+            System.out.println("로그인 성공: username=" + username);
 
             // JWT를 쿠키에 저장
             Cookie cookie = new Cookie("authToken", token);
             cookie.setHttpOnly(true); // JavaScript에서 접근 불가 (XSS 방지)
-            cookie.setSecure(true);  // HTTPS에서만 전송
+            cookie.setSecure("prod".equals(activeProfile));  // 운영 환경에서만 HTTPS 사용
             cookie.setPath("/");     // 모든 경로에 대해 쿠키 전송
-            cookie.setMaxAge(7 * 24 * 60 * 60); // 7일간 유효
+            cookie.setMaxAge(rememberMe ? 30 * 24 * 60 * 60 : -1); // 30일 또는 세션 종료시 만료
             response.addCookie(cookie);
+            log.info("authToken 쿠키 생성: value={}, maxAge={}, secure={}", token, cookie.getMaxAge(), cookie.getSecure());
 
-            return "redirect:/home"; // 로그인 후 리디렉션
+            return "redirect:/"; // 로그인 후 리디렉션
         } catch (IllegalArgumentException e) {
+            log.warn("로그인 실패: username={}, 이유={}", username, e.getMessage());
             model.addAttribute("error", e.getMessage());
             return "auth/login";
         }
@@ -58,7 +69,7 @@ public class UserController {
     public String logout(HttpServletResponse response) {
         Cookie cookie = new Cookie("authToken", null);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        cookie.setSecure("prod".equals(activeProfile));  // 운영 환경에서만 HTTPS 사용
         cookie.setPath("/");
         cookie.setMaxAge(0); // 즉시 만료
         response.addCookie(cookie);
@@ -97,5 +108,19 @@ public class UserController {
     @GetMapping("privacy")
     public String privacyPage(Model model) {
         return "auth/privacy";
+    }
+
+    @GetMapping("/verify-email")
+    public String verifyEmail(@RequestParam("token") String token, Model model) {
+        boolean success = userService.verifyEmail(token);
+        model.addAttribute("success", success);
+        return "auth/verify-email";
+    }
+
+    @GetMapping("/check-email")
+    @ResponseBody
+    public Map<String, Boolean> checkEmail(@RequestParam("email") String email) {
+        boolean exists = userService.isEmailExists(email);
+        return java.util.Collections.singletonMap("exists", exists);
     }
 }

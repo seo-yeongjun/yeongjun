@@ -29,22 +29,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // 모든 요청을 기본적으로 허용
-                )
-                .formLogin(form -> form
-                        .loginPage("/auth/login") // 로그인 페이지 경로
-                        .defaultSuccessUrl("/", true) // 로그인 성공 시 리디렉션
-                        .failureUrl("/auth/login?error=true") // 로그인 실패 시 리디렉션
-                        .permitAll() // 로그인 페이지는 모든 사용자 접근 허용
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/auth/logout")
-                        .logoutSuccessUrl("/")
-                        .permitAll()
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+    .csrf(AbstractHttpConfigurer::disable)
+    .authorizeHttpRequests(auth -> auth
+        .anyRequest().permitAll()
+    )
+    // .formLogin(form -> form ... )  // 이 부분 주석 또는 삭제
+    .logout(logout -> logout
+        .logoutUrl("/auth/logout")
+        .logoutSuccessUrl("/")
+        .deleteCookies("authToken")
+        .permitAll()
+    )
+    .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

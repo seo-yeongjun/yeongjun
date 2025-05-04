@@ -89,6 +89,8 @@
                 class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="이메일을 입력하세요"
         >
+        <p class="text-xs text-gray-500 mt-1"> 이메일 인증을 위해 실 사용 중인 메일을 입력하세요.</p>
+        <p id="emailValidateMsg" class="text-xs mt-1"></p>
       </div>
 
       <div>
@@ -127,5 +129,26 @@
     </form>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const emailInput = document.getElementById('email');
+    const msg = document.getElementById('emailValidateMsg');
+    emailInput.addEventListener('blur', function() {
+        const email = emailInput.value;
+        if (!email) return;
+        fetch(`/auth/check-email?email=${encodeURIComponent(email)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.exists) {
+                    msg.textContent = '이미 사용 중인 이메일입니다.';
+                    msg.className = 'text-xs text-red-500 mt-1';
+                } else {
+                    msg.textContent = '사용 가능한 이메일입니다.';
+                    msg.className = 'text-xs text-green-600 mt-1';
+                }
+            });
+    });
+});
+</script>
 </body>
 </html>

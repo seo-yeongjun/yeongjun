@@ -26,6 +26,9 @@ public class User implements UserDetails {
     private boolean is_active;
     private LocalDateTime created_at;
     private LocalDateTime updated_at;
+    private boolean email_verified;
+    private String email_verification_token;
+    private LocalDateTime email_verification_token_expiry;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

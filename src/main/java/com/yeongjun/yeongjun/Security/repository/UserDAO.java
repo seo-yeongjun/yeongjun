@@ -15,7 +15,19 @@ public class UserDAO extends BaseDAO<User> {
         return selectOne("getUserById", username);
     }
 
+    public User getUserByVerificationToken(String token) {
+        return selectOne("getUserByVerificationToken", token);
+    }
+
     public int insertUser(User user) {
         return insert("insertUser", user);
+    }
+
+    public int updateUser(User user) {
+        return update("updateUser", user);
+    }
+
+    public User getUserByEmail(String email) {
+        return selectOne("getUserByEmail", email);
     }
 }

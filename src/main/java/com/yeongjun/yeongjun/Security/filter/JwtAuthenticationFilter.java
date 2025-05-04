@@ -54,22 +54,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     // JWT 토큰을 쿠키 또는 Authorization 헤더에서 추출
     private String resolveToken(HttpServletRequest request) {
-        // 1. Authorization 헤더에서 토큰 추출
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-
-        // 2. 쿠키에서 토큰 추출
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
+        // 쿠키에서 토큰 확인
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
                 if ("authToken".equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }
         }
-
-        // 토큰이 없으면 null 반환
+        
+        // Authorization 헤더에서 토큰 확인
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
         return null;
     }
 }

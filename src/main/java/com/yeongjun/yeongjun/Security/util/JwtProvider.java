@@ -18,13 +18,11 @@ public class JwtProvider {
     private final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256); // 새로운 Key 생성
 
     // JWT 생성
-    public String createToken(String username, Role role) {
+    public String createToken(String username, Role role, long validityInMilliseconds) {
         Claims claims = Jwts.claims().setSubject(username);
         claims.put("role", role.name()); // Role 추가
 
         Date now = new Date();
-        // 토큰 유효 시간 (1시간)
-        long validityInMilliseconds = 3600000 * 8;
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
         return Jwts.builder()
