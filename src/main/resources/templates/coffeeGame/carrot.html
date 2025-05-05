@@ -2,7 +2,7 @@
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
       layout:decorate="~{coffeeGame/layout}">
 <head>
-    <title th:text="${title} ?: '당근 기르기 🥕'"></title>
+    <title th:text="'영준닷컴 | 커피게임-당근기르기'"></title>
     <style>
         /* 모바일 대응 */
         @media (max-width: 768px) {
@@ -60,13 +60,23 @@
     <div id="settingBoard" class="container mx-auto py-8">
         <div class="flex justify-center items-center">
             <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md flex flex-col items-center">
-                <h1 class="text-2xl">당근 기르기 🥕</h1>
+                <div class="mb-10 w-full bg-[aliceblue] p-4 rounded">
+                    <h1 class="text-2xl font-bold mb-4">당근 기르기</h1>
+                    <p class="text-gray-700 mb-4">
+                        어떤 동물의 당근이 가장 크게 자랐을까요?<br>
+                        가장 큰 당근을 기른 동물이 기분 좋게<br>
+                        커피를 쏜다고 하네요?!
+                    </p>
+                </div>
                 <div class="flex items-center space-x-2 mb-4">
                     <label for="playerCount" class="font-medium text-gray-700">참가자 수</label>
-                    <button id="minusBtn" class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition duration-200 focus:outline-none">-</button>
-                    <input type="number" id="playerCount" class="w-16 text-center border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500" value="4" min="1" max="10">
-                    <button id="plusBtn" class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition duration-200 focus:outline-none">+</button>
-                    <button id="playerCountBtn" class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition duration-200 focus:outline-none">적용/초기화</button>
+                    <button id="minusBtn"
+                            class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition duration-200 focus:outline-none">-</button>
+                    <input type="number" id="playerCount"
+                           class="w-16 text-center border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           value="4" min="1" max="10">
+                    <button id="plusBtn"
+                            class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition duration-200 focus:outline-none">+</button>
                 </div>
                 <div id="labelArea" class="hidden w-full">
                     <div class="flex flex-col items-center space-y-2">
@@ -76,7 +86,10 @@
                     </div>
                 </div>
                 <div class="mt-4 hidden" id="gameBtnArea">
-                    <button id="startGame" class="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600 transition duration-200 focus:outline-none mr-2">게임 시작</button>
+                    <button id="startGame"
+                            class="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600 transition duration-200 focus:outline-none mr-2">
+                        게임 시작
+                    </button>
                 </div>
             </div>
         </div>
@@ -85,7 +98,10 @@
     <!-- 게임 보드 -->
     <div id="gameBoard" class="md:max-w-[82vw] hidden mx-auto mt-4 bg-white rounded-lg shadow-md">
         <div class="flex justify-center mb-4">
-            <button id="resetGame" class="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition duration-200 focus:outline-none">초기화</button>
+            <button id="resetGame"
+                    class="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition duration-200 focus:outline-none">
+                초기화
+            </button>
         </div>
         <div class="overflow-x-auto">
             <canvas id="gameCanvas" class="mx-auto h-[50vh] border border-gray-300"></canvas>
@@ -96,7 +112,7 @@
     <div id="gameModal" class="modal">
         <div class="modal-content">
             <div class="modal-message">
-                누구의 당근이 가장 크게 자랐을까요?
+                누구의 당근이 가장 크게 자랐을까요?<br>
                 가장 큰 당근을 기른 플레이어가 기분 좋게 커피를 쏩니다!
             </div>
             <button id="startCarrotGame" class="modal-button">당근 기르기!</button>
@@ -106,40 +122,25 @@
     <script>
         // 전역 변수
         let ctx, gameCanvas, canvasWidth, canvasHeight;
-        // 전체 맵 높이를 4배로 설정 (우주, 하늘, 대기/구름, 땅)
-        let totalMapHeight;
-        // 초기 오프셋 (땅만 보이도록) = 3 * canvasHeight
-        let initialOffset;
-
+        let totalMapHeight, initialOffset;
         let playerCount = 0;
         let playerNames = [];
         let carrotSizes = [];
-        let animationFrame;
-        let startTime;
+        let animationFrame, startTime;
+        let stars = [], birds = [], clouds = [];
 
-        let stars = [];
-        let birds = [];
-        let clouds = [];
+        // 기본 동물이름 (최대 10명)
+        const defaultAnimals = ['토끼','사자','호랑이','코끼리','여우','원숭이','강아지','고양이','펭귄','판다'];
 
         function initBackgroundElements() {
-            // 별 50개 좌표
             stars = [];
             for (let i = 0; i < 50; i++) {
-                stars.push({
-                    x: Math.random() * canvasWidth,
-                    y: Math.random() * canvasHeight,
-                    size: Math.random() * 2
-                });
+                stars.push({ x: Math.random() * canvasWidth, y: Math.random() * canvasHeight, size: Math.random() * 2 });
             }
-            // 새 5마리 좌표
             birds = [];
             for (let i = 0; i < 5; i++) {
-                birds.push({
-                    x: Math.random() * canvasWidth,
-                    y: canvasHeight + Math.random() * canvasHeight * 0.5
-                });
+                birds.push({ x: Math.random() * canvasWidth, y: canvasHeight + Math.random() * canvasHeight * 0.5 });
             }
-            // 구름 5개 좌표 (대기 영역)
             clouds = [];
             for (let i = 0; i < 5; i++) {
                 clouds.push({
@@ -150,266 +151,196 @@
             }
         }
 
-        // 애니메이션 단계 시간
-        const GROW_DURATION = 500;     // 0.5초 (당근 성장)
-        const SCROLL_DURATION = 8000;   // 8초 (카메라 스크롤)
-        const TOTAL_DURATION = GROW_DURATION + SCROLL_DURATION; // 총 6초
+        const GROW_DURATION = 500;
+        const SCROLL_DURATION = 8000;
+        const TOTAL_DURATION = GROW_DURATION + SCROLL_DURATION;
 
-        // 캔버스 초기화
         function initCanvas() {
             gameCanvas = document.getElementById('gameCanvas');
             ctx = gameCanvas.getContext('2d');
-
-            // 캔버스의 width를 gameBoard의 width로 설정
             canvasWidth = document.getElementById('gameBoard').offsetWidth;
-            // height는 기존처럼 offsetHeight 또는 원하는 값으로 설정 가능 (예: window.innerHeight나 50vh 등)
             canvasHeight = gameCanvas.offsetHeight;
             gameCanvas.width = canvasWidth;
             gameCanvas.height = canvasHeight;
-
-            // 전체 맵 높이 및 초기 오프셋 설정
             totalMapHeight = 4 * canvasHeight;
             initialOffset = 3 * canvasHeight;
-
-            // 캔버스 크기가 결정된 후, 배경 요소 초기화
             initBackgroundElements();
         }
 
-        // 배경 그리기
-        // 0 ~ 1*canvasHeight: 우주, 1~2: 하늘, 2~3: 대기/구름, 3~4: 땅
         function drawBackground(offsetY) {
-            ctx.save();
-            ctx.translate(0, -offsetY);
-
+            ctx.save(); ctx.translate(0, -offsetY);
             // 우주
             ctx.fillStyle = '#000033';
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-            // 별 효과 (미리 저장된 좌표 사용)
-            for (let star of stars) {
-                ctx.fillStyle = 'white';
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
+            stars.forEach(s => { ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill(); });
             // 하늘
-            ctx.fillStyle = '#87CEEB';
-            ctx.fillRect(0, canvasHeight, canvasWidth, canvasHeight);
-
-            // 해(태양) 추가 - 우측 상단에 위치
-            let sunX = canvasWidth - 100;
-            let sunY = canvasHeight + 80; // 하늘 영역 내
-            let sunRadius = 40;
-            let sunGradient = ctx.createRadialGradient(sunX, sunY, sunRadius * 0.2, sunX, sunY, sunRadius);
-            sunGradient.addColorStop(0, 'yellow');
-            sunGradient.addColorStop(1, 'orange');
-            ctx.fillStyle = sunGradient;
-            ctx.beginPath();
-            ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 하늘에 새들 추가 (미리 저장된 좌표 사용)
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 2;
-            for (let bird of birds) {
+            ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, canvasHeight, canvasWidth, canvasHeight);
+            // 해
+            let sunX = canvasWidth - 100, sunY = canvasHeight + 80, sunR = 40;
+            let grad = ctx.createRadialGradient(sunX,sunY,sunR*0.2,sunX,sunY,sunR);
+            grad.addColorStop(0,'yellow'); grad.addColorStop(1,'orange');
+            ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(sunX,sunY,sunR,0,Math.PI*2); ctx.fill();
+            // 새
+            ctx.strokeStyle = 'black'; ctx.lineWidth = 2;
+            birds.forEach(b => {
                 ctx.beginPath();
-                ctx.moveTo(bird.x, bird.y);
-                ctx.lineTo(bird.x + 10, bird.y - 10);
-                ctx.lineTo(bird.x + 20, bird.y);
+                ctx.moveTo(b.x,b.y);
+                ctx.lineTo(b.x+10,b.y-10);
+                ctx.lineTo(b.x+20,b.y);
                 ctx.stroke();
-            }
-
-            // 대기/구름 (간단히 파란색 톤)
+            });
+            // 대기/구름
             ctx.fillStyle = '#99CCFF';
-            ctx.fillRect(0, 2 * canvasHeight, canvasWidth, canvasHeight);
-
-            // 대기 요소: 구름 추가 (미리 저장된 좌표 사용)
-            for (let cloud of clouds) {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillRect(0, 2*canvasHeight, canvasWidth, canvasHeight);
+            clouds.forEach(c => {
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
                 ctx.beginPath();
-                ctx.arc(cloud.x, cloud.y, 20 * cloud.scale, 0, Math.PI * 2);
-                ctx.arc(cloud.x + 25 * cloud.scale, cloud.y - 10 * cloud.scale, 15 * cloud.scale, 0, Math.PI * 2);
-                ctx.arc(cloud.x + 40 * cloud.scale, cloud.y, 20 * cloud.scale, 0, Math.PI * 2);
+                ctx.arc(c.x, c.y, 20*c.scale, 0, Math.PI*2);
+                ctx.arc(c.x+25*c.scale, c.y-10*c.scale, 15*c.scale, 0, Math.PI*2);
+                ctx.arc(c.x+40*c.scale, c.y, 20*c.scale, 0, Math.PI*2);
                 ctx.fill();
-            }
-
+            });
             // 땅
             ctx.fillStyle = '#8B4513';
-            ctx.fillRect(0, 3 * canvasHeight, canvasWidth, canvasHeight);
-            // 땅 질감 표현: 작은 점들 (여전히 매 프레임 랜덤 생성해도 괜찮음)
-            for (let i = 0; i < 300; i++) {
-                let x = Math.random() * canvasWidth;
-                let y = 3 * canvasHeight + Math.random() * canvasHeight;
-                let radius = Math.random() * 2;
-                ctx.fillStyle = 'rgba(100, 50, 0, 0.6)';
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                ctx.fill();
+            ctx.fillRect(0, 3*canvasHeight, canvasWidth, canvasHeight);
+            for (let i=0;i<300;i++){
+                let x = Math.random()*canvasWidth;
+                let y = 3*canvasHeight + Math.random()*canvasHeight;
+                ctx.fillStyle = 'rgba(100,50,0,0.6)';
+                ctx.beginPath(); ctx.arc(x,y,Math.random()*2,0,Math.PI*2); ctx.fill();
             }
-
             ctx.restore();
         }
 
-
-        // 당근 그리기 함수
-        // x: 가로 위치
-        // targetLength: 당근의 최종 길이 (픽셀 단위)
-        // name: 플레이어 명칭
-        // growthProgress: 0~1 (성장 단계, 1이면 full 길이)
-        // offsetY: 배경 스크롤 오프셋
         function drawCarrot(x, targetLength, name, growthProgress, offsetY) {
-            const groundTop = 3 * canvasHeight;  // 땅 윗부분
-            const currentLength = growthProgress * targetLength;
-            const virtualTop = groundTop - currentLength;
-            const canvasBaseY = groundTop - offsetY;
-            const canvasTopY  = virtualTop - offsetY;
+            const groundTop = 3*canvasHeight;
+            const currLen = growthProgress*targetLength;
+            const virtTop = groundTop - currLen;
+            const baseY = groundTop - offsetY;
+            const topY = virtTop - offsetY;
 
-            // 당근 몸통
+            // 줄기
             ctx.beginPath();
-            ctx.moveTo(x, canvasBaseY);
-            ctx.lineTo(x, canvasTopY);
+            ctx.moveTo(x, baseY);
+            ctx.lineTo(x, topY);
             ctx.strokeStyle = '#FF6B6B';
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            // 당근 잎
+            // 잎
             ctx.beginPath();
-            ctx.moveTo(x, canvasTopY);
-            ctx.quadraticCurveTo(x - 10, canvasTopY - 20, x, canvasTopY - 30);
-            ctx.quadraticCurveTo(x + 10, canvasTopY - 20, x, canvasTopY);
+            ctx.moveTo(x, topY);
+            ctx.quadraticCurveTo(x-10, topY-20, x, topY-30);
+            ctx.quadraticCurveTo(x+10, topY-20, x, topY);
             ctx.fillStyle = '#4CAF50';
             ctx.fill();
 
-            // 플레이어 명찰
+            // 이름
             ctx.fillStyle = '#FFF';
             ctx.font = '14px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(name, x, canvasTopY - 10);
+            ctx.fillText(name, x, topY - 10);
         }
 
-        // 애니메이션 루프
         function animate(timestamp) {
             if (!startTime) startTime = timestamp;
-            const elapsed = timestamp - startTime;
-
-            let offsetY = initialOffset;
-            let growthProgress = 0;
+            let elapsed = timestamp - startTime;
+            let offsetY = initialOffset, growthProgress = 0;
 
             if (elapsed <= GROW_DURATION) {
-                // Phase 1: 당근 성장 (배경 고정)
                 growthProgress = elapsed / GROW_DURATION;
             } else {
-                // 성장 완료
                 growthProgress = 1;
+                let scrollElapsed = elapsed - GROW_DURATION;
+                let scrollProg = Math.min(scrollElapsed / SCROLL_DURATION, 1);
+                offsetY = initialOffset * (1 - scrollProg);
             }
 
-            if (elapsed > GROW_DURATION) {
-                // Phase 2: 카메라 스크롤 (2~6초)
-                const scrollElapsed = elapsed - GROW_DURATION;
-                const scrollProgress = Math.min(scrollElapsed / SCROLL_DURATION, 1);
-                offsetY = initialOffset * (1 - scrollProgress);
-            }
-
-            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            ctx.clearRect(0,0,canvasWidth,canvasHeight);
             drawBackground(offsetY);
-
-            const gap = canvasWidth / (playerCount + 1);
-            for (let i = 0; i < playerCount; i++) {
-                const x = gap * (i + 1);
-                drawCarrot(x, carrotSizes[i], playerNames[i], growthProgress, offsetY);
+            let gap = canvasWidth / (playerCount + 1);
+            for (let i=0;i<playerCount;i++){
+                drawCarrot(gap*(i+1), carrotSizes[i], playerNames[i], growthProgress, offsetY);
             }
-
             if (elapsed < TOTAL_DURATION) {
                 animationFrame = requestAnimationFrame(animate);
             } else {
-                // 애니메이션 종료 후 결과 메시지 표시
                 showResult();
             }
         }
 
-        // 결과 메시지 표시 함수
         function showResult() {
-            // 승리자 결정 (가장 긴 당근)
             const maxSize = Math.max(...carrotSizes);
-            const winnerIndex = carrotSizes.indexOf(maxSize);
-            const winnerName = playerNames[winnerIndex];
-
-            // 현재 화면의 배경은 마지막 스크롤 상태(offsetY = 0)
-            // 결과 메시지를 오버레이로 표시
+            const winnerIdx = carrotSizes.indexOf(maxSize);
+            const winner = playerNames[winnerIdx];
             ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-            let fontSize = 24;
-            if (window.innerWidth < 768) { // 768px 이하를 모바일로 판단
-                fontSize = 14;
-            }
+            ctx.fillRect(0,0,canvasWidth,canvasHeight);
+            let fontSize = window.innerWidth < 768 ? 14 : 24;
             ctx.fillStyle = 'white';
             ctx.font = `bold ${fontSize}px sans-serif`;
             ctx.textAlign = 'center';
-            const textY = canvasHeight * 0.5; // 화면의 3/4 위치
-            ctx.fillText(`${winnerName}님의 당근이 가장 크게 자랐어요.`, canvasWidth / 2, textY - 10);
-            ctx.fillText(`기분좋게 커피를 쏩시다!`, canvasWidth / 2, textY + 20);
+            ctx.fillText(`${winner}님의 당근이 가장 크게 자랐어요.`, canvasWidth/2, canvasHeight*0.5 - 10);
+            ctx.fillText(`기분좋게 커피를 쏩시다!`, canvasWidth/2, canvasHeight*0.5 + 20);
         }
 
-        // 게임 초기화
-        // 각 당근의 targetLength는 [canvasHeight, 2.5×canvasHeight] 범위에서 결정하고,
-        // 한 당근은 강제로 3×canvasHeight로 설정하여 우주까지 도달하도록 함.
         function initGame() {
             carrotSizes = [];
-            for (let i = 0; i < playerCount; i++) {
-                const randLength = canvasHeight + Math.random() * (1.5 * canvasHeight);
-                carrotSizes.push(randLength);
+            for (let i=0;i<playerCount;i++){
+                carrotSizes.push(canvasHeight + Math.random()*(1.5*canvasHeight));
             }
-            if (playerCount > 0) {
-                const idx = Math.floor(Math.random() * playerCount);
+            if (playerCount>0){
+                let idx = Math.floor(Math.random()*playerCount);
                 carrotSizes[idx] = 2.5 * canvasHeight;
             }
             startTime = null;
             animationFrame = requestAnimationFrame(animate);
         }
 
-        // 이벤트 리스너
         window.onload = () => {
             const playerCountInput = document.getElementById('playerCount');
-            const playerCountBtn = document.getElementById('playerCountBtn');
             const nameList = document.getElementById('nameList');
             const labelArea = document.getElementById('labelArea');
             const gameBtnArea = document.getElementById('gameBtnArea');
+            const plusBtn = document.getElementById('plusBtn');
+            const minusBtn = document.getElementById('minusBtn');
             const startGame = document.getElementById('startGame');
             const settingBoard = document.getElementById('settingBoard');
             const gameBoard = document.getElementById('gameBoard');
             const resetGame = document.getElementById('resetGame');
-            const plusBtn = document.getElementById('plusBtn');
-            const minusBtn = document.getElementById('minusBtn');
             const gameModal = document.getElementById('gameModal');
             const startCarrotGame = document.getElementById('startCarrotGame');
 
-            plusBtn.addEventListener('click', () => {
-                playerCountInput.value = Math.min(parseInt(playerCountInput.value) + 1, 10);
-            });
-            minusBtn.addEventListener('click', () => {
-                playerCountInput.value = Math.max(parseInt(playerCountInput.value) - 1, 1);
-            });
-
-            playerCountBtn.addEventListener('click', () => {
-                playerCount = parseInt(playerCountInput.value);
+            function updatePlayers() {
+                playerCount = parseInt(playerCountInput.value) || 1;
+                playerCount = Math.min(Math.max(playerCount, 1), 10);
+                playerCountInput.value = playerCount;
                 nameList.innerHTML = '<label class="font-medium text-gray-700 mb-2 block">플레이어 이름</label>';
                 for (let i = 0; i < playerCount; i++) {
                     const input = document.createElement('input');
                     input.type = 'text';
-                    input.value = `플레이어${i + 1}`;
+                    input.value = defaultAnimals[i] || `플레이어${i+1}`;
                     input.className = 'w-full border border-gray-300 rounded px-2 py-1 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500';
                     input.addEventListener('click', () => { input.value = ''; });
                     nameList.appendChild(input);
                 }
                 labelArea.classList.remove('hidden');
                 gameBtnArea.classList.remove('hidden');
+            }
+
+            plusBtn.addEventListener('click', () => {
+                playerCountInput.value = Math.min(parseInt(playerCountInput.value) + 1, 10);
+                updatePlayers();
             });
+            minusBtn.addEventListener('click', () => {
+                playerCountInput.value = Math.max(parseInt(playerCountInput.value) - 1, 1);
+                updatePlayers();
+            });
+            playerCountInput.addEventListener('change', updatePlayers);
 
             startGame.addEventListener('click', () => {
-                const names = document.querySelectorAll('#nameList input');
-                playerNames = Array.from(names).map(input => input.value.trim());
-                if (playerNames.some(name => !name)) {
+                const inputs = document.querySelectorAll('#nameList input');
+                playerNames = Array.from(inputs).map(i => i.value.trim());
+                if (playerNames.some(n => !n)) {
                     alert('모든 플레이어 이름을 입력해주세요.');
                     return;
                 }
@@ -427,6 +358,9 @@
             resetGame.addEventListener('click', () => {
                 window.location.reload();
             });
+
+            // 초기 생성
+            updatePlayers();
         };
     </script>
 </div>

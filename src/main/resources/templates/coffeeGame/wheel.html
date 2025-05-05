@@ -2,7 +2,7 @@
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
       layout:decorate="~{coffeeGame/layout}">
 <head>
-    <title th:text="${title} ?: '행운의 돌림판'"></title>
+    <title th:text="'영준닷컴 | 커피게임-돌려돌려 돌림판'"></title>
     <style>
         /* 추가적인 Tailwind 클래스나 커스텀 CSS 필요시 여기에 작성 */
         .pointer {
@@ -17,7 +17,11 @@
 <body>
 <div layout:fragment="content">
     <div class="flex flex-col items-center space-y-6">
-
+        <div class="mb-2 w-full bg-[aliceblue] p-4 rounded">
+            <h1 class="text-xl font-bold mb-2">돌려돌려 돌림판</h1>
+            <p class="text-gray-700 mb-4">+,- 버튼으로 참가자 수를 조정하고 [돌리기] 버튼으로 돌림판을 돌립니다.</p>
+            <p class="text-gray-500 text-sm">※ 돌리기 버튼을 여러번 눌러도 되요!</p>
+        </div>
         <!-- 돌림판 영역: 컨테이너는 화면 전체폭(100vw)로 사용하며 최대 400px로 제한하고, 정사각형 비율 유지 -->
         <div class="relative w-[90vw] max-w-[400px] aspect-square mx-auto">
             <!-- 캔버스는 컨테이너 크기에 맞게 채워짐 -->

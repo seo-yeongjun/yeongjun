@@ -6,6 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
   <link th:href="@{/main.css}" rel="stylesheet">
+  <link rel="icon" href="/common/android-chrome-512x512.png"/>
+  <link rel="apple-touch-icon" href="/common/apple-touch-icon.png"/>
+  <meta name="description" content="영준닷컴 | 도구상자">
+  <meta name="keywords" content="영준닷컴, 웹툴, web application, 도구상자">
+  <meta name="author" content="영준닷컴">
+  <meta property="og:title" content="영준닷컴 | 도구상자">
+  <meta property="og:description" content="영준닷컴 | 도구상자">
+  <meta property="og:image" content="/common/logo.png">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5922960159916303"
           crossorigin="anonymous"></script>
 </head>
@@ -59,23 +67,8 @@
     </a>
   </div>
 </div>
-<div id="mobile-category-menu" class="block md:hidden bg-gray-100 py-2 px-2 overflow-x-auto whitespace-nowrap border-b border-gray-300">
-  <ul class="flex">
-    <li th:each="category : ${toolsCategory}" class="mr-4 last:mr-0">
-      <a class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm font-medium"
-         th:href="@{|/${category.path}|}" th:text="${category.category_name}"></a>
-    </li>
-  </ul>
-</div>
 
 <div class=" ml-1 py-6 flex-grow flex">
-  <aside class="hidden md:block w-60 bg-gray-100 border-r border-gray-300 p-2 min-w-40">
-    <ul class="space-y-2">
-      <li class="p-2 rounded hover:bg-gray-200 cursor-pointer" th:each="category : ${toolsCategory}">
-        <a class="block w-full h-full" th:href="@{|/${category.path}|}" th:text="${category.category_name}"></a>
-      </li>
-    </ul>
-  </aside>
   <main layout:fragment="content" class="w-full md:pt-6 md:px-4 flex-grow">
   </main>
 </div>

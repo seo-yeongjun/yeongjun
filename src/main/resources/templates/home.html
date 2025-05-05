@@ -1,46 +1,179 @@
 <!DOCTYPE html>
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{layout}">
 <head>
-    <title th:text="${title} ?: '홈 페이지'">홈 페이지</title>
+    <title th:text="'영준닷컴 | 홈 페이지'">영준닷컴 | 홈 페이지</title>
     <style>
-        .category-box:nth-child(7n+1) {
-            background-color: #f87171; /* 빨강 */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 1rem;
+            padding: 0.2rem;
         }
-        .category-box:nth-child(7n+2) {
-            background-color: #fb923c; /* 주황 */
+
+        .app-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
-        .category-box:nth-child(7n+3) {
-            background-color: #facc15; /* 노랑 */
+
+        .app-icon:hover {
+            transform: scale(1.1);
         }
-        .category-box:nth-child(7n+4) {
-            background-color: #4ade80; /* 초록 */
+
+        .app-icon img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 0.5rem;
         }
-        .category-box:nth-child(7n+5) {
-            background-color: #60a5fa; /* 파랑 */
+
+        .app-icon span {
+            font-size: 0.75rem;
+            color: #333;
+            word-break: break-word;
         }
-        .category-box:nth-child(7n+6) {
-            background-color: #818cf8; /* 남색 */
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
         }
-        .category-box:nth-child(7n) {
-            background-color: #a78bfa; /* 보라 */
+
+        .modal-content {
+            position: relative;
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .subcategory-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(60px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .subcategory-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .subcategory-icon img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 0.25rem;
+        }
+
+        .subcategory-icon span {
+            font-size: 0.7rem;
+            color: #333;
+            word-break: break-word;
+        }
+
+        @media (min-width: 768px) {
+            .app-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+
+            .app-icon img {
+                width: 80px;
+                height: 80px;
+            }
+
+            .subcategory-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+
+            .subcategory-icon img {
+                width: 80px;
+                height: 80px;
+            }
         }
     </style>
 </head>
 <body>
 <div layout:fragment="content">
-    <div id="categories" class="flex flex-wrap gap-4">
-        <ul class="flex flex-wrap gap-2 w-full">
-            <li th:each="category : ${baseCategory}"
-                class="w-[48%] md:w-48 p-4 border border-gray-300 rounded-lg shadow-lg text-center text-white hover:scale-105 transform transition-transform category-box">
-                <a th:href="${category.path}"
-                   class="block w-full h-full cursor-pointer">
-                    <strong th:text="${category.category_name}" class="block text-lg font-semibold mb-2">Category Name</strong>
-                    <p th:if="${category.description != null}" th:text="${category.description}" class="text-sm"></p>
-                </a>
-            </li>
-        </ul>
-
+    <div class="app-grid">
+        <!-- 최상위 카테고리 반복 -->
+        <div th:each="category : ${baseCategory}"
+             th:if="${category.parent_id == 0}"
+             class="app-icon">
+            <!-- 자식이 있는 경우 모달 열기 -->
+            <div th:if="${category.has_children}"
+                 th:onclick="|openModal('${category.category_id}')|" class="flex flex-col items-center">
+                <img th:src="${category.icon_path != null ? category.icon_path : '/icon/default.png'}"
+                     th:alt="${category.category_name}" />
+                <span th:text="${category.category_name}">Category Name</span>
+            </div>
+            <!-- 자식이 없는 경우 바로 링크 -->
+            <a th:unless="${category.has_children}"
+               th:href="${category.path}"
+               class="flex flex-col items-center">
+                <img th:src="${category.icon_path != null ? category.icon_path : '/icon/default.png'}"
+                     th:alt="${category.category_name}" />
+                <span th:text="${category.category_name}">Category Name</span>
+            </a>
+        </div>
     </div>
+
+    <!-- 모달 템플릿 -->
+    <div th:each="category : ${baseCategory}"
+         th:if="${category.parent_id == 0}"
+         th:id="|modal-${category.category_id}|"
+         class="modal">
+        <div class="modal-content" th:if="${category.has_children}">
+            <span class="close-modal" th:onclick="|closeModal('${category.category_id}')|">&times;</span>
+            <h2 th:text="${category.category_name}" class="text-xl font-bold mb-4">Category Name</h2>
+            <div class="subcategory-grid">
+                <!-- 서브카테고리 반복 -->
+                <div th:each="subcategory : ${baseCategory}"
+                     th:if="${subcategory.parent_id == category.category_id}"
+                     class="subcategory-icon">
+                    <a th:href="${subcategory.path}" class="flex flex-col items-center">
+                        <img th:src="${subcategory.icon_path != null ? subcategory.icon_path : '/icon/default.png'}"
+                             th:alt="${subcategory.category_name}" />
+                        <span th:text="${subcategory.category_name}">Subcategory Name</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        function openModal(categoryId) {
+            document.getElementById('modal-' + categoryId).style.display = 'block';
+        }
+        function closeModal(categoryId) {
+            document.getElementById('modal-' + categoryId).style.display = 'none';
+        }
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
 </div>
 </body>
 </html>

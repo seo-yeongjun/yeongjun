@@ -5,44 +5,21 @@
 
 <mapper namespace="base.category">
     <select id="selectAllBaseCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
-        select category_id, category_name, parent_id, description, path
-        from category
-        where parent_id is null
-    </select>
-
-    <select id="selectAllTransactionsCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
-        select category_id, category_name, parent_id, description, path
-        from category_by_category_name
-        where parent_name = '가계부'
-    </select>
-
-    <select id="selectAllToolsCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
-        select category_id, category_name, parent_id, description, path
-        from category_by_category_name
-        where parent_name = '도구모음 🛠️🧰'
-    </select>
-
-    <select id="selectAllCoffeeGameCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
-        select category_id, category_name, parent_id, description, path
-        from category_by_category_name
-        where parent_name = '커피게임 ☕️🎲'
-    </select>
-
-    <select id="selectAllNewsCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
-        select category_id, category_name, parent_id, description, path
-        from category_by_category_name
-        where parent_name = '타이틀 뉴스검색 📰🔍'
-    </select>
-
-    <select id="selectAllAjeGagCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
-        select category_id, category_name, parent_id, description, path
-        from category_by_category_name
-        where parent_name = '아재개그 박물관 🤣🏛️'
-    </select>
-
-    <select id="selectAllGogoClubStatCategory" resultType="com.yeongjun.yeongjun.home.model.Category">
-        select category_id, category_name, parent_id, description, path
-        from category_by_category_name
-        where parent_name = '고고클럽 통계📊'
+        SELECT
+            c.category_id,
+            c.category_name,
+            c.parent_id,
+            c.description,
+            c.path,
+            c.icon_path,
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM category
+                    WHERE parent_id = c.category_id
+                ) THEN 1
+                ELSE 0
+                END AS has_children
+        FROM category c
     </select>
 </mapper>

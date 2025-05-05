@@ -17,16 +17,6 @@ public class CategoryService {
     // 캐시 역할을 할 멤버 변수들
     @Getter
     private List<Category> baseCategoryList;
-    @Getter
-    private List<Category> transactionsCategoryList;
-    @Getter
-    private List<Category> toolsCategory;
-    @Getter
-    private List<Category> coffeeGameCategory;
-    @Getter
-    private List<Category> newsCategory;
-    @Getter
-    private List<Category> gogoClubStatCategory;
 
     public CategoryService(CategoryDAO categoryDAO) {
         this.categoryDAO = categoryDAO;
@@ -47,10 +37,5 @@ public class CategoryService {
     @Scheduled(cron = "0 0 * * * *")
     public void updateCategoryCache() {
         baseCategoryList = categoryDAO.selectAllBaseCategory();
-        transactionsCategoryList = categoryDAO.selectAllTransactionsCategory();
-        toolsCategory = categoryDAO.selectAllToolsCategory();
-        coffeeGameCategory = categoryDAO.selectAllCoffeeGameCategory();
-        newsCategory = categoryDAO.selectAllNewsCategory();
-        gogoClubStatCategory = categoryDAO.selectAllGogoClubStatCategory();
     }
 }

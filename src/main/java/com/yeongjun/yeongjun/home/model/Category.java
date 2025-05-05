@@ -13,4 +13,6 @@ public class Category {
     private int parent_id;
     private String description;
     private String path;
+    private String icon_path;
+    private boolean has_children;
 }

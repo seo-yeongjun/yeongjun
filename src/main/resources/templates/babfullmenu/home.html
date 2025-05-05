@@ -4,7 +4,7 @@
         layout:decorate="~{babfullmenu/layout}"
         lang="ko">
 <head>
-    <title th:text="${title} ?: '홈 페이지'">홈 페이지</title>
+    <title th:text="'영준닷컴 | 밥full식단'">홈 페이지</title>
     <style>
         /* 테이블 공통 스타일 */
         table {
@@ -89,6 +89,12 @@
         </div>
     </div>
     <!-- babfullmenu.size() == 0 인 경우(= 오늘 메뉴가 비어있을 때) -->
+    <!-- 페이지 설명 -->
+    <div class="text-center mb-4">
+        <p class="mt-2 text-lg text-gray-600 underline">
+           성공회대학교 밥full의 식단을 제공하는 페이지입니다.<br/>
+        </p>
+    </div>
     <div th:if="${babfullmenu.size() == 0}" class="text-center">
         <p class="mb-4 text-lg font-semibold text-red-500">
             아직 이번주 메뉴를 업로드한 사람이 없어요!<br/>
