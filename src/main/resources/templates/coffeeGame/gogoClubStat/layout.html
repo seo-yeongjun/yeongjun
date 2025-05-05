@@ -61,9 +61,13 @@
 </div>
 <div id="mobile-category-menu" class="block md:hidden bg-gray-100 py-2 px-2 overflow-x-auto whitespace-nowrap border-b border-gray-300">
   <ul class="flex">
-    <li th:each="category : ${gogoClubStatCategory}" class="mr-4 last:mr-0">
+    <li class="mr-4 last:mr-0">
       <a class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm font-medium"
-         th:href="@{|/${category.path}|}" th:text="${category.category_name}"></a>
+         href="/coffeeGame/gogoClubStat/stats">통계</a>
+    </li>
+    <li class="mr-4 last:mr-0">
+      <a class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm font-medium"
+         href="/coffeeGame/gogoClubStat/record">기록하기</a>
     </li>
   </ul>
 </div>
@@ -71,8 +75,11 @@
 <div class=" ml-1 py-6 flex-grow flex">
   <aside class="hidden md:block w-60 bg-gray-100 border-r border-gray-300 p-2 min-w-40">
     <ul class="space-y-2">
-      <li class="p-2 rounded hover:bg-gray-200 cursor-pointer" th:each="category : ${gogoClubStatCategory}">
-        <a class="block w-full h-full" th:href="@{|/${category.path}|}" th:text="${category.category_name}"></a>
+      <li class="p-2 rounded hover:bg-gray-200 cursor-pointer" >
+        <a class="block w-full h-full" href="/coffeeGame/gogoClubStat/stats">통계</a>
+      </li>
+      <li class="p-2 rounded hover:bg-gray-200 cursor-pointer">
+        <a class="block w-full h-full" href="/coffeeGame/gogoClubStat/record">기록하기</a>
       </li>
     </ul>
   </aside>
