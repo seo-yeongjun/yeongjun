@@ -1,10 +1,191 @@
 <!DOCTYPE html>
-<html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{magicBook/layout}">
+<html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorate="~{magicBook/layout}"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="'영준닷컴 | 고민해결 책(업무)'"></title>
+    <title th:text="'영준닷컴 | 고민해결 책(업무)'">고민해결책(업무)</title>
+    <style>
+        /* 컨테이너 및 초기 화면 */
+        .magicbook-initial {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            height: 100%;
+            /* 업무 이미지에 어울리는 다크 블루 그라디언트 */
+            background: linear-gradient(135deg, #1E273F 0%, #16202E 100%);
+            perspective: 800px;
+            transform-style: preserve-3d;
+        }
+
+        .magicbook-image {
+            width: 200px;
+            height: auto;
+            margin-bottom: 16px;
+        }
+
+        .prompt-text {
+            font-size: 18px;
+            color: #E0E0E0;
+            margin-bottom: 24px;
+            text-align: center;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            min-height: 60px;
+            position: relative;
+        }
+
+        /* 버튼 스타일 */
+        .btn-primary {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 24px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #448AFF; /* 선명한 블루 액센트 */
+            color: #FFFFFF;
+            transition: background-color 0.3s;
+            display: none;
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: #2979FF;
+        }
+
+        /* 깜박이는 커서 */
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            background-color: currentColor;
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+        }
+        @keyframes blink {
+            50% { background-color: transparent; }
+        }
+
+        /* 질문 전환 애니메이션 (책 펼치기) */
+        @keyframes flip {
+            0% { transform: rotateY(0deg); }
+            50% { transform: rotateY(90deg); }
+            100% { transform: rotateY(0deg); }
+        }
+        .flip-animation {
+            animation: flip 0.6s ease-in-out;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .btn-primary {
+                width: 80%;
+                max-width: 300px;
+            }
+        }
+
+        /* 다크 모드 (필요 시 추가 조정) */
+        @media (prefers-color-scheme: dark) {
+            .prompt-text {
+                background-color: rgba(255,255,255,0.05);
+            }
+            .btn-primary {
+                background-color: #82B1FF;
+            }
+            .btn-primary:hover:not(:disabled) {
+                background-color: #448AFF;
+            }
+        }
+    </style>
 </head>
 <body>
 <div layout:fragment="content">
+    <div class="magicbook-initial">
+        <img src="/magicBook/work.png"
+             alt="고민해결책(업무) 이미지"
+             class="magicbook-image"/>
+        <p id="promptText" class="prompt-text"></p>
+        <button id="actionButton"
+                type="button"
+                class="btn-primary"></button>
+    </div>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const entries = /*[[${Entries}]]*/ [];
+        const promptEl = document.getElementById('promptText');
+        const actionButton = document.getElementById('actionButton');
+        let answered = false;
+
+        // 글자 하나씩 타이핑 함수
+        function typeText(el, text, speed) {
+            return new Promise(resolve => {
+                el.textContent = '';
+                let i = 0;
+                const cursor = document.createElement('span');
+                cursor.classList.add('cursor');
+                el.appendChild(cursor);
+                function typing() {
+                    if (i < text.length) {
+                        el.textContent += text.charAt(i);
+                        el.appendChild(cursor);
+                        i++;
+                        setTimeout(typing, speed);
+                    } else {
+                        el.removeChild(cursor);
+                        resolve();
+                    }
+                }
+                typing();
+            });
+        }
+
+        // 초기 타이핑 애니메이션 실행
+        function initTyping() {
+            actionButton.style.display = 'none';
+            typeText(promptEl, '" 업무 고민이 있나? 물어 보면 대답해 줌세. "', 50)
+                .then(() => {
+                    actionButton.textContent = '책의 답변 듣기';
+                    actionButton.style.display = 'inline-block';
+                });
+        }
+
+        // 버튼 클릭 핸들러
+        async function handleShowAnswer() {
+            if (!entries.length) return;
+            actionButton.disabled = true;
+
+            if (!answered) {
+                answered = true;
+                // 검토 중 → 제안 준비 → 실제 답변
+                await typeText(promptEl, '" ... 🔍검토 중... "', 100);
+                await new Promise(res => setTimeout(res, 300));
+                await typeText(promptEl, '" 이렇게 답변하고 싶구만... "', 100);
+                await new Promise(res => setTimeout(res, 300));
+                const idx = Math.floor(Math.random() * entries.length);
+                await typeText(promptEl, '" '+entries[idx].answer+' "', 50);
+                actionButton.textContent = '다른 질문하기';
+            } else {
+                // 질문 리셋 애니메이션 후 초기화
+                const container = document.querySelector('.magicbook-initial');
+                container.classList.add('flip-animation');
+                container.addEventListener('animationend', () => {
+                    container.classList.remove('flip-animation');
+                    answered = false;
+                    initTyping();
+                }, { once: true });
+            }
+
+            actionButton.disabled = false;
+        }
+
+        document.addEventListener('DOMContentLoaded', initTyping);
+        actionButton.addEventListener('click', handleShowAnswer);
+        /*]]>*/
+    </script>
 </div>
 </body>
 </html>
