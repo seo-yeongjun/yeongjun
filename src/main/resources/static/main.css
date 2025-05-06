@@ -734,10 +734,6 @@ video {
   margin-top: auto;
 }
 
-.mb-3 {
-  margin-bottom: 0.75rem;
-}
-
 .block {
   display: block;
 }
@@ -1195,6 +1191,11 @@ video {
   border-top-color: transparent;
 }
 
+.bg-\[aliceblue\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(240 248 255 / var(--tw-bg-opacity, 1));
+}
+
 .bg-black {
   --tw-bg-opacity: 1;
   background-color: rgb(0 0 0 / var(--tw-bg-opacity, 1));
@@ -1260,11 +1261,6 @@ video {
   background-color: rgb(252 165 165 / var(--tw-bg-opacity, 1));
 }
 
-.bg-red-50 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(254 242 242 / var(--tw-bg-opacity, 1));
-}
-
 .bg-red-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(239 68 68 / var(--tw-bg-opacity, 1));
@@ -1292,11 +1288,6 @@ video {
 .bg-yellow-400 {
   --tw-bg-opacity: 1;
   background-color: rgb(250 204 21 / var(--tw-bg-opacity, 1));
-}
-
-.bg-\[aliceblue\] {
-  --tw-bg-opacity: 1;
-  background-color: rgb(240 248 255 / var(--tw-bg-opacity, 1));
 }
 
 .bg-opacity-50 {
@@ -1686,6 +1677,15 @@ video {
 
 .duration-300 {
   transition-duration: 300ms;
+}
+
+ins.adsbygoogle[data-anchor-status="displayed"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  /* 가능한 최대치에 가깝게 설정 */
+  z-index: 2147483647 !important;
 }
 
 .last\:mr-0:last-child {
