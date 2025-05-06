@@ -1,12 +1,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-ins.adsbygoogle[data-anchor-status="displayed"] {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    /* 가능한 최대치에 가깝게 설정 */
-    z-index: 2147483647 !important;
-}
