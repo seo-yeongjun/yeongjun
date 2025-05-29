@@ -88,6 +88,7 @@ public class UserController {
     public String registerUser(@ModelAttribute RegisterRequest registerRequest,@RequestParam("g-recaptcha-response") String recaptchaResponse, Model model) {
         if (!userService.verifyRecaptcha(recaptchaResponse)) {
             model.addAttribute("error", "로봇이 아님을 확인해 주세요.");
+            model.addAttribute("user", registerRequest); // ✅ 누락된 부분 추가
             return "auth/register";
         }
         try {
