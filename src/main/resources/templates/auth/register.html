@@ -33,9 +33,20 @@
         privacyError.textContent = '';
       }
 
+      // reCAPTCHA 확인
+      const captchaResponse = grecaptcha.getResponse();
+      const captchaError = document.getElementById('captchaError');
+      if (!captchaResponse) {
+        captchaError.textContent = '로봇이 아님을 확인해 주세요.';
+        return false;
+      } else {
+        captchaError.textContent = '';
+      }
+
       return true;
     }
   </script>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
 <div layout:fragment="content" class="w-full max-w-md px-4 mx-auto p-6">
@@ -120,6 +131,8 @@
         <p id="privacyError" class="mt-1 text-red-600 text-sm"></p>
       </div>
 
+      <div class="g-recaptcha" data-sitekey="6LeHFU4rAAAAABULmlOxU3k2RCvOeNSvoLumk7On"></div>
+      <p id="captchaError" class="mt-1 text-red-600 text-sm"></p>
       <button
               type="submit"
               class="w-full py-2 bg-indigo-600 text-white font-semibold rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"

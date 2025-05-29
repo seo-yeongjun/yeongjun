@@ -85,7 +85,11 @@ public class UserController {
 
     // 회원가입 처리
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute RegisterRequest registerRequest, Model model) {
+    public String registerUser(@ModelAttribute RegisterRequest registerRequest,@RequestParam("g-recaptcha-response") String recaptchaResponse, Model model) {
+        if (!userService.verifyRecaptcha(recaptchaResponse)) {
+            model.addAttribute("error", "로봇이 아님을 확인해 주세요.");
+            return "auth/register";
+        }
         try {
             User user = new User();
             user.setUsername(registerRequest.getUsername());

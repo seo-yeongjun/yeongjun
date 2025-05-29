@@ -1,5 +1,6 @@
 package com.yeongjun.yeongjun.Security.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import com.yeongjun.yeongjun.Security.model.Role;
 import com.yeongjun.yeongjun.Security.model.User;
 import com.yeongjun.yeongjun.Security.repository.UserDAO;
@@ -17,6 +18,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final EmailService emailService;
+    @Value("${recaptcha.secret-key}")
+    private String recaptchaSecretKey;
 
     public UserService(UserDAO userDAO, PasswordEncoder passwordEncoder, JwtProvider jwtProvider, EmailService emailService) {
         this.userDAO = userDAO;
@@ -56,6 +59,20 @@ public class UserService {
             return userDAO.updateUser(user) > 0;
         }
         return false;
+    }
+
+    //reCaptcha 검증
+    public boolean verifyRecaptcha(String recaptchaResponse) {
+        String secret = recaptchaSecretKey;
+        RestTemplate restTemplate = new RestTemplate();
+        String verifyUrl = "https://www.google.com/recaptcha/api/siteverify";
+        
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("secret", secret);
+        params.add("response", recaptchaResponse);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(verifyUrl, params, Map.class);
+        return (Boolean) response.getBody().get("success");
     }
 
     // 로그인 처리
