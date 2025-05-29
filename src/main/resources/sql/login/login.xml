@@ -92,4 +92,20 @@
         FROM Users
         WHERE email = #{email}
     </select>
+
+    <select id="getUserByNickname" resultType="com.yeongjun.yeongjun.Security.model.User">
+        SELECT username,
+               password,
+               nickname,
+               email,
+               role,
+               is_active,
+               created_at,
+               updated_at,
+               email_verified,
+               email_verification_token,
+               email_verification_token_expiry
+        FROM Users
+        WHERE nickname = #{nickname}
+    </select>
 </mapper>

@@ -107,6 +107,11 @@ public class UserController {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("user", registerRequest);
             return "auth/register";
+        } catch (Exception e) {
+            // 예기치 못한 예외에 대한 사용자 안내 및 로깅
+            model.addAttribute("error", "예기치 못한 문제가 발생했습니다. zanygeek8371@gmail.com 으로 문의 주세요.");
+            model.addAttribute("user", registerRequest);
+            return "auth/register";
         }
     }
 

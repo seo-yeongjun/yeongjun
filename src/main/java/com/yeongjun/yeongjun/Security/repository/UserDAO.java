@@ -30,4 +30,8 @@ public class UserDAO extends BaseDAO<User> {
     public User getUserByEmail(String email) {
         return selectOne("getUserByEmail", email);
     }
+
+    public User getUserByNickname(String nickname) {
+        return selectOne("getUserByNickname", nickname);
+    }
 }

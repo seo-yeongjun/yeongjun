@@ -40,6 +40,15 @@ public class UserService {
         if (userDAO.getUserByUsername(user.getUsername()) != null) {
             throw new IllegalArgumentException("이미 사용중인 아이디입니다.");
         }
+        // 이메일 중복 확인
+        if (userDAO.getUserByEmail(user.getEmail()) != null) {
+            throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
+        }
+
+        // 닉네임 중복 확인
+        if (userDAO.getUserByNickname(user.getNickname()) != null) {
+            throw new IllegalArgumentException("이미 사용중인 닉네임입니다.");
+        }
         user.setRole(Role.USER);
         user.setPassword(passwordEncoder.encode(user.getPassword())); // 비밀번호 암호화
         user.set_active(false); // 이메일 인증 전까지 비활성화
