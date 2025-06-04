@@ -5,6 +5,7 @@ import com.yeongjun.yeongjun.Security.model.Role;
 import com.yeongjun.yeongjun.Security.model.User;
 import com.yeongjun.yeongjun.Security.repository.UserDAO;
 import com.yeongjun.yeongjun.Security.util.JwtProvider;
+import com.yeongjun.yeongjun.Security.service.EmailService;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,8 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Map;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class UserService {
