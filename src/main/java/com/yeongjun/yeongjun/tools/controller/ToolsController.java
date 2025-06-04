@@ -42,5 +42,5 @@ public class ToolsController {
     public String textCompare() {return "tools/textCompare";}
 
     @GetMapping("duplicateCheck")
-    public String textCompare() {return "tools/duplicateCheck";}
+    public String duplicateCheck() {return "tools/duplicateCheck";}
 }
