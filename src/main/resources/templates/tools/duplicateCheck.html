@@ -4,15 +4,210 @@
         layout:decorate="~{tools/layout}">
 <head>
     <meta charset="UTF-8">
-    <title th:text="'영준닷컴 | 도구상자-중복 제거&개수 확인'"></title>
+    <title th:text="'영준닷컴 | 도구상자-중복 제거·개수 분석'"></title>
     <script>
-    </script>
+        function processInput() {
+            const startBtn = document.getElementById('processButton');
+            const loading = document.getElementById('loadingMessage');
+            const emptyMsgs = document.querySelectorAll('.empty-message');
+            const removedTbody = document.querySelector('#removedTable tbody');
+            const countedTbody = document.querySelector('#countedTable tbody');
 
+            startBtn.disabled = true;
+            loading.classList.remove('hidden');
+            emptyMsgs.forEach(p => p.classList.add('hidden'));
+
+            setTimeout(() => {
+                // 1) 원본 줄 분리
+                const rawLines = document
+                    .getElementById('inputText')
+                    .value
+                    .split(/\r?\n/);
+
+                // 2) 옵션
+                const ignoreSpaces = document.getElementById('gapCheck').checked;
+                const ignoreCase = document.getElementById('capitalizeCheck').checked;
+                const doSort = document.getElementById('sortCheck').checked;
+                const skipEmpty = document.getElementById('skipEmptyCheck').checked;
+
+                // 3) 집계
+                const countMap = new Map();
+                const order = [];
+
+                rawLines.forEach(line => {
+                    // 빈 줄 무시
+                    if (skipEmpty && line.trim() === '') return;
+
+                    let key = line;
+                    if (ignoreSpaces) key = key.replace(/\s+/g, '');
+                    if (ignoreCase) key = key.toLowerCase();
+
+                    if (!countMap.has(key)) {
+                        countMap.set(key, 0);
+                        order.push(key);
+                    }
+                    countMap.set(key, countMap.get(key) + 1);
+                });
+
+                // 4) 순서 or 정렬
+                const uniqueKeys = doSort
+                    ? Array.from(countMap.keys()).sort((a, b) => a.localeCompare(b, 'ko'))
+                    : order;
+
+                // 5) 테이블 초기화
+                removedTbody.innerHTML = '';
+                countedTbody.innerHTML = '';
+
+                // 6) 테이블 채우기
+                uniqueKeys.forEach(key => {
+                    const tr1 = document.createElement('tr');
+                    tr1.innerHTML = `<td class="px-3 py-2 whitespace-nowrap">${key}</td>`;
+                    removedTbody.appendChild(tr1);
+
+                    const tr2 = document.createElement('tr');
+                    tr2.innerHTML = `
+          <td class="px-3 py-2 whitespace-nowrap">${key}</td>
+          <td class="px-3 py-2 whitespace-nowrap text-right">${countMap.get(key)}</td>
+        `;
+                    countedTbody.appendChild(tr2);
+                });
+
+                // 7) UI 마무리
+                loading.classList.add('hidden');
+                startBtn.disabled = false;
+
+                if (uniqueKeys.length === 0) {
+                    emptyMsgs.forEach(p => p.classList.remove('hidden'));
+                }
+            }, 100);
+        }
+    </script>
+    <style>
+        #removedTable,
+        #countedTable {
+            border-collapse: collapse;
+        }
+
+        /* 모든 셀에 동일한 패딩과 최소 높이 부여 */
+        #removedTable td,
+        #countedTable td {
+            height: 2.5rem;
+            padding: 0.75rem;
+            vertical-align: middle;
+            border: 1px solid #e5e7eb;
+            text-align: left;    /* 왼쪽 정렬 */
+        }
+
+        /* 헤더 셀 스타일 */
+        #removedTable th,
+        #countedTable th {
+            border: 1px solid #e5e7eb;
+            height: 2.5rem;
+            padding: 0.75rem;
+            vertical-align: middle;
+            text-align: left;
+        }
+    </style>
 </head>
-<body>
-<div layout:fragment="content" class="w-full md:pt-6 md:px-4 flex-grow mx-auto px-4 sm:px-6 lg:px-8" style="max-width: 91vw;">
-    개발 중 입니다. <br>
-    완성 예정 일 : 2025년 6월 7일일
+
+<body class="bg-gray-50">
+<div layout:fragment="content" class="max-w-4xl mx-auto p-4">
+    <!-- 타이틀 -->
+    <div id="titleAndDescription" class="text-center mb-6">
+        <h1 class="text-3xl font-bold mb-2">중복 제거·개수 분석</h1>
+        <p class="text-gray-600">
+            여러 줄 텍스트를 붙여넣으면<br>
+            중복은 제거하고, 중복된 횟수를 보여줍니다.
+        </p>
+    </div>
+
+    <!-- 설정 -->
+    <div id="setting" class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+        <label class="inline-flex items-center space-x-2">
+            <input type="checkbox" id="gapCheck" class="form-checkbox h-5 w-5 text-blue-600">
+            <span>띄어쓰기,탭 무시 비교</span>
+        </label>
+        <label class="inline-flex items-center space-x-2">
+            <input type="checkbox" id="skipEmptyCheck" class="form-checkbox h-5 w-5 text-blue-600">
+            <span>빈 줄 제거</span>
+        </label>
+        <label class="inline-flex items-center space-x-2">
+            <input type="checkbox" id="capitalizeCheck" class="form-checkbox h-5 w-5 text-blue-600">
+            <span>대소문자 구분 안 함</span>
+        </label>
+        <label class="inline-flex items-center space-x-2">
+            <input type="checkbox" id="sortCheck" class="form-checkbox h-5 w-5 text-blue-600">
+            <span>결과 자동 정렬(A-Z, ㄱ-ㅎ 순)</span>
+        </label>
+    </div>
+
+    <!-- 입력 영역 -->
+    <div id="inputArea" class="mb-6">
+      <textarea
+              id="inputText"
+              rows="10"
+              class="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="중복을 제거하고 중복 횟수를 파악할 텍스트를 붙여넣으세요…"
+      ></textarea>
+    </div>
+
+    <!-- 실행 버튼 -->
+    <button
+            id="processButton"
+            onclick="processInput()"
+            class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition disabled:opacity-50"
+    >
+        중복 제거
+    </button>
+
+    <!-- 로딩 상태 메시지 -->
+    <p id="loadingMessage" class="mt-4 text-blue-600 font-medium hidden">
+        분석 중… 잠시만 기다려 주세요.
+    </p>
+
+    <!-- 결과 영역 -->
+    <div id="resultArea" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- 고유 항목 테이블 -->
+        <div id="removeArea" class="bg-white border border-gray-200 rounded-lg p-4">
+            <h2 class="mb-2 font-medium text-gray-700">중복 제거 목록</h2>
+            <div class="overflow-x-auto">
+                <table id="removedTable" class="min-w-full divide-y divide-gray-200 border">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">항목</th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    <!-- JS로 채워집니다 -->
+                    </tbody>
+                </table>
+            </div>
+            <p class="empty-message mt-2 text-gray-500 italic">
+                결과가 없습니다.<br>먼저 ‘중복 제거’ 버튼을 눌러 주세요.
+            </p>
+        </div>
+
+        <!-- 항목별 개수 테이블 -->
+        <div id="countArea" class="bg-white border border-gray-200 rounded-lg p-4">
+            <h2 class="mb-2 font-medium text-gray-700">중복 횟수</h2>
+            <div class="overflow-x-auto">
+                <table id="countedTable" class="min-w-full divide-y divide-gray-200 border">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">항목</th>
+                        <th class="px-3 py-2 text-right text-sm font-medium text-gray-600">개수</th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    <!-- JS로 채워집니다 -->
+                    </tbody>
+                </table>
+            </div>
+            <p class="empty-message mt-2 text-gray-500 italic">
+                결과가 없습니다.<br>먼저 ‘중복 제거’ 버튼을 눌러 주세요.
+            </p>
+        </div>
+    </div>
 </div>
 </body>
 </html>
