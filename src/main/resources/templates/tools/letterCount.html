@@ -32,8 +32,8 @@
                 let lengthRemoveSpace = textRemoveSpace.length;
                 let byteRemoveSpace = getByteLength(textRemoveSpace);
 
-                textLength.innerHTML = `<span class="font-bold">띄어쓰기 포함:</span><br>${length} 글자, ${byte} byte`;
-                textSpaceRemoveLength.innerHTML = `<span class="font-bold">띄어쓰기 제외:</span><br>${lengthRemoveSpace} 글자, ${byteRemoveSpace} byte`;
+                textLength.innerHTML = `<span class="font-bold">띄어쓰기 포함:</span><br>${length} 글자, ${byte} ${(byte === 1 ? "byte" : "bytes")}`;
+                textSpaceRemoveLength.innerHTML = `<span class="font-bold">띄어쓰기 제외:</span><br>${lengthRemoveSpace} 글자, ${byteRemoveSpace} ${(byteRemoveSpace === 1 ? "byte" : "bytes")}`;
             }
 
             function getByteLength(s, b, i, c) {
