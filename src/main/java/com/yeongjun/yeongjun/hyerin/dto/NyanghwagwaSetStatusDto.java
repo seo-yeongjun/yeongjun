@@ -8,6 +8,7 @@ import lombok.Getter;
 public class NyanghwagwaSetStatusDto {
     private final Long setId;
     private final String setName;
+    private final Long naverProductNo;
     private final Integer stockQuantity;
     private final Integer totalItemCount;
 }

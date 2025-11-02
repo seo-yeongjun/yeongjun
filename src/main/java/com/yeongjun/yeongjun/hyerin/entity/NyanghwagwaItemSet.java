@@ -11,6 +11,7 @@ public class NyanghwagwaItemSet {
     private Long set_id;
     private String set_name;
     private String description;
+    private Long naver_product_no;
     private LocalDateTime created_at;
     private LocalDateTime updated_at;
 }

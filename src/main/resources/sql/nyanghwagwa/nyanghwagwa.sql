@@ -13,6 +13,7 @@ CREATE TABLE nyanghwagwa_item_sets (
     set_id         BIGINT AUTO_INCREMENT PRIMARY KEY,
     set_name       VARCHAR(100) NOT NULL UNIQUE,
     description    TEXT,
+    naver_product_no BIGINT,
     created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at     DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

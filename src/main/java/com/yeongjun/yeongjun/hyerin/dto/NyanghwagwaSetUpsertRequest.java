@@ -18,6 +18,8 @@ public class NyanghwagwaSetUpsertRequest {
 
     private String description;
 
+    private Long naverProductNo;
+
     @Valid
     private List<NyanghwagwaSetComponentRequest> components;
 }

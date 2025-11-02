@@ -9,6 +9,7 @@
         <id property="set_id" column="set_id" />
         <result property="set_name" column="set_name" />
         <result property="description" column="description" />
+        <result property="naver_product_no" column="naver_product_no" />
         <result property="created_at" column="created_at" />
         <result property="updated_at" column="updated_at" />
     </resultMap>
@@ -17,6 +18,7 @@
         SELECT set_id,
                set_name,
                description,
+               naver_product_no,
                created_at,
                updated_at
           FROM nyanghwagwa_item_sets
@@ -27,6 +29,7 @@
         SELECT set_id,
                set_name,
                description,
+               naver_product_no,
                created_at,
                updated_at
           FROM nyanghwagwa_item_sets
@@ -34,14 +37,15 @@
     </select>
 
     <insert id="insertSet" parameterType="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaItemSet" useGeneratedKeys="true" keyProperty="set_id">
-        INSERT INTO nyanghwagwa_item_sets (set_name, description)
-        VALUES (#{set_name}, #{description})
+        INSERT INTO nyanghwagwa_item_sets (set_name, description, naver_product_no)
+        VALUES (#{set_name}, #{description}, #{naver_product_no})
     </insert>
 
     <update id="updateSet" parameterType="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaItemSet">
         UPDATE nyanghwagwa_item_sets
            SET set_name = #{set_name},
-               description = #{description}
+               description = #{description},
+               naver_product_no = #{naver_product_no}
          WHERE set_id = #{set_id}
     </update>
 

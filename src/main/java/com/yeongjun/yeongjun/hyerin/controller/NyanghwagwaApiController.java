@@ -49,7 +49,9 @@ public class NyanghwagwaApiController {
     public NyanghwagwaDashboardView produce(@Valid @RequestBody NyanghwagwaProduceRequest request,
                                             @AuthenticationPrincipal User user) {
         if (request.getSetId() != null) {
+            inventoryService.synchronizeSetFromNaver(request.getSetId());
             inventoryService.produceSet(request.getSetId(), request.getCount(), resolveActor(user), request.getNotes());
+            inventoryService.pushSetStockToNaver(request.getSetId());
         } else if (request.getItemId() != null) {
             inventoryService.produceItem(request.getItemId(), request.getCount(), resolveActor(user), request.getNotes());
         } else {
@@ -61,7 +63,9 @@ public class NyanghwagwaApiController {
     @PostMapping("/sale")
     public NyanghwagwaDashboardView sale(@Valid @RequestBody NyanghwagwaSaleRequest request,
                                          @AuthenticationPrincipal User user) {
+        inventoryService.synchronizeSetFromNaver(request.getSetId());
         inventoryService.sellSet(request.getSetId(), request.getCount(), resolveActor(user), request.getNotes());
+        inventoryService.pushSetStockToNaver(request.getSetId());
         return inventoryService.loadDashboardView();
     }
 
@@ -86,14 +90,14 @@ public class NyanghwagwaApiController {
 
     @PostMapping("/sets")
     public NyanghwagwaDashboardView createSet(@Valid @RequestBody NyanghwagwaSetUpsertRequest request) {
-        inventoryService.upsertSet(null, request.getSetName(), request.getDescription(), toInputs(request.getComponents()));
+        inventoryService.upsertSet(null, request.getSetName(), request.getDescription(), request.getNaverProductNo(), toInputs(request.getComponents()));
         return inventoryService.loadDashboardView();
     }
 
     @PutMapping("/sets/{setId}")
     public NyanghwagwaDashboardView updateSet(@PathVariable Long setId,
                                               @Valid @RequestBody NyanghwagwaSetUpsertRequest request) {
-        inventoryService.upsertSet(setId, request.getSetName(), request.getDescription(), toInputs(request.getComponents()));
+        inventoryService.upsertSet(setId, request.getSetName(), request.getDescription(), request.getNaverProductNo(), toInputs(request.getComponents()));
         return inventoryService.loadDashboardView();
     }
 

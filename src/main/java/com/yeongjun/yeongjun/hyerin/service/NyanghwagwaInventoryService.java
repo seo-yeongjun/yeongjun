@@ -34,22 +34,31 @@ public class NyanghwagwaInventoryService {
 
     public record SetComponentInput(Long itemId, Integer requiredQuantity) {}
 
+    private static final String NAVER_SYNC_ACTOR = "naver-sync";
+    private static final String NAVER_SYNC_NOTE_SALE = "네이버 스마트스토어 판매 동기화";
+    private static final String NAVER_SYNC_NOTE_RESTOCK = "네이버 스마트스토어 재고 보정";
+
     private final NyanghwagwaItemDAO itemDAO;
     private final NyanghwagwaItemSetDAO itemSetDAO;
     private final NyanghwagwaItemSetEntryDAO itemSetEntryDAO;
     private final NyanghwagwaInventoryLogDAO inventoryLogDAO;
+    private final NaverSmartStoreService naverSmartStoreService;
 
     public NyanghwagwaInventoryService(NyanghwagwaItemDAO itemDAO,
                                        NyanghwagwaItemSetDAO itemSetDAO,
                                        NyanghwagwaItemSetEntryDAO itemSetEntryDAO,
-                                       NyanghwagwaInventoryLogDAO inventoryLogDAO) {
+                                       NyanghwagwaInventoryLogDAO inventoryLogDAO,
+                                       NaverSmartStoreService naverSmartStoreService) {
         this.itemDAO = itemDAO;
         this.itemSetDAO = itemSetDAO;
         this.itemSetEntryDAO = itemSetEntryDAO;
         this.inventoryLogDAO = inventoryLogDAO;
+        this.naverSmartStoreService = naverSmartStoreService;
     }
 
     public NyanghwagwaDashboardView loadDashboardView() {
+        synchronizeAllSetsFromNaver();
+
         List<NyanghwagwaItem> items = itemDAO.selectAllItems();
         Map<Long, NyanghwagwaItem> itemMap = toItemMap(items);
 
@@ -131,6 +140,7 @@ public class NyanghwagwaInventoryService {
     public NyanghwagwaItemSet upsertSet(Long setId,
                                         String setName,
                                         String description,
+                                        Long naverProductNo,
                                         List<SetComponentInput> components) {
         if (!StringUtils.hasText(setName)) {
             throw new IllegalArgumentException("세트 이름을 입력해 주세요.");
@@ -147,6 +157,7 @@ public class NyanghwagwaInventoryService {
 
         set.setSet_name(setName.trim());
         set.setDescription(StringUtils.hasText(description) ? description.trim() : null);
+        set.setNaver_product_no(naverProductNo);
 
         if (isCreate) {
             itemSetDAO.insertSet(set);
@@ -297,6 +308,7 @@ public class NyanghwagwaInventoryService {
         return NyanghwagwaSetStatusDto.builder()
                 .setId(set.getSet_id())
                 .setName(set.getSet_name())
+                .naverProductNo(set.getNaver_product_no())
                 .stockQuantity(stockQuantity)
                 .totalItemCount(totalItemCount)
                 .build();
@@ -305,6 +317,7 @@ public class NyanghwagwaInventoryService {
     private NyanghwagwaSetViewDto buildSetViewDto(NyanghwagwaItemSet set,
                                                   List<NyanghwagwaItemSetEntry> entries,
                                                   Map<Long, NyanghwagwaItem> itemMap) {
+        int stockQuantity = calculateAvailableSetCount(entries, itemMap);
         List<NyanghwagwaSetComponentDto> components = CollectionUtils.isEmpty(entries)
                 ? List.of()
                 : entries.stream()
@@ -327,6 +340,8 @@ public class NyanghwagwaInventoryService {
                 .setId(set.getSet_id())
                 .setName(set.getSet_name())
                 .description(set.getDescription())
+                .naverProductNo(set.getNaver_product_no())
+                .stockQuantity(stockQuantity)
                 .items(components)
                 .requireAlert(requireAlert)
                 .build();
@@ -407,5 +422,69 @@ public class NyanghwagwaInventoryService {
         log.setActor_username(actor);
         log.setNotes(notes);
         inventoryLogDAO.insertLog(log);
+    }
+
+    @Transactional
+    public void synchronizeAllSetsFromNaver() {
+        if (!naverSmartStoreService.isIntegrationEnabled()) {
+            return;
+        }
+        List<NyanghwagwaItemSet> sets = itemSetDAO.selectAllSets();
+        for (NyanghwagwaItemSet set : sets) {
+            synchronizeSetFromNaverInternal(set);
+        }
+    }
+
+    @Transactional
+    public void synchronizeSetFromNaver(Long setId) {
+        if (!naverSmartStoreService.isIntegrationEnabled()) {
+            return;
+        }
+        NyanghwagwaItemSet set = requireSet(setId);
+        synchronizeSetFromNaverInternal(set);
+    }
+
+    @Transactional
+    public void pushSetStockToNaver(Long setId) {
+        if (!naverSmartStoreService.isIntegrationEnabled()) {
+            return;
+        }
+        NyanghwagwaItemSet set = requireSet(setId);
+        Long productNo = set.getNaver_product_no();
+        if (productNo == null) {
+            return;
+        }
+        int currentStock = calculateSetStock(setId);
+        naverSmartStoreService.updateInventoryQuantity(productNo, currentStock);
+    }
+
+    private void synchronizeSetFromNaverInternal(NyanghwagwaItemSet set) {
+        if (set == null) {
+            return;
+        }
+        Long productNo = set.getNaver_product_no();
+        if (productNo == null) {
+            return;
+        }
+        naverSmartStoreService.fetchInventoryQuantity(productNo)
+                .ifPresent(remoteStock -> adjustLocalInventoryForRemoteStock(set, remoteStock));
+    }
+
+    private void adjustLocalInventoryForRemoteStock(NyanghwagwaItemSet set, int remoteStock) {
+        int localStock = calculateSetStock(set.getSet_id());
+        if (remoteStock == localStock) {
+            return;
+        }
+        if (remoteStock < localStock) {
+            int diff = localStock - remoteStock;
+            if (diff > 0) {
+                sellSet(set.getSet_id(), diff, NAVER_SYNC_ACTOR, NAVER_SYNC_NOTE_SALE);
+            }
+        } else {
+            int diff = remoteStock - localStock;
+            if (diff > 0) {
+                produceSet(set.getSet_id(), diff, NAVER_SYNC_ACTOR, NAVER_SYNC_NOTE_RESTOCK);
+            }
+        }
     }
 }

@@ -11,6 +11,8 @@ public class NyanghwagwaSetViewDto {
     private final Long setId;
     private final String setName;
     private final String description;
+    private final Long naverProductNo;
+    private final Integer stockQuantity;
     private final List<NyanghwagwaSetComponentDto> items;
     private final boolean requireAlert;
 }
