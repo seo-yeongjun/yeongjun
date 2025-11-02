@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorate="~{hyerin/layout}">
+<head>
+    <title>냥화과 | 접근</title>
+</head>
+<body>
+<div layout:fragment="content" class="w-full flex min-h-[60vh] items-center justify-center bg-gray-50 py-16">
+    <div class="w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <h1 class="text-xl font-semibold text-gray-900">냥화과 접근</h1>
+        <p class="mt-1 text-sm text-gray-500">비밀번호를 입력해 냥화과 재고 관리 화면으로 이동하세요.</p>
+
+        <form th:action="@{/hyerin/login}" method="post" class="mt-6 space-y-4">
+            <div>
+                <label for="accessCode" class="block text-xs font-semibold text-gray-600">비밀번호</label>
+                <input id="accessCode" name="accessCode" type="password" required autofocus
+                       class="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                       placeholder="비밀번호를 입력하세요" />
+            </div>
+
+            <div th:if="${errorMessage != null}" class="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-600">
+                <span th:text="${errorMessage}">비밀번호가 올바르지 않습니다.</span>
+            </div>
+
+            <button type="submit"
+                    class="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                접속
+            </button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

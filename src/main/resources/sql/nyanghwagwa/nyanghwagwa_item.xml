@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="nyanghwagwa.item">
+
+    <resultMap id="NyanghwagwaItemMap" type="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaItem">
+        <id property="item_id" column="item_id" />
+        <result property="item_name" column="item_name" />
+        <result property="quantity" column="quantity" />
+        <result property="unit" column="unit" />
+        <result property="description" column="description" />
+        <result property="created_at" column="created_at" />
+        <result property="updated_at" column="updated_at" />
+    </resultMap>
+
+    <select id="selectAllItems" resultMap="NyanghwagwaItemMap">
+        SELECT item_id,
+               item_name,
+               quantity,
+               unit,
+               description,
+               created_at,
+               updated_at
+          FROM nyanghwagwa_items
+         ORDER BY item_name ASC
+    </select>
+
+    <select id="selectItemById" parameterType="long" resultMap="NyanghwagwaItemMap">
+        SELECT item_id,
+               item_name,
+               quantity,
+               unit,
+               description,
+               created_at,
+               updated_at
+          FROM nyanghwagwa_items
+         WHERE item_id = #{value}
+    </select>
+
+    <insert id="insertItem" parameterType="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaItem" useGeneratedKeys="true" keyProperty="item_id">
+        INSERT INTO nyanghwagwa_items (item_name, quantity, unit, description)
+        VALUES (#{item_name}, #{quantity}, #{unit}, #{description})
+    </insert>
+
+    <update id="updateItem" parameterType="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaItem">
+        UPDATE nyanghwagwa_items
+           SET item_name = #{item_name},
+               quantity = #{quantity},
+               unit = #{unit},
+               description = #{description}
+         WHERE item_id = #{item_id}
+    </update>
+
+    <update id="updateItemQuantity" parameterType="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaItem">
+        UPDATE nyanghwagwa_items
+           SET quantity = #{quantity}
+         WHERE item_id = #{item_id}
+    </update>
+
+    <delete id="deleteItem" parameterType="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaItem">
+        DELETE FROM nyanghwagwa_items
+         WHERE item_id = #{item_id}
+    </delete>
+
+</mapper>

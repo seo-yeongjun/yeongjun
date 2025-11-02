@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="nyanghwagwa.itemSet">
+
+    <resultMap id="NyanghwagwaItemSetMap" type="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaItemSet">
+        <id property="set_id" column="set_id" />
+        <result property="set_name" column="set_name" />
+        <result property="description" column="description" />
+        <result property="created_at" column="created_at" />
+        <result property="updated_at" column="updated_at" />
+    </resultMap>
+
+    <select id="selectAllSets" resultMap="NyanghwagwaItemSetMap">
+        SELECT set_id,
+               set_name,
+               description,
+               created_at,
+               updated_at
+          FROM nyanghwagwa_item_sets
+         ORDER BY set_name ASC
+    </select>
+
+    <select id="selectSetById" parameterType="long" resultMap="NyanghwagwaItemSetMap">
+        SELECT set_id,
+               set_name,
+               description,
+               created_at,
+               updated_at
+          FROM nyanghwagwa_item_sets
+         WHERE set_id = #{value}
+    </select>
+
+    <insert id="insertSet" parameterType="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaItemSet" useGeneratedKeys="true" keyProperty="set_id">
+        INSERT INTO nyanghwagwa_item_sets (set_name, description)
+        VALUES (#{set_name}, #{description})
+    </insert>
+
+    <update id="updateSet" parameterType="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaItemSet">
+        UPDATE nyanghwagwa_item_sets
+           SET set_name = #{set_name},
+               description = #{description}
+         WHERE set_id = #{set_id}
+    </update>
+
+    <delete id="deleteSet" parameterType="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaItemSet">
+        DELETE FROM nyanghwagwa_item_sets
+         WHERE set_id = #{set_id}
+    </delete>
+
+</mapper>

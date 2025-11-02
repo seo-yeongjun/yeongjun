@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="nyanghwagwa.inventoryLog">
+
+    <resultMap id="NyanghwagwaInventoryLogMap" type="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaInventoryLog">
+        <id property="log_id" column="log_id" />
+        <result property="log_type" column="log_type" javaType="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaInventoryLogType" />
+        <result property="set_id" column="set_id" />
+        <result property="item_id" column="item_id" />
+        <result property="quantity_change" column="quantity_change" />
+        <result property="remaining_stock" column="remaining_stock" />
+        <result property="performed_at" column="performed_at" />
+        <result property="actor_username" column="actor_username" />
+        <result property="notes" column="notes" />
+    </resultMap>
+
+    <select id="selectRecentLogs" parameterType="int" resultMap="NyanghwagwaInventoryLogMap">
+        SELECT log_id,
+               log_type,
+               set_id,
+               item_id,
+               quantity_change,
+               remaining_stock,
+               performed_at,
+               actor_username,
+               notes
+          FROM nyanghwagwa_inventory_logs
+         ORDER BY performed_at DESC
+         LIMIT #{value}
+    </select>
+
+    <insert id="insertLog" parameterType="com.yeongjun.yeongjun.hyerin.entity.NyanghwagwaInventoryLog" useGeneratedKeys="true" keyProperty="log_id">
+        INSERT INTO nyanghwagwa_inventory_logs (log_type, set_id, item_id, quantity_change, remaining_stock, performed_at, actor_username, notes)
+        VALUES (#{log_type}, #{set_id}, #{item_id}, #{quantity_change}, #{remaining_stock}, #{performed_at}, #{actor_username}, #{notes})
+    </insert>
+
+    <select id="countProduceLogsBySetId" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+          FROM nyanghwagwa_inventory_logs
+         WHERE set_id = #{value}
+           AND log_type = 'PRODUCE'
+    </select>
+
+    <select id="selectLatestActivitySummary" resultType="map">
+        SELECT log_type,
+               performed_at,
+               notes
+          FROM nyanghwagwa_inventory_logs
+         ORDER BY performed_at DESC
+         LIMIT 1
+    </select>
+
+</mapper>

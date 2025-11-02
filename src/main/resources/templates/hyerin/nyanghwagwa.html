@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorate="~{hyerin/layout}">
+<head>
+    <title>냥화과 | 재고관리</title>
+    <style>
+        details summary svg {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        details[open] summary svg {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content" class="w-full flex flex-col gap-6 sm:gap-8">
+    <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <h1 class="text-2xl font-bold text-gray-800">냥화과 재고 관리</h1>
+    </div>
+
+    <!-- 현황 -->
+    <section class="space-y-4 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-600">현황</span>
+                <h2 class="text-lg font-semibold text-gray-900">세트별 현재 재고</h2>
+            </div>
+        </div>
+
+        <div class="space-y-3" th:if="${#lists.isEmpty(setStatuses)}">
+            <div class="rounded-xl border border-dashed border-blue-200 bg-blue-50/40 p-6 text-center text-sm text-blue-500">
+                아직 등록된 세트가 없습니다. 아래에서 새 세트를 만들어 주세요.
+            </div>
+        </div>
+
+        <div class="space-y-3" th:if="${!#lists.isEmpty(setStatuses)}">
+            <article th:each="status : ${setStatuses}"
+                     th:attr="data-status-card='true', data-set-id=${status.setId}"
+                     class="flex flex-col gap-3 rounded-xl border border-blue-50 bg-blue-50/40 p-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-base font-semibold text-gray-900" th:text="${status.setName}">세트명</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-600">
+                            <span th:text="${status.stockQuantity}">0</span>
+                            <span>세트 보유</span>
+                        </div>
+                        <button type="button" data-status-toggle
+                                class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                            상세보기
+                        </button>
+                    </div>
+                </div>
+                <div class="hidden rounded-lg border border-blue-100 bg-white px-4 py-3" data-status-detail>
+                    <div class="text-sm text-gray-500">세트 구성 정보를 불러오는 중입니다...</div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- 만들었어요 -->
+    <section class="space-y-4 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
+        <details class="rounded-xl border border-indigo-50 bg-indigo-50/40 p-4">
+            <summary class="flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-2">
+                    <span class="rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600">만들었어요</span>
+                </div>
+                <div class="flex items-center gap-1 text-sm font-medium text-emerald-600">
+                    <span>펼치기</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="h-5 w-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m6 9 6 6 6-6" />
+                    </svg>
+                </div>
+            </summary>
+
+            <div class="grid gap-3 sm:grid-cols-2 mt-4">
+                <article class="space-y-4 rounded-xl border border-indigo-50 bg-white px-4 py-3"
+                     th:each="produceItem : ${itemList}"
+                     th:attr="data-set-card='produce', data-item-id=${produceItem.itemId}">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-base font-semibold text-gray-900" th:text="${produceItem.itemName}">아이템명</p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            현재 재고 <span class="font-semibold text-gray-700" th:text="${produceItem.quantity}">0</span> 개
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600" th:for="${'produce-count-' + produceItem.itemId}">만든 개수</label>
+                        <input type="number" min="0" value="0"
+                               class="h-10 w-24 rounded-lg border border-gray-200 px-3 text-sm text-right"
+                               th:id="${'produce-count-' + produceItem.itemId}" data-produce-count>
+                        <button type="button" data-produce-button
+                                class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                            제작 완료
+                        </button>
+                    </div>
+                </div>
+            </article>
+            </div>
+        </details>
+    </section>
+
+    <!-- 팔았어요 -->
+    <section class="space-y-4 rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
+        <details class="rounded-xl border border-rose-50 bg-rose-50/40 p-4">
+            <summary class="flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-2">
+                    <span class="rounded-full bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-600">팔았어요</span>
+                </div>
+                <div class="flex items-center gap-1 text-sm font-medium text-emerald-600">
+                    <span>펼치기</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="h-5 w-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m6 9 6 6 6-6" />
+                    </svg>
+                </div>
+            </summary>
+
+            <div class="mt-4 space-y-3">
+                <article class="space-y-4 rounded-xl border border-rose-50 bg-white px-4 py-3"
+                     th:each="saleSet : ${saleCandidates}"
+                     th:attr="data-set-card='sale', data-set-id=${saleSet.setId}">
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-base font-semibold text-gray-900" th:text="${saleSet.setName}">세트명</p>
+                </div>
+
+                <div class="rounded-lg border border-rose-50 bg-rose-50/50 p-3 text-sm text-rose-600"
+                     th:if="${saleSet.requireAlert}">
+                    재고가 부족한 아이템이 있습니다. 판매 전 재고를 확인해 주세요.
+                </div>
+
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600" th:for="${'sale-count-' + saleSet.setId}">판매 수량</label>
+                        <input type="number" min="1" value="1"
+                               class="h-10 w-20 rounded-lg border border-gray-200 px-3 text-sm"
+                               th:id="${'sale-count-' + saleSet.setId}" data-sale-count>
+                    </div>
+                    <button type="button" data-sale-button
+                            class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                        판매 처리
+                    </button>
+                </div>
+            </article>
+            </div>
+        </details>
+    </section>
+
+    <!-- 아이템 관리 -->
+    <section class="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
+        <details class="rounded-xl border border-emerald-50 bg-emerald-50/40 p-4">
+            <summary class="flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-2">
+                    <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600">화과자 관리</span>
+                </div>
+                <div class="flex items-center gap-1 text-sm font-medium text-emerald-600">
+                    <span>펼치기</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="h-5 w-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m6 9 6 6 6-6" />
+                    </svg>
+                </div>
+            </summary>
+
+            <div class="mt-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <button type="button" id="nh-item-form-toggle"
+                            class="flex items-center gap-2 rounded-lg border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-600 hover:bg-emerald-50">
+                        <span class="text-lg leading-none">+</span>
+                        <span>새 화과자</span>
+                    </button>
+                </div>
+
+                <div id="nh-item-form-wrapper" class="hidden rounded-lg border border-emerald-50 bg-white/80 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h4 class="text-base font-semibold text-gray-900">화과자 등록</h4>
+                        </div>
+                        <button type="button" id="nh-item-form-close"
+                                class="h-8 w-8 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-100">×</button>
+                    </div>
+
+                    <form id="nh-item-create-form" class="space-y-3" action="#" method="post">
+                        <div class="grid gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1" for="nh-item-name">화과자명</label>
+                                <input id="nh-item-name" name="itemName" type="text" required
+                                       class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                                       placeholder="예: 펜던트" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1" for="nh-item-description">비고</label>
+                                <textarea id="nh-item-description" name="description" rows="2"
+                                          class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                                          placeholder="메모를 입력하세요."></textarea>
+                            </div>
+                        </div>
+                        <div class="flex justify-between">
+                            <button type="button" id="nh-item-form-reset"
+                                    class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100">
+                                입력 초기화
+                            </button>
+                            <button type="button" id="nh-item-create-btn"
+                                    class="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">
+                                화과자 등록
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="space-y-2" th:if="${#lists.isEmpty(itemList)}">
+                    <div class="rounded-lg border border-dashed border-emerald-200 bg-white/60 p-4 text-center text-sm text-emerald-600">
+                        등록된 화과자가 없습니다. 위의 &ldquo;새 화과자&rdquo; 버튼을 눌러 추가해 주세요.
+                    </div>
+                </div>
+
+                <div class="space-y-2" th:if="${!#lists.isEmpty(itemList)}">
+                    <div class="rounded-lg border border-emerald-50 bg-white/80 p-3"
+                         th:each="item : ${itemList}"
+                         th:attr="data-item-row='true', data-item-id=${item.itemId}">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 w-full">
+                                <div class="sm:w-1/3">
+                                    <label class="sr-only">화과자명</label>
+                                    <input type="text" name="itemName"
+                                           class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                                           th:value="${item.itemName}" />
+                                </div>
+                                <div class="hidden flex items-center gap-2 sm:w-1/4">
+                                    <label class="text-xs font-semibold text-gray-500">재고</label>
+                                    <input type="number" min="0" name="quantity"
+                                           class="w-20 rounded-lg border border-gray-200 px-2 py-2 text-sm text-right focus:border-emerald-500 focus:outline-none"
+                                           th:value="${item.quantity}" />
+                                    <span class="text-xs text-gray-500">개</span>
+                                </div>
+                                <div class="sm:flex-1">
+                                    <label class="sr-only">비고</label>
+                                    <input type="text" name="description"
+                                           class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                                           th:value="${item.description}" placeholder="메모 없음" />
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" data-item-action="save"
+                                        class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100">
+                                    저장
+                                </button>
+                                <button type="button" data-item-action="delete"
+                                        class="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-50">
+                                    삭제
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- 세트 관리 -->
+    <section class="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
+        <details class="rounded-xl border border-emerald-50 bg-emerald-50/40 p-4">
+            <summary class="flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-2">
+                    <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600">세트 관리</span>
+                </div>
+                <div class="flex items-center gap-1 text-sm font-medium text-emerald-600">
+                    <span>펼치기</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="h-5 w-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m6 9 6 6 6-6" />
+                    </svg>
+                </div>
+            </summary>
+
+            <div class="mt-4 space-y-4">
+                <div class="space-y-2" th:if="${#lists.isEmpty(setList)}">
+                    <div class="rounded-lg border border-dashed border-emerald-200 bg-white/60 p-4 text-center text-sm text-emerald-600">
+                        세트가 없습니다. 아래의 &ldquo;새 세트&rdquo; 버튼을 눌러 추가해 보세요.
+                    </div>
+                </div>
+
+                <div class="space-y-2" th:if="${!#lists.isEmpty(setList)}">
+                    <details class="rounded-lg border border-emerald-50 bg-white/80 p-3"
+                             th:each="set : ${setList}"
+                             th:attr="data-set-id=${set.setId}, data-set-name=${set.setName}, data-set-description=${set.description != null ? set.description : ''}">
+                        <summary class="flex items-center justify-between gap-2 text-sm font-semibold text-gray-900 cursor-pointer">
+                            <span th:text="${set.setName}">세트명</span>
+                            <span class="text-xs font-medium text-emerald-600">구성 보기</span>
+                        </summary>
+                        <div class="mt-3 space-y-2 text-sm text-gray-600">
+                            <div class="flex items-center justify-between rounded-lg bg-emerald-50/50 px-3 py-2"
+                                 th:each="comp : ${set.items}"
+                                 th:attr="data-item-id=${comp.itemId}, data-required=${comp.requiredQuantity}">
+                                <span th:text="${comp.itemName}">화과자명</span>
+                                <span class="font-semibold text-gray-800" th:text="${comp.requiredQuantity}">0</span>
+                            </div>
+                            <div class="flex flex-wrap justify-end gap-2 pt-2">
+                                <button type="button" data-set-action="edit"
+                                        class="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-100">
+                                    구성 수정
+                                </button>
+                                <button type="button" data-set-action="reset"
+                                        class="rounded-lg border border-amber-200 px-3 py-1 text-xs font-semibold text-amber-600 hover:bg-amber-50">
+                                    구성 초기화
+                                </button>
+                                <button type="button" data-set-action="delete"
+                                        class="rounded-lg border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-500 hover:bg-rose-50">
+                                    세트 삭제
+                                </button>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="flex justify-center">
+                    <button type="button" id="nh-set-form-toggle"
+                            class="flex items-center gap-2 rounded-lg border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-600 hover:bg-emerald-50">
+                        <span class="text-lg leading-none">+</span>
+                        <span>새 세트 추가</span>
+                    </button>
+                </div>
+
+                <div id="nh-set-form-wrapper" class="hidden rounded-lg border border-emerald-50 bg-white/80 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h4 class="text-base font-semibold text-gray-900" id="nh-set-form-title">새 세트 만들기</h4>
+                            <p class="text-xs text-gray-500" id="nh-set-form-description">세트 정보를 입력하고 구성 화과자를 추가하세요.</p>
+                        </div>
+                        <button type="button" id="nh-set-form-close"
+                                class="h-8 w-8 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-100">×</button>
+                    </div>
+
+                    <form id="nh-set-form" class="space-y-3" data-mode="create" action="#" method="post">
+                        <input type="hidden" name="setId" />
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1" for="nh-set-name">세트명</label>
+                                <input id="nh-set-name" name="setName" type="text" required
+                                       class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                                       placeholder="예: 스페셜 키트" />
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1" for="nh-set-description">설명</label>
+                                <textarea id="nh-set-description" name="description" rows="2"
+                                          class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                                          placeholder="세트에 대한 메모를 입력하세요."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold text-gray-600">세트 구성 화과자</span>
+                                <button type="button" id="nh-set-component-add"
+                                        class="flex items-center gap-1 rounded-lg border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-600 hover:bg-emerald-50">
+                                    <span class="text-lg leading-none">+</span>
+                                    구성 추가
+                                </button>
+                            </div>
+                            <div id="nh-set-components" class="space-y-2"></div>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <button type="button" id="nh-set-form-reset"
+                                    class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100">
+                                입력 초기화
+                            </button>
+                            <button type="submit"
+                                    class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                                    id="nh-set-submit-button">
+                                세트 등록
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <template id="nh-set-component-template">
+                    <div class="flex flex-col gap-2 rounded-lg border border-emerald-100 bg-white/80 p-3 sm:flex-row sm:items-center"
+                         data-component-row>
+                        <div class="sm:flex-1">
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">화과자</label>
+                            <select name="itemId" required
+                                    class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+                                <option value="">화과자를 선택하세요</option>
+                            </select>
+                        </div>
+                        <div class="sm:w-36">
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">필요 수량</label>
+                            <input type="number" name="requiredQuantity" min="1" value="1" required
+                                   class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none" />
+                        </div>
+                        <div class="sm:w-24 flex justify-end">
+                            <button type="button" data-component-remove
+                                    class="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-50">
+                                삭제
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </details>
+    </section>
+
+    <script th:inline="javascript">
+        window.NyanghwagwaData = {
+            itemList: /*[[${itemList}]]*/ [],
+            setList: /*[[${setList}]]*/ []
+        };
+    </script>
+
+    <script>
+        (function () {
+            const apiBase = '/api/hyerin/nyanghwagwa';
+            const nyData = window.NyanghwagwaData || { itemList: [], setList: [] };
+
+            const setLookup = new Map((nyData.setList || []).map(set => [String(set.setId), set]));
+
+            function resolveSetData(setId) {
+                if (setId == null) {
+                    return null;
+                }
+                const key = String(setId);
+                if (setLookup.has(key)) {
+                    return setLookup.get(key);
+                }
+                return (nyData.setList || []).find(set => String(set.setId) === key) || null;
+            }
+
+            function renderStatusDetail(detailElement, setData) {
+                if (!detailElement) {
+                    return;
+                }
+                detailElement.replaceChildren();
+
+                if (!setData) {
+                    const empty = document.createElement('div');
+                    empty.className = 'text-sm text-gray-500';
+                    empty.textContent = '세트 정보를 찾을 수 없습니다.';
+                    detailElement.appendChild(empty);
+                    return;
+                }
+
+                if (!Array.isArray(setData.items) || setData.items.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.className = 'text-sm text-gray-500';
+                    empty.textContent = '등록된 구성 아이템이 없습니다.';
+                    detailElement.appendChild(empty);
+                    return;
+                }
+
+                const listContainer = document.createElement('div');
+                listContainer.className = 'flex flex-col gap-3';
+
+                const components = setData.items.slice();
+                const chunkSize = 3;
+                for (let i = 0; i < components.length; i += chunkSize) {
+                    const chunk = components.slice(i, i + chunkSize);
+                    const column = document.createElement('div');
+                    column.className = 'rounded-lg border border-blue-100/70 bg-blue-50/40 p-3';
+
+                    chunk.forEach(component => {
+                        const unit = component?.unit && component.unit.trim().length > 0
+                            ? component.unit.trim()
+                            : '개';
+                        const required = component?.requiredQuantity != null ? component.requiredQuantity : 0;
+                        const current = component?.currentQuantity != null ? component.currentQuantity : 0;
+
+                        const row = document.createElement('p');
+                        row.className = 'text-sm text-gray-700';
+                        row.textContent = `${component?.itemName || '아이템'} 필요: ${required}${unit} 보유: ${current}${unit}`;
+                        column.appendChild(row);
+                    });
+
+                    listContainer.appendChild(column);
+                }
+
+                detailElement.appendChild(listContainer);
+            }
+
+            const statusCards = document.querySelectorAll('[data-status-card]');
+            statusCards.forEach(card => {
+                const toggleButton = card.querySelector('[data-status-toggle]');
+                const detailElement = card.querySelector('[data-status-detail]');
+                if (!toggleButton || !detailElement) {
+                    return;
+                }
+                const setId = card.dataset.setId ? Number(card.dataset.setId) : null;
+
+                toggleButton.addEventListener('click', () => {
+                    const willOpen = detailElement.classList.contains('hidden');
+                    if (willOpen) {
+                        renderStatusDetail(detailElement, resolveSetData(setId));
+                        detailElement.classList.remove('hidden');
+                        toggleButton.textContent = '닫기';
+                    } else {
+                        detailElement.classList.add('hidden');
+                        toggleButton.textContent = '상세보기';
+                    }
+                });
+            });
+
+            const produceToggles = document.querySelectorAll('[data-accordion-toggle]');
+            produceToggles.forEach(button => {
+                button.addEventListener('click', () => {
+                    const panel = button.parentElement.querySelector('[data-accordion-panel]');
+                    if (!panel) return;
+                    panel.classList.toggle('hidden');
+                    const icon = button.querySelector('svg');
+                    if (icon) {
+                        icon.classList.toggle('rotate-180');
+                    }
+                });
+            });
+
+            const quantityButtons = document.querySelectorAll('[data-quantity-btn]');
+            quantityButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const input = btn.parentElement.querySelector('[data-quantity-input]');
+                    if (!input) return;
+                    const delta = btn.dataset.quantityBtn === '+' ? 1 : -1;
+                    const current = parseInt(input.value || '0', 10);
+                    const next = Math.max(0, current + delta);
+                    input.value = next;
+                });
+            });
+
+        function getCsrfToken() {
+            const cookie = document.cookie.split(';').map(v => v.trim()).find(v => v.startsWith('XSRF-TOKEN='));
+            if (!cookie) {
+                return null;
+            }
+            return decodeURIComponent(cookie.split('=')[1]);
+        }
+
+        async function apiRequest(path, method, payload) {
+            const headers = { 'Content-Type': 'application/json' };
+            const csrfToken = getCsrfToken();
+            if (csrfToken) {
+                headers['X-XSRF-TOKEN'] = csrfToken;
+            }
+            const response = await fetch(`${apiBase}${path}`, {
+                method,
+                headers,
+                body: payload ? JSON.stringify(payload) : null,
+                credentials: 'same-origin'
+            });
+
+                if (!response.ok) {
+                    let message;
+                    try {
+                        const data = await response.json();
+                        message = data?.message || data?.error;
+                    } catch (ignore) {
+                        message = await response.text();
+                    }
+                    throw new Error(message || '요청 처리에 실패했습니다.');
+                }
+
+                if (response.status === 204) {
+                    return null;
+                }
+
+                try {
+                    return await response.json();
+                } catch (ignore) {
+                    return null;
+                }
+            }
+
+            function alertError(error) {
+                const message = error instanceof Error ? error.message : String(error);
+                window.alert(message);
+            }
+
+            function reload() {
+                window.location.reload();
+            }
+
+        const produceButtons = document.querySelectorAll('[data-produce-button]');
+        produceButtons.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const card = btn.closest('[data-set-card="produce"]');
+                if (!card) return;
+                const itemId = card.dataset.itemId ? Number(card.dataset.itemId) : null;
+                const setId = card.dataset.setId ? Number(card.dataset.setId) : null;
+                const countInput = card.querySelector('[data-produce-count]');
+                const count = Number(countInput?.value || '0');
+                if (!itemId && !setId) {
+                    alertError('제작 대상 정보를 찾을 수 없습니다.');
+                    return;
+                }
+                if (!count || count < 1) {
+                    alertError('제작 수량은 1 이상이어야 합니다.');
+                    return;
+                }
+                try {
+                    await apiRequest('/produce', 'POST', { setId, itemId, count, notes: null });
+                    reload();
+                } catch (error) {
+                    alertError(error);
+                    console.error('Nyanghwagwa produce error', error);
+                }
+                });
+            });
+
+            const saleButtons = document.querySelectorAll('[data-sale-button]');
+            saleButtons.forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const card = btn.closest('[data-set-card="sale"]');
+                    if (!card) return;
+                    const setId = Number(card.dataset.setId);
+                    const countInput = card.querySelector('[data-sale-count]');
+                    const count = Number(countInput?.value || '0');
+                    if (!setId) {
+                        alertError('세트 정보를 찾을 수 없습니다.');
+                        return;
+                    }
+                    if (!count || count < 1) {
+                        alertError('판매 수량은 1 이상이어야 합니다.');
+                        return;
+                    }
+                    try {
+                        await apiRequest('/sale', 'POST', { setId, count, notes: null });
+                        reload();
+                    } catch (error) {
+                        alertError(error);
+                        console.error('Nyanghwagwa sale error', error);
+                    }
+                });
+            });
+
+        const itemFormWrapper = document.getElementById('nh-item-form-wrapper');
+        const itemFormToggleButton = document.getElementById('nh-item-form-toggle');
+        const itemFormCloseButton = document.getElementById('nh-item-form-close');
+        const itemFormResetButton = document.getElementById('nh-item-form-reset');
+        const itemCreateForm = document.getElementById('nh-item-create-form');
+        const itemCreateButton = document.getElementById('nh-item-create-btn');
+        function openItemForm() {
+            if (itemFormWrapper) {
+                itemFormWrapper.classList.remove('hidden');
+            }
+            prepareItemForm();
+        }
+
+        function closeItemForm() {
+            if (itemFormWrapper) {
+                itemFormWrapper.classList.add('hidden');
+            }
+            prepareItemForm();
+        }
+
+        function prepareItemForm() {
+            if (!itemCreateForm) {
+                return;
+            }
+            itemCreateForm.reset();
+            const input = document.getElementById('nh-item-name');
+            const shouldFocus = itemFormWrapper && !itemFormWrapper.classList.contains('hidden');
+            if (input && shouldFocus) {
+                input.focus({ preventScroll: false });
+            }
+        }
+
+        if (itemFormToggleButton) {
+            itemFormToggleButton.addEventListener('click', () => {
+                if (itemFormWrapper && !itemFormWrapper.classList.contains('hidden')) {
+                    closeItemForm();
+                } else {
+                    openItemForm();
+                }
+            });
+        }
+
+        if (itemFormCloseButton) {
+            itemFormCloseButton.addEventListener('click', () => closeItemForm());
+        }
+
+        if (itemFormResetButton) {
+            itemFormResetButton.addEventListener('click', () => prepareItemForm());
+        }
+
+        if (itemCreateForm && itemCreateButton) {
+            itemCreateButton.addEventListener('click', async () => {
+                const formData = new FormData(itemCreateForm);
+                const payload = {
+                    itemName: (formData.get('itemName') || '').toString().trim(),
+                    quantity: 0,
+                    unit: '개',
+                    description: (formData.get('description') || '').toString().trim()
+                };
+                console.debug('Nyanghwagwa item create payload', payload);
+
+                try {
+                    await apiRequest('/items', 'POST', payload);
+                    closeItemForm();
+                    reload();
+                } catch (error) {
+                    alertError(error);
+                    console.error('Nyanghwagwa item create error', error);
+                }
+            });
+        }
+
+        if (itemFormWrapper) {
+            closeItemForm();
+        }
+
+        const itemRows = document.querySelectorAll('[data-item-row]');
+        itemRows.forEach(row => {
+            const itemId = Number(row.dataset.itemId);
+            const saveButton = row.querySelector('[data-item-action="save"]');
+            const deleteButton = row.querySelector('[data-item-action="delete"]');
+
+                if (saveButton) {
+                saveButton.addEventListener('click', async () => {
+                    const payload = {
+                        itemName: row.querySelector('input[name="itemName"]').value.trim(),
+                        quantity: Number(row.querySelector('input[name="quantity"]').value || '0'),
+                        unit: '개',
+                        description: row.querySelector('input[name="description"]').value.trim()
+                    };
+
+                    try {
+                        await apiRequest(`/items/${itemId}`, 'PUT', payload);
+                        reload();
+                        } catch (error) {
+                            alertError(error);
+                            console.error('Nyanghwagwa item update error', error);
+                        }
+                    });
+                }
+
+                if (deleteButton) {
+                    deleteButton.addEventListener('click', async () => {
+                        if (!window.confirm('해당 화과자를 삭제하시겠어요?')) {
+                            return;
+                        }
+                        try {
+                            await apiRequest(`/items/${itemId}`, 'DELETE');
+                            reload();
+                        } catch (error) {
+                            alertError(error);
+                            console.error('Nyanghwagwa item delete error', error);
+                        }
+                    });
+                }
+            });
+
+        const setFormWrapper = document.getElementById('nh-set-form-wrapper');
+        const setFormToggleButton = document.getElementById('nh-set-form-toggle');
+        const setFormCloseButton = document.getElementById('nh-set-form-close');
+        const setFormTitle = document.getElementById('nh-set-form-title');
+        const setFormDescription = document.getElementById('nh-set-form-description');
+        const setForm = document.getElementById('nh-set-form');
+        const setComponentsContainer = document.getElementById('nh-set-components');
+        const componentTemplate = document.getElementById('nh-set-component-template');
+        const setSubmitButton = document.getElementById('nh-set-submit-button');
+        const setFormResetButton = document.getElementById('nh-set-form-reset');
+
+            function populateItemOptions(select, selectedId) {
+                if (!select) return;
+                const itemList = Array.isArray(nyData.itemList) ? nyData.itemList : [];
+                select.innerHTML = '';
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = '화과자를 선택하세요';
+                select.appendChild(placeholder);
+                itemList.forEach(item => {
+                    if (!item || item.itemId == null) return;
+                    const option = document.createElement('option');
+                    option.value = item.itemId;
+                    option.textContent = item.itemName || `화과자 ${item.itemId}`;
+                    if (selectedId != null && Number(selectedId) === Number(item.itemId)) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            }
+
+        function addComponentRow(itemId, requiredQuantity) {
+            if (!componentTemplate || !setComponentsContainer) {
+                return;
+            }
+            const fragment = componentTemplate.content.cloneNode(true);
+            const row = fragment.querySelector('[data-component-row]');
+            const select = row.querySelector('select[name="itemId"]');
+                const quantityInput = row.querySelector('input[name="requiredQuantity"]');
+                const removeButton = row.querySelector('[data-component-remove]');
+
+                populateItemOptions(select, itemId);
+
+                if (requiredQuantity) {
+                    quantityInput.value = Number(requiredQuantity);
+                }
+
+                removeButton.addEventListener('click', () => {
+                    row.remove();
+                    if (!setComponentsContainer.childElementCount) {
+                        addComponentRow();
+                    }
+                });
+
+            setComponentsContainer.appendChild(fragment);
+        }
+
+        function prepareCreateForm() {
+            if (!setForm || !setComponentsContainer) {
+                return;
+            }
+            setForm.dataset.mode = 'create';
+            if (setSubmitButton) {
+                setSubmitButton.textContent = '세트 등록';
+            }
+            if (setFormTitle) {
+                setFormTitle.textContent = '새 세트 만들기';
+            }
+            if (setFormDescription) {
+                setFormDescription.textContent = '세트 정보를 입력하고 구성 화과자를 추가하세요.';
+            }
+            setForm.reset();
+            const setIdInput = setForm.querySelector('input[name="setId"]');
+            if (setIdInput) {
+                setIdInput.value = '';
+            }
+            setComponentsContainer.innerHTML = '';
+            addComponentRow();
+        }
+
+        function openSetForm(mode = 'create') {
+            if (setFormWrapper) {
+                setFormWrapper.classList.remove('hidden');
+            }
+            if (mode === 'create') {
+                prepareCreateForm();
+            }
+            const nameInput = document.getElementById('nh-set-name');
+            if (nameInput) {
+                nameInput.focus({ preventScroll: false });
+            }
+        }
+
+        function closeSetForm() {
+            if (setFormWrapper) {
+                setFormWrapper.classList.add('hidden');
+            }
+            prepareCreateForm();
+        }
+
+            function fillSetForm(details) {
+                if (!setForm) {
+                    return;
+                }
+        const setIdInput = setForm.querySelector('input[name="setId"]');
+        const setNameInput = document.getElementById('nh-set-name');
+        const setDescriptionInput = document.getElementById('nh-set-description');
+
+        setForm.dataset.mode = 'update';
+        if (setSubmitButton) {
+            setSubmitButton.textContent = '세트 수정';
+        }
+        if (setFormTitle) {
+            setFormTitle.textContent = `${details.dataset.setName || '세트'} 수정`;
+        }
+        if (setFormDescription) {
+            setFormDescription.textContent = '세트 정보를 수정하고 구성 화과자를 업데이트하세요.';
+        }
+        setIdInput.value = details.dataset.setId || '';
+        setNameInput.value = details.dataset.setName || '';
+        setDescriptionInput.value = details.dataset.setDescription || '';
+
+        if (!setComponentsContainer) {
+            return;
+        }
+        setComponentsContainer.innerHTML = '';
+        const componentNodes = details.querySelectorAll('[data-item-id]');
+        if (!componentNodes.length) {
+            addComponentRow();
+        } else {
+            componentNodes.forEach(node => {
+                addComponentRow(node.dataset.itemId, node.dataset.required);
+            });
+        }
+
+        openSetForm('update');
+        setForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+        if (setForm) {
+            const componentAddButton = document.getElementById('nh-set-component-add');
+            if (componentAddButton) {
+                componentAddButton.addEventListener('click', () => addComponentRow());
+            }
+
+            if (setFormToggleButton) {
+                setFormToggleButton.addEventListener('click', () => {
+                    if (setFormWrapper && !setFormWrapper.classList.contains('hidden')) {
+                        closeSetForm();
+                    } else {
+                        openSetForm('create');
+                        if (setFormWrapper) {
+                            setFormWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
+                });
+            }
+
+            if (setFormCloseButton) {
+                setFormCloseButton.addEventListener('click', () => {
+                    closeSetForm();
+                });
+            }
+
+            if (setFormResetButton) {
+                setFormResetButton.addEventListener('click', () => {
+                    prepareCreateForm();
+                });
+            }
+
+            setForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const mode = setForm.dataset.mode || 'create';
+                const setIdInput = setForm.querySelector('input[name="setId"]');
+                const setNameInput = document.getElementById('nh-set-name');
+                const setDescriptionInput = document.getElementById('nh-set-description');
+
+                const rawSetId = setIdInput.value;
+                const setId = rawSetId ? Number(rawSetId) : null;
+
+                const rows = Array.from(setComponentsContainer.querySelectorAll('[data-component-row]'));
+                    if (!rows.length) {
+                        alertError('최소 1개의 구성 화과자를 추가해 주세요.');
+                        return;
+                    }
+
+                    const components = [];
+                    for (const row of rows) {
+                        const itemIdValue = row.querySelector('select[name="itemId"]').value;
+                        const requiredQuantityValue = row.querySelector('input[name="requiredQuantity"]').value;
+                        if (!itemIdValue) {
+                            alertError('모든 구성 행에서 화과자를 선택해 주세요.');
+                            return;
+                        }
+                        if (!requiredQuantityValue || Number(requiredQuantityValue) <= 0) {
+                            alertError('구성 화과자의 필요 수량은 1 이상이어야 합니다.');
+                            return;
+                        }
+                        components.push({
+                            itemId: Number(itemIdValue),
+                            requiredQuantity: Number(requiredQuantityValue)
+                        });
+                    }
+
+                const payload = {
+                    setName: setNameInput.value,
+                    description: setDescriptionInput.value,
+                    components
+                };
+                console.debug('Nyanghwagwa set upsert payload', { mode, setId, payload });
+
+                const path = mode === 'update' && setId ? `/sets/${setId}` : '/sets';
+                const method = mode === 'update' && setId ? 'PUT' : 'POST';
+
+                    try {
+                    await apiRequest(path, method, payload);
+                    reload();
+                } catch (error) {
+                    alertError(error);
+                    console.error('Nyanghwagwa set upsert error', error);
+                }
+            });
+            prepareCreateForm();
+            closeSetForm();
+        }
+
+            const setActionButtons = document.querySelectorAll('[data-set-action]');
+            setActionButtons.forEach(button => {
+                button.addEventListener('click', async () => {
+                    const action = button.dataset.setAction;
+                    const details = button.closest('details');
+                    if (!details) return;
+                    const setId = details.dataset.setId;
+                    const setName = details.dataset.setName || '';
+                    const description = details.dataset.setDescription || '';
+
+                    if (action === 'edit') {
+                    fillSetForm(details);
+                    return;
+                }
+
+                    if (action === 'reset') {
+                        if (!window.confirm('세트 구성 화과자를 모두 제거하시겠어요?')) {
+                            return;
+                        }
+                        try {
+                            await apiRequest(`/sets/${setId}`, 'PUT', {
+                                setName,
+                                description,
+                                components: []
+                            });
+                            reload();
+                        } catch (error) {
+                            alertError(error);
+                        }
+                        return;
+                    }
+
+                    if (action === 'delete') {
+                        if (!window.confirm('세트를 삭제하시겠어요?')) {
+                            return;
+                        }
+                        try {
+                            await apiRequest(`/sets/${setId}`, 'DELETE');
+                            reload();
+                        } catch (error) {
+                            alertError(error);
+                            console.error('Nyanghwagwa set delete error', error);
+                        }
+                    }
+                });
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

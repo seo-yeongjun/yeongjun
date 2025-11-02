@@ -39,6 +39,12 @@ public class HomeController {
                 hyerinCategory.setDescription("혜린이의 포트폴리오 페이지입니다.");
 
                 newCategoryList.add(hyerinCategory);
+                Category nyanghwagwaCategory = new Category();
+                nyanghwagwaCategory.setCategory_name("냥화과");
+                nyanghwagwaCategory.setPath("/hyerin/nyanghwagwa");
+                nyanghwagwaCategory.setDescription("재고관리 메뉴");
+
+                newCategoryList.add(nyanghwagwaCategory);
                 baseCategory = newCategoryList;
             }
         }
