@@ -590,7 +590,12 @@
         </table>
         </div>
     </div>
-    <script>
+    <script th:inline="javascript">
+        /*[# th:if="${likeDislikeMap != null}"]*/
+        const serverLikeDislikeMap = /*[[${likeDislikeMap}]]*/ {};
+        const serverCurrentVoteMap = /*[[${currentVoteMap}]]*/ {};
+        /*[/]*/
+        
         function showSpinner() {
             // 스피너를 화면에 표시
             const spinner = document.getElementById('loadingSpinner');
@@ -787,10 +792,10 @@
         }
 
         // 메뉴별 좋아요/싫어요 초기화
-        async function initializeVotes() {
+        function initializeVotes() {
             const voteContainers = document.querySelectorAll('.menu-vote-container');
             
-            // 각 메뉴별로 서버에서 데이터 조회
+            // 서버에서 받은 데이터 사용 (개별 API 호출 제거)
             for (const container of voteContainers) {
                 const menuName = container.getAttribute('data-menu-name');
                 if (!menuName || menuName.trim() === '') continue;
@@ -806,32 +811,29 @@
                 const likeCountSpan = container.querySelector('.like-count');
                 const dislikeCountSpan = container.querySelector('.dislike-count');
 
-                // 서버에서 좋아요/싫어요 데이터 조회
-                try {
-                    const response = await fetch(`/babfullmenu/likeDislike?menuName=${encodeURIComponent(menuName)}`, {
-                        method: 'GET',
-                        credentials: 'same-origin'
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        likeCountSpan.textContent = result.likeCount != null ? result.likeCount : 0;
-                        dislikeCountSpan.textContent = result.dislikeCount != null ? result.dislikeCount : 0;
-                        
-                        // 현재 투표 상태 설정
-                        if (result.currentVote === 'LIKE') {
-                            likeBtn.classList.add('active');
-                        } else if (result.currentVote === 'DISLIKE') {
-                            dislikeBtn.classList.add('active');
-                        }
-                    } else {
-                        likeCountSpan.textContent = '0';
-                        dislikeCountSpan.textContent = '0';
-                    }
-                } catch (error) {
-                    console.error('좋아요/싫어요 조회 중 오류:', error);
-                    likeCountSpan.textContent = '0';
-                    dislikeCountSpan.textContent = '0';
+                // 서버에서 받은 데이터 사용
+                let likeCount = 0;
+                let dislikeCount = 0;
+                let currentVote = null;
+                
+                if (typeof serverLikeDislikeMap !== 'undefined' && serverLikeDislikeMap[menuName]) {
+                    const likeDislike = serverLikeDislikeMap[menuName];
+                    likeCount = likeDislike && likeDislike.likeCount != null ? likeDislike.likeCount : 0;
+                    dislikeCount = likeDislike && likeDislike.dislikeCount != null ? likeDislike.dislikeCount : 0;
+                }
+                
+                if (typeof serverCurrentVoteMap !== 'undefined' && serverCurrentVoteMap[menuName]) {
+                    currentVote = serverCurrentVoteMap[menuName];
+                }
+                
+                likeCountSpan.textContent = likeCount;
+                dislikeCountSpan.textContent = dislikeCount;
+                
+                // 현재 투표 상태 설정
+                if (currentVote === 'LIKE') {
+                    likeBtn.classList.add('active');
+                } else if (currentVote === 'DISLIKE') {
+                    dislikeBtn.classList.add('active');
                 }
 
                 // 버튼 클릭 이벤트
@@ -924,13 +926,13 @@
         }
 
         // DOM이 모두 로드된 후 실행
-        window.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('DOMContentLoaded', () => {
             // 1) 먼저 내용 없는 <tr>을 제거
             removeEmptyRows();
             // 2) 그리고 폰트 자동 리사이즈 처리
             autoResizeText();
-            // 3) 좋아요/싫어요 초기화 (비동기 완료 대기)
-            await initializeVotes();
+            // 3) 좋아요/싫어요 초기화 (서버 데이터 사용, API 호출 없음)
+            initializeVotes();
             // 4) 모바일 메뉴 토글 설정 (has-vote 클래스가 추가된 후)
             setupMobileMenuToggle();
         });
