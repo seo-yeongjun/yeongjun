@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="babfullMenu.menuVote">
+    <select id="selectByNormalizedMenuNameAndSessionId" parameterType="com.yeongjun.yeongjun.babfullmenu.model.MenuVote" resultType="com.yeongjun.yeongjun.babfullmenu.model.MenuVote">
+        SELECT id, normalized_menu_name AS normalizedMenuName, vote_type AS voteType, session_id AS sessionId, created_at AS createdAt
+        FROM menu_vote
+        WHERE normalized_menu_name = #{normalizedMenuName}
+          AND session_id = #{sessionId}
+    </select>
+
+    <insert id="insertMenuVote" parameterType="com.yeongjun.yeongjun.babfullmenu.model.MenuVote">
+        INSERT INTO menu_vote (normalized_menu_name, vote_type, session_id, created_at)
+        VALUES (#{normalizedMenuName}, #{voteType}, #{sessionId}, #{createdAt})
+    </insert>
+
+    <delete id="deleteMenuVote" parameterType="com.yeongjun.yeongjun.babfullmenu.model.MenuVote">
+        DELETE FROM menu_vote
+        WHERE normalized_menu_name = #{normalizedMenuName}
+          AND session_id = #{sessionId}
+    </delete>
+
+    <select id="selectRecentVotesBySessionId" parameterType="String" resultType="com.yeongjun.yeongjun.babfullmenu.model.MenuVote">
+        SELECT id, normalized_menu_name AS normalizedMenuName, vote_type AS voteType, session_id AS sessionId, created_at AS createdAt
+        FROM menu_vote
+        WHERE session_id = #{sessionId}
+          AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+    </select>
+</mapper>
+

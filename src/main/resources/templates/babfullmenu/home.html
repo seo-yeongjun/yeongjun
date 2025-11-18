@@ -8,15 +8,99 @@
     <style>
         /* 테이블 공통 스타일 */
         table {
-            table-layout: fixed; /* 컬럼 너비 고정 */
+            table-layout: auto; /* 자동 레이아웃 (모바일 대응) */
             margin: 0 auto; /* 가운데 정렬 */
             border-collapse: collapse;
-            width: 80%; /* 원하는 폭 조절 */
+            width: 95%; /* 폭을 넓게 조절 */
             background-color: #FFFFFF;
             /* 살짝 그림자 효과 */
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             /* 테두리 색상 */
             border: 1px solid #E5E7EB;
+        }
+
+        /* 데스크톱에서는 고정 레이아웃 사용 */
+        @media (min-width: 769px) {
+            table {
+                table-layout: fixed;
+                width: 95%;
+            }
+
+            th, td {
+                padding: 0.4rem 0.3rem;
+            }
+
+            .auto-resize {
+                font-size: 13px;
+            }
+
+            .menu-item-container {
+                gap: 2px;
+            }
+
+            .menu-name {
+                line-height: 1.2;
+            }
+
+            .menu-vote-container {
+                gap: 4px;
+                margin-top: 1px;
+                padding: 1px 0;
+            }
+
+            .vote-btn {
+                padding: 2px 5px;
+                font-size: 9px;
+                min-width: 35px;
+                gap: 2px;
+            }
+
+            .vote-emoji {
+                font-size: 10px;
+            }
+
+            tr.breakfast-header > td,
+            tr.lunch-header > td {
+                padding: 0.25rem 0.3rem;
+                font-size: 11px;
+            }
+
+            /* 페이지 전체 높이 최적화 */
+            .text-center {
+                margin-top: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* 태블릿 스타일 */
+        @media (min-width: 481px) and (max-width: 768px) {
+            table {
+                width: 98%;
+            }
+
+            th, td {
+                padding: 0.3rem 0.2rem;
+            }
+
+            .auto-resize {
+                font-size: 11px;
+            }
+
+            .vote-btn {
+                padding: 2px 4px;
+                font-size: 8px;
+                min-width: 30px;
+            }
+
+            .vote-emoji {
+                font-size: 9px;
+            }
+
+            tr.breakfast-header > td,
+            tr.lunch-header > td {
+                padding: 0.25rem 0.2rem;
+                font-size: 10px;
+            }
         }
 
         thead tr {
@@ -26,11 +110,12 @@
 
         th, td {
             border: 1px solid #E5E7EB;
-            padding: 0.75rem;
+            padding: 0.5rem 0.4rem;
             text-align: center;
-            white-space: nowrap;
+            white-space: normal; /* 모바일에서 줄바꿈 허용 */
             font-weight: normal; /* 기본 폰트 굵기 */
             vertical-align: middle;
+            word-break: keep-all; /* 단어 단위로 줄바꿈 */
         }
 
         /* 짝수 행에 살짝 다른 배경색 (테이블에 줄무늬 효과) */
@@ -40,7 +125,7 @@
 
         /* auto-resize 공통 클래스 */
         .auto-resize {
-            font-size: 16px; /* 기본 폰트 사이즈 */
+            font-size: 14px; /* 기본 폰트 사이즈 */
             vertical-align: middle; /* 세로 정렬 */
         }
 
@@ -48,16 +133,295 @@
         tr.breakfast-header > td {
             background-color: #ddc2c2;
             font-weight: 600; /* 구분 행은 약간 두껍게 */
+            padding: 0.4rem 0.4rem;
+            font-size: 13px;
         }
         /* 중식 구분 행 - 파스텔 그린 톤 */
         tr.lunch-header > td {
             background-color: #bcdfbc;
             font-weight: 600;
+            padding: 0.4rem 0.4rem;
+            font-size: 13px;
         }
 
         /* 제공자 문구 색상(원래 text-green-500 사용 중) */
         .provider-text {
             color: #ea7f06; /* Tailwind의 emerald-500 쯤 되는 컬러 */
+        }
+
+        /* 메뉴 아이템 컨테이너 */
+        .menu-item-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .menu-name {
+            margin-bottom: 0;
+            word-break: keep-all;
+            line-height: 1.3;
+        }
+
+        /* 모바일에서 메뉴명과 좋아요/싫어요를 같은 줄에 배치 */
+        @media (max-width: 768px) {
+            .menu-item-container {
+                flex-direction: column;
+                flex-wrap: nowrap;
+                justify-content: center;
+                gap: 4px;
+                align-items: center;
+                cursor: pointer;
+                position: relative;
+            }
+
+            .menu-name {
+                margin-bottom: 0;
+                text-align: center;
+                width: 100%;
+            }
+
+            /* 모바일에서 좋아요/싫어요 기본 숨김 */
+            .menu-vote-container {
+                display: none !important;
+                flex: 0 0 auto;
+                margin-top: 0;
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* 클릭 시 표시되는 클래스 */
+            .menu-item-container.show-votes .menu-vote-container {
+                display: flex !important;
+                animation: fadeIn 0.3s ease-in;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-5px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        }
+
+        /* 좋아요/싫어요 버튼 스타일 */
+        .menu-vote-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 2px;
+            padding: 2px 0;
+        }
+
+        /* 데스크탑/태블릿에서는 항상 표시 */
+        @media (min-width: 769px) {
+            .menu-vote-container {
+                display: flex !important;
+            }
+        }
+
+        .vote-btn {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 3px 6px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            transition: all 0.2s ease;
+            min-width: 40px;
+            justify-content: center;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .vote-btn:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .vote-btn:active {
+            transform: translateY(0);
+        }
+
+        .vote-btn.like-btn.active {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e40af;
+            font-weight: 600;
+        }
+
+        .vote-btn.dislike-btn.active {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+            font-weight: 600;
+        }
+
+        .vote-separator {
+            margin: 0 4px;
+            color: #9ca3af;
+            font-weight: 300;
+        }
+
+        .vote-emoji {
+            font-size: 11px;
+            line-height: 1;
+            display: inline-block;
+        }
+
+        /* 모바일 반응형 스타일 */
+        @media (max-width: 768px) {
+            /* 테이블 컨테이너 스타일 - 가로 스크롤 제거 */
+            .text-center > div {
+                overflow-x: visible;
+                width: 100%;
+                margin: 0 auto;
+            }
+
+            table {
+                width: 100% !important;
+                font-size: 11px;
+                min-width: 0 !important; /* 최소 너비 제거 */
+                table-layout: auto; /* 자동 레이아웃 */
+                max-width: 100%;
+            }
+
+            th, td {
+                padding: 0.4rem 0.15rem;
+                font-size: 10px;
+                width: auto !important;
+                max-width: 20vw; /* 최대 너비 제한 */
+                min-width: 0;
+            }
+
+            .menu-item-container {
+                gap: 2px;
+                min-height: auto;
+            }
+
+            .menu-name {
+                font-size: 10px;
+                line-height: 1.2;
+                margin-bottom: 2px;
+            }
+
+            .menu-vote-container {
+                gap: 3px;
+                padding: 2px 0;
+                flex-wrap: nowrap;
+            }
+
+            .vote-btn {
+                padding: 2px 4px;
+                font-size: 8px;
+                min-width: 28px;
+                max-width: 35px;
+                gap: 1px;
+                border-radius: 4px;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .vote-btn .vote-emoji {
+                font-size: 10px;
+            }
+
+            .vote-btn .like-count,
+            .vote-btn .dislike-count {
+                font-size: 8px;
+            }
+
+            .vote-emoji {
+                font-size: 11px;
+            }
+
+            .vote-separator {
+                margin: 0 1px;
+                font-size: 9px;
+            }
+
+            /* 제공자 텍스트 크기 조정 */
+            .provider-text {
+                font-size: 16px;
+            }
+
+            /* 테이블 헤더도 작게 */
+            th.auto-resize {
+                font-size: 10px;
+                padding: 0.3rem 0.2rem;
+            }
+        }
+
+        /* 작은 모바일 (480px 이하) */
+        @media (max-width: 480px) {
+            table {
+                width: 100% !important;
+                min-width: 0 !important;
+                font-size: 10px;
+                max-width: 100%;
+            }
+
+            th, td {
+                padding: 0.3rem 0.1rem;
+                font-size: 9px;
+                max-width: 18vw; /* 작은 모바일에서 더 작게 */
+                min-width: 0;
+            }
+
+            .menu-name {
+                font-size: 9px;
+                line-height: 1.2;
+            }
+
+            .menu-vote-container {
+                gap: 2px;
+            }
+
+            .vote-btn {
+                padding: 2px 3px;
+                font-size: 7px;
+                min-width: 25px;
+                max-width: 30px;
+                gap: 1px;
+                white-space: nowrap;
+            }
+
+            .vote-btn .vote-emoji {
+                font-size: 9px;
+            }
+
+            .vote-btn .like-count,
+            .vote-btn .dislike-count {
+                font-size: 7px;
+            }
+
+            .vote-emoji {
+                font-size: 10px;
+            }
+
+            .vote-separator {
+                font-size: 8px;
+                margin: 0 1px;
+            }
+
+            .provider-text {
+                font-size: 14px;
+            }
+
+            th.auto-resize {
+                font-size: 9px;
+                padding: 0.25rem 0.15rem;
+            }
         }
     </style>
 </head>
@@ -90,8 +454,8 @@
     </div>
     <!-- babfullmenu.size() == 0 인 경우(= 오늘 메뉴가 비어있을 때) -->
     <!-- 페이지 설명 -->
-    <div class="text-center mb-4">
-        <p class="mt-2 text-lg text-gray-600 underline">
+    <div class="text-center mb-2">
+        <p class="mt-1 text-sm text-gray-600 underline">
            성공회대학교 밥full의 식단을 제공하는 페이지입니다.<br/>
         </p>
     </div>
@@ -164,8 +528,9 @@
     </div>
     <!-- babfullmenu.size() > 0 인 경우(= 오늘 메뉴가 있을 때) -->
     <div th:if="${babfullmenu.size() > 0}" class="text-center">
-        <p class="mb-4 text-lg font-semibold provider-text"
+        <p class="mb-2 text-base font-semibold provider-text"
            th:text="'★'+${babfullmenu[0].provider}+'★'+'님이 제공해주신 메뉴표입니다.'"></p>
+        <div style="width: 100%;">
         <table class="w-full">
             <thead>
             <tr>
@@ -183,8 +548,20 @@
             </tr>
             <tr th:each="i : ${#numbers.sequence(1,9)}" class="breakfast-row">
                 <td class="px-2 py-2 w-[20%] auto-resize" th:each="menuItem : ${babfullmenu}">
-                    <span th:text="${#strings.isEmpty(menuItem['morning_menu' + i]) ? '' : menuItem['morning_menu' + i]}">
-                    </span>
+                    <div class="menu-item-container">
+                        <div class="menu-name" th:text="${#strings.isEmpty(menuItem['morning_menu' + i]) ? '' : menuItem['morning_menu' + i]}">
+                        </div>
+                        <div th:if="${!#strings.isEmpty(menuItem['morning_menu' + i])}" class="menu-vote-container" 
+                             th:data-menu-name="${menuItem['morning_menu' + i]}">
+                            <button class="vote-btn like-btn" data-vote-type="LIKE" title="좋아요">
+                                <span class="vote-emoji">👍</span> <span class="like-count">0</span>
+                            </button>
+                            <span class="vote-separator">/</span>
+                            <button class="vote-btn dislike-btn" data-vote-type="DISLIKE" title="싫어요">
+                                <span class="vote-emoji">👎</span> <span class="dislike-count">0</span>
+                            </button>
+                        </div>
+                    </div>
                 </td>
             </tr>
             <!-- 점심 메뉴 -->
@@ -193,12 +570,25 @@
             </tr>
             <tr th:each="i : ${#numbers.sequence(1,9)}" class="lunch-row">
                 <td class="px-2 py-2 w-[20%] auto-resize" th:each="menuItem : ${babfullmenu}">
-                <span th:text="${#strings.isEmpty(menuItem['lunch_menu' + i]) ? '' : menuItem['lunch_menu' + i]}">
-                </span>
+                    <div class="menu-item-container">
+                        <div class="menu-name" th:text="${#strings.isEmpty(menuItem['lunch_menu' + i]) ? '' : menuItem['lunch_menu' + i]}">
+                        </div>
+                        <div th:if="${!#strings.isEmpty(menuItem['lunch_menu' + i])}" class="menu-vote-container" 
+                             th:data-menu-name="${menuItem['lunch_menu' + i]}">
+                            <button class="vote-btn like-btn" data-vote-type="LIKE" title="좋아요">
+                                <span class="vote-emoji">👍</span> <span class="like-count">0</span>
+                            </button>
+                            <span class="vote-separator">/</span>
+                            <button class="vote-btn dislike-btn" data-vote-type="DISLIKE" title="싫어요">
+                                <span class="vote-emoji">👎</span> <span class="dislike-count">0</span>
+                            </button>
+                        </div>
+                    </div>
                 </td>
             </tr>
             </tbody>
         </table>
+        </div>
     </div>
     <script>
         function showSpinner() {
@@ -362,14 +752,189 @@
             });
         }
 
+        // 쿠키 읽기 함수
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        // 좋아요/싫어요 투표 처리
+        async function handleVote(menuName, voteType) {
+            try {
+                const formData = new FormData();
+                formData.append('menuName', menuName);
+                formData.append('voteType', voteType);
+
+                const response = await fetch('/babfullmenu/vote', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    throw new Error('투표 처리에 실패했습니다.');
+                }
+
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('투표 처리 중 오류:', error);
+                alert('투표 처리 중 오류가 발생했습니다.');
+                return null;
+            }
+        }
+
+        // 메뉴별 좋아요/싫어요 초기화
+        async function initializeVotes() {
+            const voteContainers = document.querySelectorAll('.menu-vote-container');
+            
+            // 각 메뉴별로 서버에서 데이터 조회
+            for (const container of voteContainers) {
+                const menuName = container.getAttribute('data-menu-name');
+                if (!menuName || menuName.trim() === '') continue;
+
+                // 모바일용 has-vote 클래스 추가
+                const menuItemContainer = container.closest('.menu-item-container');
+                if (menuItemContainer) {
+                    menuItemContainer.classList.add('has-vote');
+                }
+
+                const likeBtn = container.querySelector('.like-btn');
+                const dislikeBtn = container.querySelector('.dislike-btn');
+                const likeCountSpan = container.querySelector('.like-count');
+                const dislikeCountSpan = container.querySelector('.dislike-count');
+
+                // 서버에서 좋아요/싫어요 데이터 조회
+                try {
+                    const response = await fetch(`/babfullmenu/likeDislike?menuName=${encodeURIComponent(menuName)}`, {
+                        method: 'GET',
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        likeCountSpan.textContent = result.likeCount != null ? result.likeCount : 0;
+                        dislikeCountSpan.textContent = result.dislikeCount != null ? result.dislikeCount : 0;
+                        
+                        // 현재 투표 상태 설정
+                        if (result.currentVote === 'LIKE') {
+                            likeBtn.classList.add('active');
+                        } else if (result.currentVote === 'DISLIKE') {
+                            dislikeBtn.classList.add('active');
+                        }
+                    } else {
+                        likeCountSpan.textContent = '0';
+                        dislikeCountSpan.textContent = '0';
+                    }
+                } catch (error) {
+                    console.error('좋아요/싫어요 조회 중 오류:', error);
+                    likeCountSpan.textContent = '0';
+                    dislikeCountSpan.textContent = '0';
+                }
+
+                // 버튼 클릭 이벤트
+                likeBtn.addEventListener('click', async () => {
+                    const result = await handleVote(menuName, 'LIKE');
+                    if (result) {
+                        likeCountSpan.textContent = result.likeCount || 0;
+                        dislikeCountSpan.textContent = result.dislikeCount || 0;
+                        
+                        // 활성 상태 업데이트
+                        if (result.currentVote === 'LIKE') {
+                            likeBtn.classList.add('active');
+                            dislikeBtn.classList.remove('active');
+                        } else {
+                            likeBtn.classList.remove('active');
+                            dislikeBtn.classList.remove('active');
+                        }
+                    }
+                });
+
+                dislikeBtn.addEventListener('click', async () => {
+                    const result = await handleVote(menuName, 'DISLIKE');
+                    if (result) {
+                        likeCountSpan.textContent = result.likeCount || 0;
+                        dislikeCountSpan.textContent = result.dislikeCount || 0;
+                        
+                        // 활성 상태 업데이트
+                        if (result.currentVote === 'DISLIKE') {
+                            dislikeBtn.classList.add('active');
+                            likeBtn.classList.remove('active');
+                        } else {
+                            likeBtn.classList.remove('active');
+                            dislikeBtn.classList.remove('active');
+                        }
+                    }
+                });
+            }
+        }
+
+        // 모바일에서 메뉴 클릭 시 좋아요/싫어요 토글
+        function setupMobileMenuToggle() {
+            // 모바일인지 확인 (768px 이하)
+            if (window.innerWidth <= 768) {
+                const menuContainers = document.querySelectorAll('.menu-item-container');
+                
+                menuContainers.forEach(container => {
+                    // 좋아요/싫어요 버튼이 있는 경우에만 클릭 이벤트 추가
+                    const voteContainer = container.querySelector('.menu-vote-container');
+                    if (voteContainer) {
+                        // 이미 이벤트 리스너가 추가되었는지 확인
+                        if (container.dataset.toggleSetup === 'true') {
+                            return; // 이미 설정됨
+                        }
+                        container.dataset.toggleSetup = 'true';
+                        
+                        // 컨테이너 전체에 클릭 이벤트 추가 (메뉴명 클릭 시)
+                        container.addEventListener('click', function(e) {
+                            // 좋아요/싫어요 버튼 클릭이 아닌 경우에만 동작
+                            if (!e.target.closest('.vote-btn')) {
+                                e.stopPropagation();
+
+                                // show-votes 가 없는 경우에만 추가
+                                if (!container.classList.contains('show-votes')) {
+                                    container.classList.add('show-votes');
+                                }
+                            }
+                        });
+                        
+                        // 좋아요/싫어요 버튼 클릭 시 이벤트 전파 방지
+                        const voteButtons = voteContainer.querySelectorAll('.vote-btn');
+                        voteButtons.forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                            });
+                        });
+                    }
+                });
+            }
+        }
+
+        // 화면 크기 변경 시 모바일 토글 기능 재설정
+        function handleResize() {
+            autoResizeText();
+            // 모바일이 아니면 모든 show-votes 클래스 제거
+            if (window.innerWidth > 768) {
+                document.querySelectorAll('.menu-item-container.show-votes').forEach(container => {
+                    container.classList.remove('show-votes');
+                });
+            }
+        }
+
         // DOM이 모두 로드된 후 실행
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             // 1) 먼저 내용 없는 <tr>을 제거
             removeEmptyRows();
             // 2) 그리고 폰트 자동 리사이즈 처리
             autoResizeText();
+            // 3) 좋아요/싫어요 초기화 (비동기 완료 대기)
+            await initializeVotes();
+            // 4) 모바일 메뉴 토글 설정 (has-vote 클래스가 추가된 후)
+            setupMobileMenuToggle();
         });
-        window.addEventListener('resize', autoResizeText);
+        window.addEventListener('resize', handleResize);
     </script>
 </div>
 </body>

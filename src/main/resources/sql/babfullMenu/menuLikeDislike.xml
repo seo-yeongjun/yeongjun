@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="babfullMenu.menuLikeDislike">
+    <select id="selectByNormalizedMenuName" parameterType="String" resultType="com.yeongjun.yeongjun.babfullmenu.model.MenuLikeDislike">
+        SELECT id, normalized_menu_name AS normalizedMenuName, like_count AS likeCount, dislike_count AS dislikeCount
+        FROM menu_like_dislike
+        WHERE normalized_menu_name = #{normalizedMenuName}
+    </select>
+
+    <insert id="insertMenuLikeDislike" parameterType="com.yeongjun.yeongjun.babfullmenu.model.MenuLikeDislike">
+        INSERT INTO menu_like_dislike (normalized_menu_name, like_count, dislike_count)
+        VALUES (#{normalizedMenuName}, #{likeCount}, #{dislikeCount})
+    </insert>
+
+    <update id="updateLikeCount" parameterType="com.yeongjun.yeongjun.babfullmenu.model.MenuLikeDislike">
+        UPDATE menu_like_dislike
+        SET like_count = #{likeCount}
+        WHERE normalized_menu_name = #{normalizedMenuName}
+    </update>
+
+    <update id="updateDislikeCount" parameterType="com.yeongjun.yeongjun.babfullmenu.model.MenuLikeDislike">
+        UPDATE menu_like_dislike
+        SET dislike_count = #{dislikeCount}
+        WHERE normalized_menu_name = #{normalizedMenuName}
+    </update>
+
+    <select id="selectAll" resultType="com.yeongjun.yeongjun.babfullmenu.model.MenuLikeDislike">
+        SELECT id, normalized_menu_name AS normalizedMenuName, like_count AS likeCount, dislike_count AS dislikeCount
+        FROM menu_like_dislike
+    </select>
+</mapper>
+

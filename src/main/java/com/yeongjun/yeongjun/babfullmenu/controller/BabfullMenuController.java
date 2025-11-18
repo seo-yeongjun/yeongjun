@@ -2,16 +2,18 @@ package com.yeongjun.yeongjun.babfullmenu.controller;
 
 import com.yeongjun.yeongjun.babfullmenu.entity.MenuDTO;
 import com.yeongjun.yeongjun.babfullmenu.model.BabfullMenu;
+import com.yeongjun.yeongjun.babfullmenu.model.MenuLikeDislike;
 import com.yeongjun.yeongjun.babfullmenu.service.DocumentAIService;
+import com.yeongjun.yeongjun.babfullmenu.service.MenuLikeDislikeService;
 import com.yeongjun.yeongjun.transactions.service.BabfullMenuService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -27,17 +29,58 @@ import java.util.Map;
 public class BabfullMenuController {
     private final BabfullMenuService babfullMenuService;
     private final DocumentAIService documentAIService;
+    private final MenuLikeDislikeService menuLikeDislikeService;
     // ip별 업로드 횟수 제한을 위한 Map
     private final Map<String, Integer> uploadCountMap = new HashMap<>();
 
-    public BabfullMenuController(BabfullMenuService babfullMenuService, DocumentAIService documentAIService) {
+    public BabfullMenuController(BabfullMenuService babfullMenuService, DocumentAIService documentAIService, MenuLikeDislikeService menuLikeDislikeService) {
         this.babfullMenuService = babfullMenuService;
         this.documentAIService = documentAIService;
+        this.menuLikeDislikeService = menuLikeDislikeService;
     }
 
     @GetMapping({"", "/"})
-    public String toolsHome(Model model) {
-        model.addAttribute("babfullmenu", babfullMenuService.getRelevantMenu());
+    public String toolsHome(Model model, HttpServletRequest request, HttpServletResponse response) {
+        List<BabfullMenu> menus = babfullMenuService.getRelevantMenu();
+        model.addAttribute("babfullmenu", menus);
+        
+        // 모든 메뉴명 수집
+        List<String> allMenuNames = new java.util.ArrayList<>();
+        for (BabfullMenu menu : menus) {
+            // 조식 메뉴
+            if (menu.getMorning_menu1() != null && !menu.getMorning_menu1().isEmpty()) allMenuNames.add(menu.getMorning_menu1());
+            if (menu.getMorning_menu2() != null && !menu.getMorning_menu2().isEmpty()) allMenuNames.add(menu.getMorning_menu2());
+            if (menu.getMorning_menu3() != null && !menu.getMorning_menu3().isEmpty()) allMenuNames.add(menu.getMorning_menu3());
+            if (menu.getMorning_menu4() != null && !menu.getMorning_menu4().isEmpty()) allMenuNames.add(menu.getMorning_menu4());
+            if (menu.getMorning_menu5() != null && !menu.getMorning_menu5().isEmpty()) allMenuNames.add(menu.getMorning_menu5());
+            if (menu.getMorning_menu6() != null && !menu.getMorning_menu6().isEmpty()) allMenuNames.add(menu.getMorning_menu6());
+            if (menu.getMorning_menu7() != null && !menu.getMorning_menu7().isEmpty()) allMenuNames.add(menu.getMorning_menu7());
+            if (menu.getMorning_menu8() != null && !menu.getMorning_menu8().isEmpty()) allMenuNames.add(menu.getMorning_menu8());
+            if (menu.getMorning_menu9() != null && !menu.getMorning_menu9().isEmpty()) allMenuNames.add(menu.getMorning_menu9());
+            // 중식 메뉴
+            if (menu.getLunch_menu1() != null && !menu.getLunch_menu1().isEmpty()) allMenuNames.add(menu.getLunch_menu1());
+            if (menu.getLunch_menu2() != null && !menu.getLunch_menu2().isEmpty()) allMenuNames.add(menu.getLunch_menu2());
+            if (menu.getLunch_menu3() != null && !menu.getLunch_menu3().isEmpty()) allMenuNames.add(menu.getLunch_menu3());
+            if (menu.getLunch_menu4() != null && !menu.getLunch_menu4().isEmpty()) allMenuNames.add(menu.getLunch_menu4());
+            if (menu.getLunch_menu5() != null && !menu.getLunch_menu5().isEmpty()) allMenuNames.add(menu.getLunch_menu5());
+            if (menu.getLunch_menu6() != null && !menu.getLunch_menu6().isEmpty()) allMenuNames.add(menu.getLunch_menu6());
+            if (menu.getLunch_menu7() != null && !menu.getLunch_menu7().isEmpty()) allMenuNames.add(menu.getLunch_menu7());
+            if (menu.getLunch_menu8() != null && !menu.getLunch_menu8().isEmpty()) allMenuNames.add(menu.getLunch_menu8());
+            if (menu.getLunch_menu9() != null && !menu.getLunch_menu9().isEmpty()) allMenuNames.add(menu.getLunch_menu9());
+        }
+        
+        // 세션 ID 가져오기
+        String sessionId = getOrCreateSessionId(request, response);
+        
+        // 좋아요/싫어요 집계 및 사용자 투표 상태 조회
+        Map<String, com.yeongjun.yeongjun.babfullmenu.model.MenuLikeDislike> likeDislikeMap = 
+            menuLikeDislikeService.getLikeDislikeMap(allMenuNames);
+        Map<String, String> currentVoteMap = 
+            menuLikeDislikeService.getCurrentVoteMap(allMenuNames, sessionId);
+        
+        model.addAttribute("likeDislikeMap", likeDislikeMap);
+        model.addAttribute("currentVoteMap", currentVoteMap);
+        
         return "babfullmenu/home";
     }
 
@@ -187,6 +230,112 @@ public class BabfullMenuController {
             log.error("메뉴 업로드 중 오류 발생: ", e);
             redirectAttributes.addFlashAttribute("error", "이미지 파싱 중 오류가 발생했습니다. 영준이에게 이미지와 함께 제보해주세요.");
             return "redirect:/babfullmenu";
+        }
+    }
+
+    /**
+     * 세션 ID를 가져오거나 생성합니다 (쿠키 기반)
+     */
+    private String getOrCreateSessionId(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("MENU_VOTE_SESSION_ID".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        
+        // 세션 ID가 없으면 생성
+        String sessionId = java.util.UUID.randomUUID().toString();
+        Cookie cookie = new Cookie("MENU_VOTE_SESSION_ID", sessionId);
+        cookie.setMaxAge(24 * 60 * 60); // 24시간
+        cookie.setPath("/");
+        response.addCookie(cookie);
+        return sessionId;
+    }
+
+    /**
+     * 좋아요/싫어요 투표 API
+     */
+    @PostMapping("/vote")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> vote(
+            @RequestParam("menuName") String menuName,
+            @RequestParam("voteType") String voteType,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        try {
+            String sessionId = getOrCreateSessionId(request, response);
+            Map<String, Object> result = menuLikeDislikeService.vote(menuName, voteType, sessionId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("투표 처리 중 오류 발생: ", e);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("error", "투표 처리 중 오류가 발생했습니다.");
+            return ResponseEntity.status(500).body(errorResult);
+        }
+    }
+
+    /**
+     * 메뉴별 좋아요/싫어요 집계 조회 API
+     */
+    @GetMapping("/likeDislike")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getLikeDislike(
+            @RequestParam("menuName") String menuName,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        try {
+            String sessionId = getOrCreateSessionId(request, response);
+            log.debug("좋아요/싫어요 조회 요청 - 원본 메뉴명: {}", menuName);
+            
+            MenuLikeDislike likeDislike = menuLikeDislikeService.getLikeDislike(menuName);
+            String currentVote = menuLikeDislikeService.getCurrentVote(menuName, sessionId);
+            
+            log.debug("조회 결과 - likeDislike: {}, currentVote: {}", likeDislike, currentVote);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("likeCount", likeDislike != null && likeDislike.getLikeCount() != null ? likeDislike.getLikeCount() : 0);
+            result.put("dislikeCount", likeDislike != null && likeDislike.getDislikeCount() != null ? likeDislike.getDislikeCount() : 0);
+            result.put("currentVote", currentVote);
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("좋아요/싫어요 조회 중 오류 발생: ", e);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("error", "조회 중 오류가 발생했습니다.");
+            return ResponseEntity.status(500).body(errorResult);
+        }
+    }
+
+    /**
+     * 디버깅용: 데이터베이스에 저장된 모든 좋아요/싫어요 데이터 조회
+     */
+    @GetMapping("/debug/allLikeDislike")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> getAllLikeDislike() {
+        try {
+            List<MenuLikeDislike> allData = menuLikeDislikeService.getAllLikeDislike();
+            List<Map<String, Object>> result = new java.util.ArrayList<>();
+            for (MenuLikeDislike item : allData) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", item.getId());
+                map.put("normalizedMenuName", item.getNormalizedMenuName());
+                if (item.getNormalizedMenuName() != null) {
+                    map.put("normalizedMenuNameBytes", java.util.Arrays.toString(
+                        item.getNormalizedMenuName().getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                }
+                map.put("likeCount", item.getLikeCount());
+                map.put("dislikeCount", item.getDislikeCount());
+                result.add(map);
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("디버깅 조회 중 오류 발생: ", e);
+            return ResponseEntity.status(500).build();
         }
     }
 }
