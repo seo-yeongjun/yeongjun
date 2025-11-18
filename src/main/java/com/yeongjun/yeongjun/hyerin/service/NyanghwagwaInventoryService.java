@@ -34,6 +34,8 @@ public class NyanghwagwaInventoryService {
 
     public record SetComponentInput(Long itemId, Integer requiredQuantity) {}
 
+    public record ItemSaleInput(Long itemId, Integer quantity) {}
+
     private static final String NAVER_SYNC_ACTOR = "naver-sync";
     private static final String NAVER_SYNC_NOTE_SALE = "네이버 스마트스토어 판매 동기화";
     private static final String NAVER_SYNC_NOTE_RESTOCK = "네이버 스마트스토어 재고 보정";
@@ -234,6 +236,47 @@ public class NyanghwagwaInventoryService {
 
         insertLog(set.getSet_id(), null, NyanghwagwaInventoryLogType.SALE, -saleCount, calculateSetStock(set.getSet_id()),
                 actorUsername, notes);
+    }
+
+    @Transactional
+    public void sellItems(Long setId, List<ItemSaleInput> itemSales, String actorUsername, String notes) {
+        if (CollectionUtils.isEmpty(itemSales)) {
+            throw new IllegalArgumentException("낱개로 판매할 화과자를 선택해 주세요.");
+        }
+
+        Map<Long, Integer> aggregated = new HashMap<>();
+        for (ItemSaleInput sale : itemSales) {
+            if (sale == null || sale.itemId() == null) {
+                throw new IllegalArgumentException("화과자 정보를 찾을 수 없습니다.");
+            }
+            int quantity = sale.quantity() == null ? 0 : sale.quantity();
+            if (quantity <= 0) {
+                throw new IllegalArgumentException("각 화과자 판매 수량은 1 이상이어야 합니다.");
+            }
+            aggregated.merge(sale.itemId(), quantity, Integer::sum);
+        }
+
+        if (aggregated.isEmpty()) {
+            throw new IllegalArgumentException("낱개 판매 처리할 수량을 입력해 주세요.");
+        }
+
+        Map<Long, NyanghwagwaItem> itemCache = new HashMap<>();
+        for (Map.Entry<Long, Integer> entry : aggregated.entrySet()) {
+            NyanghwagwaItem item = requireItem(entry.getKey());
+            itemCache.put(entry.getKey(), item);
+            if (item.getQuantity() == null || item.getQuantity() < entry.getValue()) {
+                throw new IllegalStateException("재고가 부족하여 판매할 수 없습니다. (" + item.getItem_name() + ")");
+            }
+        }
+
+        for (Map.Entry<Long, Integer> entry : aggregated.entrySet()) {
+            NyanghwagwaItem item = itemCache.get(entry.getKey());
+            int diff = entry.getValue();
+            item.setQuantity(item.getQuantity() - diff);
+            itemDAO.updateItemQuantity(item);
+            insertLog(setId, item.getItem_id(), NyanghwagwaInventoryLogType.SALE, -diff,
+                    item.getQuantity(), actorUsername, notes);
+        }
     }
 
     public int calculateSetStock(Long setId) {

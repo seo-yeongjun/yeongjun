@@ -6,6 +6,8 @@ import com.yeongjun.yeongjun.hyerin.dto.NyanghwagwaItemUpsertRequest;
 import com.yeongjun.yeongjun.hyerin.dto.NyanghwagwaProduceRequest;
 import com.yeongjun.yeongjun.hyerin.dto.NyanghwagwaSaleRequest;
 import com.yeongjun.yeongjun.hyerin.dto.NyanghwagwaSetComponentRequest;
+import com.yeongjun.yeongjun.hyerin.dto.NyanghwagwaPartialSaleItemRequest;
+import com.yeongjun.yeongjun.hyerin.dto.NyanghwagwaPartialSaleRequest;
 import com.yeongjun.yeongjun.hyerin.dto.NyanghwagwaSetUpsertRequest;
 import com.yeongjun.yeongjun.hyerin.dto.NyanghwagwaSetViewDto;
 import com.yeongjun.yeongjun.hyerin.service.NyanghwagwaInventoryService;
@@ -69,6 +71,20 @@ public class NyanghwagwaApiController {
         return inventoryService.loadDashboardView();
     }
 
+    @PostMapping("/sale/items")
+    public NyanghwagwaDashboardView partialSale(@Valid @RequestBody NyanghwagwaPartialSaleRequest request,
+                                                @AuthenticationPrincipal User user) {
+        Long setId = request.getSetId();
+        if (setId != null) {
+            inventoryService.synchronizeSetFromNaver(setId);
+        }
+        inventoryService.sellItems(setId, toItemSaleInputs(request.getItems()), resolveActor(user), request.getNotes());
+        if (setId != null) {
+            inventoryService.pushSetStockToNaver(setId);
+        }
+        return inventoryService.loadDashboardView();
+    }
+
     @PostMapping("/items")
     public NyanghwagwaDashboardView createItem(@Valid @RequestBody NyanghwagwaItemUpsertRequest request) {
         inventoryService.createItem(request.getItemName(), request.getQuantity(), request.getUnit(), request.getDescription());
@@ -113,6 +129,15 @@ public class NyanghwagwaApiController {
         }
         return components.stream()
                 .map(component -> new NyanghwagwaInventoryService.SetComponentInput(component.getItemId(), component.getRequiredQuantity()))
+                .toList();
+    }
+
+    private List<NyanghwagwaInventoryService.ItemSaleInput> toItemSaleInputs(List<NyanghwagwaPartialSaleItemRequest> items) {
+        if (items == null || items.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return items.stream()
+                .map(item -> new NyanghwagwaInventoryService.ItemSaleInput(item.getItemId(), item.getQuantity()))
                 .toList();
     }
 
