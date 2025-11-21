@@ -552,7 +552,8 @@
                         <div class="menu-name" th:text="${#strings.isEmpty(menuItem['morning_menu' + i]) ? '' : menuItem['morning_menu' + i]}">
                         </div>
                         <div th:if="${!#strings.isEmpty(menuItem['morning_menu' + i])}" class="menu-vote-container" 
-                             th:data-menu-name="${menuItem['morning_menu' + i]}">
+                             th:data-menu-name="${menuItem['morning_menu' + i]}"
+                             th:data-menu-date="${#temporals.format(menuItem.menu_dt, 'yyyy-MM-dd')}">
                             <button class="vote-btn like-btn" data-vote-type="LIKE" title="좋아요">
                                 <span class="vote-emoji">👍</span> <span class="like-count">0</span>
                             </button>
@@ -574,7 +575,8 @@
                         <div class="menu-name" th:text="${#strings.isEmpty(menuItem['lunch_menu' + i]) ? '' : menuItem['lunch_menu' + i]}">
                         </div>
                         <div th:if="${!#strings.isEmpty(menuItem['lunch_menu' + i])}" class="menu-vote-container" 
-                             th:data-menu-name="${menuItem['lunch_menu' + i]}">
+                             th:data-menu-name="${menuItem['lunch_menu' + i]}"
+                             th:data-menu-date="${#temporals.format(menuItem.menu_dt, 'yyyy-MM-dd')}">
                             <button class="vote-btn like-btn" data-vote-type="LIKE" title="좋아요">
                                 <span class="vote-emoji">👍</span> <span class="like-count">0</span>
                             </button>
@@ -766,10 +768,11 @@
         }
 
         // 좋아요/싫어요 투표 처리
-        async function handleVote(menuName, voteType) {
+        async function handleVote(menuName, menuDate, voteType) {
             try {
                 const formData = new FormData();
                 formData.append('menuName', menuName);
+                formData.append('menuDate', menuDate);
                 formData.append('voteType', voteType);
 
                 const response = await fetch('/babfullmenu/vote', {
@@ -798,7 +801,10 @@
             // 서버에서 받은 데이터 사용 (개별 API 호출 제거)
             for (const container of voteContainers) {
                 const menuName = container.getAttribute('data-menu-name');
-                if (!menuName || menuName.trim() === '') continue;
+                const menuDate = container.getAttribute('data-menu-date');
+                if (!menuName || menuName.trim() === '' || !menuDate) continue;
+
+                const menuKey = `${menuDate}|${menuName}`;
 
                 // 모바일용 has-vote 클래스 추가
                 const menuItemContainer = container.closest('.menu-item-container');
@@ -816,14 +822,14 @@
                 let dislikeCount = 0;
                 let currentVote = null;
                 
-                if (typeof serverLikeDislikeMap !== 'undefined' && serverLikeDislikeMap[menuName]) {
-                    const likeDislike = serverLikeDislikeMap[menuName];
+                if (typeof serverLikeDislikeMap !== 'undefined' && serverLikeDislikeMap[menuKey]) {
+                    const likeDislike = serverLikeDislikeMap[menuKey];
                     likeCount = likeDislike && likeDislike.likeCount != null ? likeDislike.likeCount : 0;
                     dislikeCount = likeDislike && likeDislike.dislikeCount != null ? likeDislike.dislikeCount : 0;
                 }
                 
-                if (typeof serverCurrentVoteMap !== 'undefined' && serverCurrentVoteMap[menuName]) {
-                    currentVote = serverCurrentVoteMap[menuName];
+                if (typeof serverCurrentVoteMap !== 'undefined' && serverCurrentVoteMap[menuKey]) {
+                    currentVote = serverCurrentVoteMap[menuKey];
                 }
                 
                 likeCountSpan.textContent = likeCount;
@@ -838,7 +844,7 @@
 
                 // 버튼 클릭 이벤트
                 likeBtn.addEventListener('click', async () => {
-                    const result = await handleVote(menuName, 'LIKE');
+                    const result = await handleVote(menuName, menuDate, 'LIKE');
                     if (result) {
                         likeCountSpan.textContent = result.likeCount || 0;
                         dislikeCountSpan.textContent = result.dislikeCount || 0;
@@ -855,7 +861,7 @@
                 });
 
                 dislikeBtn.addEventListener('click', async () => {
-                    const result = await handleVote(menuName, 'DISLIKE');
+                    const result = await handleVote(menuName, menuDate, 'DISLIKE');
                     if (result) {
                         likeCountSpan.textContent = result.likeCount || 0;
                         dislikeCountSpan.textContent = result.dislikeCount || 0;

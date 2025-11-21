@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
@@ -13,9 +14,9 @@ import java.time.LocalDateTime;
 @Setter
 public class MenuVote {
     private Long id;
-    private String normalizedMenuName; // REGEXP_REPLACE로 정규화된 메뉴명
+    private LocalDate menuDate;
+    private String menuName;
     private String voteType; // "LIKE" or "DISLIKE"
-    private String sessionId; // 세션 ID 또는 쿠키 ID
+    private String sessionId; // session ID or cookie ID
     private LocalDateTime createdAt;
 }
-

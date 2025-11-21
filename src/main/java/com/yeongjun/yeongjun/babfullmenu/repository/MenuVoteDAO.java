@@ -13,11 +13,8 @@ public class MenuVoteDAO extends BaseDAO<MenuVote> {
         return "babfullMenu.menuVote";
     }
 
-    public MenuVote selectByNormalizedMenuNameAndSessionId(String normalizedMenuName, String sessionId) {
-        MenuVote param = new MenuVote();
-        param.setNormalizedMenuName(normalizedMenuName);
-        param.setSessionId(sessionId);
-        return selectOne("selectByNormalizedMenuNameAndSessionId", param);
+    public MenuVote selectByMenuDateNameAndSessionId(MenuVote param) {
+        return selectOne("selectByMenuDateNameAndSessionId", param);
     }
 
     public int insertMenuVote(MenuVote menuVote) {

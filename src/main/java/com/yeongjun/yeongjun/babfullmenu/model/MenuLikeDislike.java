@@ -5,14 +5,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 public class MenuLikeDislike {
     private Long id;
-    private String normalizedMenuName; // REGEXP_REPLACE로 정규화된 메뉴명
+    private LocalDate menuDate;
+    private String menuName;
     private Integer likeCount;
     private Integer dislikeCount;
 }
-

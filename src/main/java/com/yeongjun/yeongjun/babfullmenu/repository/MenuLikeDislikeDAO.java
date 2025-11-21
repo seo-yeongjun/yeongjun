@@ -13,8 +13,8 @@ public class MenuLikeDislikeDAO extends BaseDAO<MenuLikeDislike> {
         return "babfullMenu.menuLikeDislike";
     }
 
-    public MenuLikeDislike selectByNormalizedMenuName(String normalizedMenuName) {
-        return selectOne("selectByNormalizedMenuName", normalizedMenuName);
+    public MenuLikeDislike selectByMenuDateAndName(MenuLikeDislike param) {
+        return selectOne("selectByMenuDateAndName", param);
     }
 
     public int insertMenuLikeDislike(MenuLikeDislike menuLikeDislike) {
