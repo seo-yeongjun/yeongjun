@@ -49,24 +49,25 @@ public class BabfullMenuController {
             if (menu.getMenu_dt() == null) {
                 continue;
             }
-            if (menu.getMorning_menu1() != null && !menu.getMorning_menu1().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getMorning_menu1()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getMorning_menu1()));
-            if (menu.getMorning_menu2() != null && !menu.getMorning_menu2().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getMorning_menu2()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getMorning_menu2()));
-            if (menu.getMorning_menu3() != null && !menu.getMorning_menu3().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getMorning_menu3()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getMorning_menu3()));
-            if (menu.getMorning_menu4() != null && !menu.getMorning_menu4().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getMorning_menu4()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getMorning_menu4()));
-            if (menu.getMorning_menu5() != null && !menu.getMorning_menu5().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getMorning_menu5()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getMorning_menu5()));
-            if (menu.getMorning_menu6() != null && !menu.getMorning_menu6().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getMorning_menu6()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getMorning_menu6()));
-            if (menu.getMorning_menu7() != null && !menu.getMorning_menu7().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getMorning_menu7()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getMorning_menu7()));
-            if (menu.getMorning_menu8() != null && !menu.getMorning_menu8().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getMorning_menu8()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getMorning_menu8()));
-            if (menu.getMorning_menu9() != null && !menu.getMorning_menu9().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getMorning_menu9()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getMorning_menu9()));
-            if (menu.getLunch_menu1() != null && !menu.getLunch_menu1().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getLunch_menu1()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getLunch_menu1()));
-            if (menu.getLunch_menu2() != null && !menu.getLunch_menu2().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getLunch_menu2()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getLunch_menu2()));
-            if (menu.getLunch_menu3() != null && !menu.getLunch_menu3().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getLunch_menu3()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getLunch_menu3()));
-            if (menu.getLunch_menu4() != null && !menu.getLunch_menu4().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getLunch_menu4()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getLunch_menu4()));
-            if (menu.getLunch_menu5() != null && !menu.getLunch_menu5().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getLunch_menu5()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getLunch_menu5()));
-            if (menu.getLunch_menu6() != null && !menu.getLunch_menu6().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getLunch_menu6()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getLunch_menu6()));
-            if (menu.getLunch_menu7() != null && !menu.getLunch_menu7().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getLunch_menu7()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getLunch_menu7()));
-            if (menu.getLunch_menu8() != null && !menu.getLunch_menu8().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getLunch_menu8()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getLunch_menu8()));
-            if (menu.getLunch_menu9() != null && !menu.getLunch_menu9().isEmpty()) menuIdentifierMap.put(buildMenuKey(menu.getMenu_dt(), menu.getLunch_menu9()), new MenuLikeDislikeService.MenuIdentifier(menu.getMenu_dt(), menu.getLunch_menu9()));
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getMorning_menu1());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getMorning_menu2());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getMorning_menu3());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getMorning_menu4());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getMorning_menu5());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getMorning_menu6());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getMorning_menu7());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getMorning_menu8());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getMorning_menu9());
+
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getLunch_menu1());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getLunch_menu2());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getLunch_menu3());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getLunch_menu4());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getLunch_menu5());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getLunch_menu6());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getLunch_menu7());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getLunch_menu8());
+            addMenuIdentifier(menuIdentifierMap, menu.getMenu_dt(), menu.getLunch_menu9());
         }
 
         String sessionId = getOrCreateSessionId(request, response);
@@ -255,7 +256,30 @@ public class BabfullMenuController {
     }
 
     private String buildMenuKey(LocalDate menuDate, String menuName) {
-        return menuDate.toString() + "|" + menuName;
+        return menuDate.toString() + "|" + normalizeMenuNameForKey(menuName);
+    }
+
+    private String normalizeMenuNameForKey(String menuName) {
+        if (menuName == null) {
+            return "";
+        }
+        return menuName
+                .replace("\r\n", " ")  // Windows 줄바꿈 처리
+                .replace("\r", " ")    // Mac 줄바꿈 처리
+                .replace("\n", " ")     // Unix/Linux 줄바꿈 처리
+                .replaceAll("\\s+", " ") // 연속된 공백을 하나로
+                .trim();
+    }
+
+    private void addMenuIdentifier(Map<String, MenuLikeDislikeService.MenuIdentifier> map, LocalDate menuDate, String menuName) {
+        if (menuDate == null || menuName == null || menuName.isEmpty()) {
+            return;
+        }
+        String normalized = normalizeMenuNameForKey(menuName);
+        if (normalized.isEmpty()) {
+            return;
+        }
+        map.put(buildMenuKey(menuDate, normalized), new MenuLikeDislikeService.MenuIdentifier(menuDate, normalized));
     }
 
     /**
@@ -273,7 +297,7 @@ public class BabfullMenuController {
         try {
             String sessionId = getOrCreateSessionId(request, response);
             Map<String, Object> result = menuLikeDislikeService.vote(
-                    menuName,
+                    normalizeMenuNameForKey(menuName),
                     LocalDate.parse(menuDate),
                     voteType,
                     sessionId
@@ -287,7 +311,7 @@ public class BabfullMenuController {
         }
     }
 
-@GetMapping("/likeDislike")
+        @GetMapping("/likeDislike")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getLikeDislike(
             @RequestParam("menuName") String menuName,
@@ -297,12 +321,13 @@ public class BabfullMenuController {
     ) {
         try {
             String sessionId = getOrCreateSessionId(request, response);
-            log.debug("좋아요/싫어요 조회 요청 - 원본 메뉴명: {}, 날짜: {}", menuName, menuDate);
+            String normalizedMenuName = normalizeMenuNameForKey(menuName);
+            log.debug("??/??? ?? ?? - ???: {}, ??: {}", normalizedMenuName, menuDate);
 
-            MenuLikeDislike likeDislike = menuLikeDislikeService.getLikeDislike(menuName, LocalDate.parse(menuDate));
-            String currentVote = menuLikeDislikeService.getCurrentVote(menuName, LocalDate.parse(menuDate), sessionId);
+            MenuLikeDislike likeDislike = menuLikeDislikeService.getLikeDislike(normalizedMenuName, LocalDate.parse(menuDate));
+            String currentVote = menuLikeDislikeService.getCurrentVote(normalizedMenuName, LocalDate.parse(menuDate), sessionId);
 
-            log.debug("조회 결과 - likeDislike: {}, currentVote: {}", likeDislike, currentVote);
+            log.debug("?? ?? - likeDislike: {}, currentVote: {}", likeDislike, currentVote);
 
             Map<String, Object> result = new HashMap<>();
             result.put("likeCount", likeDislike != null && likeDislike.getLikeCount() != null ? likeDislike.getLikeCount() : 0);
@@ -311,9 +336,9 @@ public class BabfullMenuController {
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            log.error("좋아요/싫어요 조회 오류 발생: ", e);
+            log.error("??/??? ?? ?? ??: ", e);
             Map<String, Object> errorResult = new HashMap<>();
-            errorResult.put("error", "조회 오류가 발생했습니다.");
+            errorResult.put("error", "?? ??? ??????.");
             return ResponseEntity.status(500).body(errorResult);
         }
     }
@@ -340,3 +365,5 @@ public class BabfullMenuController {
         }
     }
 }
+
+

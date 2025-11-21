@@ -794,16 +794,29 @@
             }
         }
 
+        // 메뉴 이름 정규화 함수 (줄바꿈 문자를 공백으로 변환)
+        function normalizeMenuName(menuName) {
+            if (!menuName) return '';
+            return menuName
+                .replace(/\r\n/g, ' ')  // Windows 줄바꿈 처리
+                .replace(/\r/g, ' ')    // Mac 줄바꿈 처리
+                .replace(/\n/g, ' ')    // Unix/Linux 줄바꿈 처리
+                .replace(/\s+/g, ' ')   // 연속된 공백을 하나로
+                .trim();
+        }
+
         // 메뉴별 좋아요/싫어요 초기화
         function initializeVotes() {
             const voteContainers = document.querySelectorAll('.menu-vote-container');
             
             // 서버에서 받은 데이터 사용 (개별 API 호출 제거)
             for (const container of voteContainers) {
-                const menuName = container.getAttribute('data-menu-name');
+                const rawMenuName = container.getAttribute('data-menu-name');
                 const menuDate = container.getAttribute('data-menu-date');
-                if (!menuName || menuName.trim() === '' || !menuDate) continue;
+                if (!rawMenuName || rawMenuName.trim() === '' || !menuDate) continue;
 
+                // 메뉴 이름 정규화 (줄바꿈 문자 제거)
+                const menuName = normalizeMenuName(rawMenuName);
                 const menuKey = `${menuDate}|${menuName}`;
 
                 // 모바일용 has-vote 클래스 추가
