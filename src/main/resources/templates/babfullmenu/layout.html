@@ -16,6 +16,25 @@
   <link th:href="@{/main.css}" rel="stylesheet">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5922960159916303" data-overlays="bottom"
           crossorigin="anonymous"></script>
+    <style>
+    /* Anchor ads가 body padding을 강제로 조정해 footer가 밀리는 것을 방지 */
+    body {
+      padding-bottom: 0 !important;
+    }
+
+    /* Anchor ins가 레이아웃을 밀지 않고 화면 하단에 고정되도록 강제 */
+    .ads-anchor-fixed {
+      position: fixed !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      transform: none !important;
+      max-width: 100% !important;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 flex flex-col min-h-screen">
 <header class="bg-white shadow-md py-4 relative">
@@ -90,6 +109,25 @@
       mobileMenu.classList.toggle('hidden');
       mobileMenu.classList.toggle('scale-0');
     };
+
+    // Anchor ads가 body padding을 바꿔 footer가 밀리는 현상 방지
+    const fixAnchorAd = () => {
+      document.body.style.paddingBottom = '0px';
+      const anchorAd = document.querySelector('ins.adsbygoogle[data-anchor-status="displayed"]');
+      if (anchorAd) {
+        anchorAd.classList.add('ads-anchor-fixed');
+      }
+    };
+
+    // 초기 실행 및 DOM 변경 감지로 반복 보정
+    fixAnchorAd();
+    const adObserver = new MutationObserver(fixAnchorAd);
+    adObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'data-anchor-status', 'class']
+    });
 
     menuButton.addEventListener('click', toggleMenu);
     closeMenu.addEventListener('click', toggleMenu);
