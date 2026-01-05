@@ -57,10 +57,14 @@ public class DocumentAIService {
                 DocumentProcessorServiceSettings.newBuilder();
 
         if (credentialsFilePath != null && !credentialsFilePath.isEmpty()) {
-            GoogleCredentials credentials = GoogleCredentials.fromStream(
-                    new ByteArrayInputStream(credentialsFilePath.getBytes(StandardCharsets.UTF_8))
-            );
-            builder.setCredentialsProvider(FixedCredentialsProvider.create(credentials));
+            // 수정된 부분: String을 바이트로 바꾸는 것이 아니라, 실제 파일을 엽니다.
+            try (InputStream keyStream = new FileInputStream(credentialsFilePath)) {
+                GoogleCredentials credentials = GoogleCredentials.fromStream(keyStream);
+                builder.setCredentialsProvider(FixedCredentialsProvider.create(credentials));
+            } catch (FileNotFoundException e) {
+                logger.error("JSON 키 파일을 찾을 수 없습니다. 경로를 확인하세요: {}", credentialsFilePath);
+                throw e;
+            }
         }
 
         DocumentProcessorServiceSettings settings = builder.build();
