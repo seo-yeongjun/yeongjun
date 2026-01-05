@@ -57,13 +57,10 @@ public class DocumentAIService {
                 DocumentProcessorServiceSettings.newBuilder();
 
         if (credentialsFilePath != null && !credentialsFilePath.isEmpty()) {
-            // 수정된 부분: String을 바이트로 바꾸는 것이 아니라, 실제 파일을 엽니다.
+            // 텍스트 파일 그 자체를 열어서 스트림으로 넘겨야 합니다.
             try (InputStream keyStream = new FileInputStream(credentialsFilePath)) {
                 GoogleCredentials credentials = GoogleCredentials.fromStream(keyStream);
                 builder.setCredentialsProvider(FixedCredentialsProvider.create(credentials));
-            } catch (FileNotFoundException e) {
-                logger.error("JSON 키 파일을 찾을 수 없습니다. 경로를 확인하세요: {}", credentialsFilePath);
-                throw e;
             }
         }
 
