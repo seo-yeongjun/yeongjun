@@ -12,8 +12,13 @@ public class IpService {
     public IPResponse getIpInfo(HttpServletRequest request) {
         String ip = request.getHeader("X-FORWARDED-FOR");
 
-        // 헤더가 없을 경우에만 getRemoteAddr() 호출
-        if (ip == null || ip.isEmpty()) {
+        if (ip != null && !ip.isEmpty()) {
+            // 1. 여러 개의 IP가 있을 경우 첫 번째 IP만 추출
+            if (ip.contains(",")) {
+                ip = ip.split(",")[0].trim();
+            }
+        } else {
+            // 2. 헤더가 없을 경우에만 getRemoteAddr() 호출
             ip = request.getRemoteAddr();
         }
 
