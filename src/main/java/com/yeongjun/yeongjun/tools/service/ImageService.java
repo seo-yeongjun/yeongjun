@@ -18,8 +18,8 @@ import java.util.zip.ZipOutputStream;
 @Service
 public class ImageService {
 
-    private static final String UPLOAD_DIR = "uploads/images";
-    private static final String PROCESSED_DIR = "processed/images";
+    private static final String UPLOAD_DIR = "/env/uploads/images";
+    private static final String PROCESSED_DIR = "/env/processed/images";
 
     public File processImages(List<MultipartFile> files, long targetSizeKB) throws IOException {
         if (files.isEmpty()) {
