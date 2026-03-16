@@ -95,7 +95,7 @@ public class BabfullMenuController {
             String ip = request.getRemoteAddr();
             if (uploadCountMap.containsKey(ip)) {
                 int count = uploadCountMap.get(ip);
-                if (count >= 3) {
+                if (count >= 50) {
                     redirectAttributes.addFlashAttribute("error", "error 999");
                     return "redirect:/babfullmenu";
                 }
