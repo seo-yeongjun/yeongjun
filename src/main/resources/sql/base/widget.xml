@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yeongjun.yeongjun.home.widget.repository.WidgetDAO">
+
+    <!-- 1. 위젯 설정 관리 -->
+    <select id="selectConfig" resultType="string">
+        SELECT config_value
+        FROM widget_config
+        WHERE config_key = #{configKey}
+    </select>
+
+    <update id="updateConfig" parameterType="com.yeongjun.yeongjun.home.widget.model.WidgetConfig">
+        UPDATE widget_config
+        SET config_value = #{configValue}
+        WHERE config_key = #{configKey}
+    </update>
+
+    <select id="selectConfigList" resultType="com.yeongjun.yeongjun.home.widget.model.WidgetConfig">
+        SELECT
+            config_key AS configKey,
+            config_value AS configValue,
+            description
+        FROM widget_config
+    </select>
+
+    <!-- 2. 공휴일 관리 -->
+    <select id="selectHolidayList" resultType="com.yeongjun.yeongjun.home.widget.model.WidgetHoliday">
+        SELECT
+            holiday_date AS holidayDate,
+            holiday_name AS holidayName
+        FROM widget_holiday
+        ORDER BY holiday_date ASC
+    </select>
+
+    <insert id="insertHoliday" parameterType="com.yeongjun.yeongjun.home.widget.model.WidgetHoliday">
+        INSERT INTO widget_holiday (holiday_date, holiday_name)
+        VALUES (#{holidayDate}, #{holidayName})
+        ON DUPLICATE KEY UPDATE holiday_name = #{holidayName}
+    </insert>
+
+    <delete id="deleteHoliday">
+        DELETE FROM widget_holiday
+        WHERE holiday_date = #{holidayDate}
+    </delete>
+
+    <!-- 3. 밸런스 게임 관리 -->
+    <select id="selectActiveBalanceGame" resultType="com.yeongjun.yeongjun.home.widget.model.BalanceGame">
+        SELECT
+            id,
+            question,
+            option_a AS optionA,
+            option_b AS optionB,
+            created_at AS createdAt
+        FROM balance_game
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <insert id="insertBalanceGame" parameterType="com.yeongjun.yeongjun.home.widget.model.BalanceGame" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO balance_game (question, option_a, option_b)
+        VALUES (#{question}, #{optionA}, #{optionB})
+    </insert>
+
+    <select id="selectVoteCount" resultType="int">
+        SELECT COUNT(*)
+        FROM balance_game_vote
+        WHERE question_id = #{questionId} AND selection = #{selection}
+    </select>
+
+    <select id="checkIpVoted" resultType="int">
+        SELECT COUNT(*)
+        FROM balance_game_vote
+        WHERE question_id = #{questionId} AND ip_address = #{ipAddress}
+    </select>
+
+    <insert id="insertVote" parameterType="com.yeongjun.yeongjun.home.widget.model.BalanceGameVote">
+        INSERT INTO balance_game_vote (question_id, ip_address, selection)
+        VALUES (#{questionId}, #{ipAddress}, #{selection})
+    </insert>
+
+</mapper>
