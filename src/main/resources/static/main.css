@@ -1048,14 +1048,6 @@ video {
   min-width: 20rem;
 }
 
-.min-w-\[100px\] {
-  min-width: 100px;
-}
-
-.min-w-\[120px\] {
-  min-width: 120px;
-}
-
 .min-w-full {
   min-width: 100%;
 }
@@ -1098,6 +1090,10 @@ video {
 
 .flex-shrink {
   flex-shrink: 1;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
 }
 
 .flex-grow {
