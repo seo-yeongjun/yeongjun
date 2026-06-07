@@ -37,7 +37,7 @@ function initCountdownWidget() {
 
             // 남은 근무일 및 D-day 세팅
             document.getElementById("countdown-working-days").textContent = data.remainingWorkingDays + "일";
-            
+
             const nextRestDayName = data.nextRestDayName;
             const restDayDday = data.restDayDday;
             const countdownHoliday = document.getElementById("countdown-holiday");
@@ -90,7 +90,7 @@ function initCountdownWidget() {
             if (countdownInterval) clearInterval(countdownInterval);
 
             const finishedText = isWorkCountdown ? "출근 완료! 💼" : "퇴근 완료! 🎉";
-            const finishedClass = isWorkCountdown 
+            const finishedClass = isWorkCountdown
                 ? "text-3xl md:text-4xl font-black text-indigo-600 tracking-tight animate-bounce"
                 : "text-3xl md:text-4xl font-black text-emerald-600 tracking-tight animate-bounce";
 
@@ -99,7 +99,7 @@ function initCountdownWidget() {
                 timerDisplay.className = finishedClass;
             } else {
                 timerDisplay.className = "text-4xl md:text-5xl font-black text-slate-800 tracking-tight";
-                
+
                 function updateTimerDisplay() {
                     if (secondsLeft <= 0) {
                         timerDisplay.textContent = finishedText;
@@ -108,14 +108,14 @@ function initCountdownWidget() {
                         setTimeout(initCountdownWidget, 5000);
                         return;
                     }
-                    
+
                     const h = Math.floor(secondsLeft / 3600);
                     const m = Math.floor((secondsLeft % 3600) / 60);
                     const s = secondsLeft % 60;
-                    
-                    timerDisplay.textContent = 
+
+                    timerDisplay.textContent =
                         `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-                    
+
                     secondsLeft--;
                 }
 
@@ -166,16 +166,16 @@ function handleCountdownConfigSubmit(e) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
     })
-    .then(res => {
-        if (res.ok) {
-            alert("설정이 성공적으로 저장되었습니다.");
-            closeAdminCountdownModal();
-            initCountdownWidget(); // 위젯 새로고침
-        } else {
-            res.text().then(text => alert("설정 저장 실패: " + text));
-        }
-    })
-    .catch(err => alert("설정 저장 중 오류가 발생했습니다: " + err));
+        .then(res => {
+            if (res.ok) {
+                alert("설정이 성공적으로 저장되었습니다.");
+                closeAdminCountdownModal();
+                initCountdownWidget(); // 위젯 새로고침
+            } else {
+                res.text().then(text => alert("설정 저장 실패: " + text));
+            }
+        })
+        .catch(err => alert("설정 저장 중 오류가 발생했습니다: " + err));
 }
 
 // 공휴일 목록 로드
@@ -224,17 +224,17 @@ function handleAddHoliday() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ holidayDate, holidayName })
     })
-    .then(res => {
-        if (res.ok) {
-            dateInput.value = "";
-            nameInput.value = "";
-            loadHolidays();
-            initCountdownWidget(); // 위젯 새로고침
-        } else {
-            res.text().then(text => alert("공휴일 추가 실패: " + text));
-        }
-    })
-    .catch(err => alert("공휴일 추가 중 오류 발생: " + err));
+        .then(res => {
+            if (res.ok) {
+                dateInput.value = "";
+                nameInput.value = "";
+                loadHolidays();
+                initCountdownWidget(); // 위젯 새로고침
+            } else {
+                res.text().then(text => alert("공휴일 추가 실패: " + text));
+            }
+        })
+        .catch(err => alert("공휴일 추가 중 오류 발생: " + err));
 }
 
 // 공휴일 삭제
@@ -244,15 +244,15 @@ function handleDeleteHoliday(date) {
     fetch(`/api/widgets/countdown/holidays?date=${date}`, {
         method: "DELETE"
     })
-    .then(res => {
-        if (res.ok) {
-            loadHolidays();
-            initCountdownWidget(); // 위젯 새로고침
-        } else {
-            res.text().then(text => alert("공휴일 삭제 실패: " + text));
-        }
-    })
-    .catch(err => alert("공휴일 삭제 중 오류 발생: " + err));
+        .then(res => {
+            if (res.ok) {
+                loadHolidays();
+                initCountdownWidget(); // 위젯 새로고침
+            } else {
+                res.text().then(text => alert("공휴일 삭제 실패: " + text));
+            }
+        })
+        .catch(err => alert("공휴일 삭제 중 오류 발생: " + err));
 }
 
 
@@ -272,18 +272,18 @@ function fetchWeatherWidgetData() {
             }
             document.getElementById("weather-current-temp").textContent = data.currentTemp;
             document.getElementById("weather-current-status").textContent = data.currentStatus;
-            
+
             const popElem = document.getElementById("weather-current-pop");
             if (popElem) {
                 popElem.textContent = data.currentPop !== undefined ? data.currentPop : 0;
             }
-            
+
             // 날씨 아이콘 변경
             const iconElem = document.getElementById("weather-main-icon");
             if (iconElem) {
                 iconElem.className = `fa-solid ${data.currentIcon} text-5xl filter drop-shadow-sm`;
             }
- 
+
             // 시간대별 예보 렌더링
             const hourlyList = document.getElementById("weather-hourly-list");
             if (hourlyList) {
@@ -360,11 +360,11 @@ function fetchTransitWidgetData() {
                 if (arrivals && arrivals.length > 0) {
                     const downTrains = arrivals.filter(t => t.direction === "하행");
                     const upTrains = arrivals.filter(t => t.direction === "상행");
-                    
+
                     let html = "";
-                    
+
                     // 하행
-                    const downTrainsStr = downTrains.length > 0 
+                    const downTrainsStr = downTrains.length > 0
                         ? downTrains.slice(0, 2).map(t => `<span class="font-extrabold text-slate-700">${t.destination}</span> <span class="font-black ${textColorClass}">${t.arrivalTime}</span>`).join(", ")
                         : `<span class="text-slate-400">도착 정보 없음</span>`;
                     html += `
@@ -373,9 +373,9 @@ function fetchTransitWidgetData() {
                             <span class="text-slate-600">${downTrainsStr}</span>
                         </div>
                     `;
-                    
+
                     // 상행
-                    const upTrainsStr = upTrains.length > 0 
+                    const upTrainsStr = upTrains.length > 0
                         ? upTrains.slice(0, 2).map(t => `<span class="font-extrabold text-slate-700">${t.destination}</span> <span class="font-black ${textColorClass}">${t.arrivalTime}</span>`).join(", ")
                         : `<span class="text-slate-400">도착 정보 없음</span>`;
                     html += `
@@ -405,7 +405,7 @@ function fetchTransitWidgetData() {
                     arrivals.slice(0, 3).forEach(bus => {
                         const busItem = document.createElement("div");
                         busItem.className = "flex items-center justify-end space-x-1.5 mb-1 last:mb-0";
-                        
+
                         let badgeClass = "bg-slate-200 text-slate-700";
                         if (bus.type === "지선") badgeClass = "bg-green-100 text-green-700";
                         else if (bus.type === "간선") badgeClass = "bg-blue-100 text-blue-700";
@@ -420,7 +420,7 @@ function fetchTransitWidgetData() {
                         element.appendChild(busItem);
                     });
                 } else {
-                    element.innerHTML = `<span class="text-[10px] text-slate-400 font-bold">도착 정보 없음</span>`;
+                    element.innerHTML = `<span class="text-[10px] text-slate-400 font-bold">버스정보는 추후에 제공될 예정입니다.</span>`;
                 }
             };
 
@@ -511,34 +511,34 @@ function voteBalanceGame(selection) {
         method: "POST",
         body: params
     })
-    .then(res => res.json())
-    .then(result => {
-        if (result.success) {
-            // 투표 성공 시 UI 갱신 및 전환
-            document.getElementById("balance-vote-buttons").classList.add("hidden");
-            
-            const resultsDiv = document.getElementById("balance-vote-results");
-            resultsDiv.classList.remove("hidden");
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                // 투표 성공 시 UI 갱신 및 전환
+                document.getElementById("balance-vote-buttons").classList.add("hidden");
 
-            // 결과 매핑 정보 주입을 위해 activeGame의 option 이름 재활용
-            const optionA = document.getElementById("balance-vote-buttons").getElementsByTagName("button")[0].textContent;
-            const optionB = document.getElementById("balance-vote-buttons").getElementsByTagName("button")[1].textContent;
+                const resultsDiv = document.getElementById("balance-vote-results");
+                resultsDiv.classList.remove("hidden");
 
-            const mockData = {
-                optionA: optionA,
-                optionB: optionB,
-                percentA: result.percentA,
-                countA: result.countA,
-                percentB: result.percentB,
-                countB: result.countB,
-                totalCount: result.totalCount
-            };
-            renderBalanceResults(mockData);
-        } else {
-            alert(result.message || "투표 처리에 실패했습니다.");
-        }
-    })
-    .catch(err => alert("투표 중 네트워크 오류 발생: " + err));
+                // 결과 매핑 정보 주입을 위해 activeGame의 option 이름 재활용
+                const optionA = document.getElementById("balance-vote-buttons").getElementsByTagName("button")[0].textContent;
+                const optionB = document.getElementById("balance-vote-buttons").getElementsByTagName("button")[1].textContent;
+
+                const mockData = {
+                    optionA: optionA,
+                    optionB: optionB,
+                    percentA: result.percentA,
+                    countA: result.countA,
+                    percentB: result.percentB,
+                    countB: result.countB,
+                    totalCount: result.totalCount
+                };
+                renderBalanceResults(mockData);
+            } else {
+                alert(result.message || "투표 처리에 실패했습니다.");
+            }
+        })
+        .catch(err => alert("투표 중 네트워크 오류 발생: " + err));
 }
 
 // 관리자용 새 밸런스 게임 생성 등록
@@ -554,16 +554,16 @@ function handleBalanceCreateSubmit(e) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
     })
-    .then(res => res.json())
-    .then(result => {
-        if (result.success) {
-            alert(result.message);
-            form.reset();
-            closeAdminBalanceModal();
-            fetchBalanceGameWidgetData(); // 밸런스 게임 갱신
-        } else {
-            alert("게임 등록 실패: " + result.message);
-        }
-    })
-    .catch(err => alert("게임 생성 중 오류 발생: " + err));
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                alert(result.message);
+                form.reset();
+                closeAdminBalanceModal();
+                fetchBalanceGameWidgetData(); // 밸런스 게임 갱신
+            } else {
+                alert("게임 등록 실패: " + result.message);
+            }
+        })
+        .catch(err => alert("게임 생성 중 오류 발생: " + err));
 }
