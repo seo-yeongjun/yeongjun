@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.2' // 최신 버전 사용
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4' // 최신 버전 사용
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'

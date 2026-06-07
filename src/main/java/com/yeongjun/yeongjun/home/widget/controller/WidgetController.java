@@ -3,6 +3,7 @@ package com.yeongjun.yeongjun.home.widget.controller;
 import com.yeongjun.yeongjun.Security.model.Role;
 import com.yeongjun.yeongjun.Security.model.User;
 import com.yeongjun.yeongjun.home.widget.model.BalanceGame;
+import com.yeongjun.yeongjun.home.widget.model.WidgetHoliday;
 import com.yeongjun.yeongjun.home.widget.service.WidgetService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -47,6 +50,47 @@ public class WidgetController {
         } catch (Exception e) {
             log.error("퇴근 설정 저장 실패: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("설정 저장 중 오류가 발생했습니다.");
+        }
+    }
+
+    // 2.1 공휴일 목록 조회
+    @GetMapping("/countdown/holidays")
+    public ResponseEntity<List<WidgetHoliday>> getHolidays() {
+        return ResponseEntity.ok(widgetService.getHolidayList());
+    }
+
+    // 2.2 공휴일 추가 (ADMIN 전용)
+    @PostMapping("/countdown/holidays")
+    public ResponseEntity<?> addHoliday(
+            @AuthenticationPrincipal User user,
+            @RequestBody WidgetHoliday holiday) {
+        if (user == null || user.getRole() != Role.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("관리자 권한이 필요합니다.");
+        }
+        try {
+            widgetService.addHoliday(holiday);
+            return ResponseEntity.ok("공휴일이 추가되었습니다.");
+        } catch (Exception e) {
+            log.error("공휴일 추가 실패: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("공휴일 추가 중 오류가 발생했습니다.");
+        }
+    }
+
+    // 2.3 공휴일 삭제 (ADMIN 전용)
+    @DeleteMapping("/countdown/holidays")
+    public ResponseEntity<?> deleteHoliday(
+            @AuthenticationPrincipal User user,
+            @RequestParam("date") String dateStr) {
+        if (user == null || user.getRole() != Role.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("관리자 권한이 필요합니다.");
+        }
+        try {
+            LocalDate date = LocalDate.parse(dateStr);
+            widgetService.deleteHoliday(date);
+            return ResponseEntity.ok("공휴일이 삭제되었습니다.");
+        } catch (Exception e) {
+            log.error("공휴일 삭제 실패: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("공휴일 삭제 중 오류가 발생했습니다.");
         }
     }
 

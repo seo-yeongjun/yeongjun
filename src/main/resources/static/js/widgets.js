@@ -38,56 +38,74 @@ function initCountdownWidget() {
             // 남은 근무일 및 D-day 세팅
             document.getElementById("countdown-working-days").textContent = data.remainingWorkingDays + "일";
             
-            const holidayName = data.nextHolidayName;
-            const holidayDday = data.holidayDday;
+            const nextRestDayName = data.nextRestDayName;
+            const restDayDday = data.restDayDday;
             const countdownHoliday = document.getElementById("countdown-holiday");
             const holidayLabel = document.getElementById("holiday-label");
-            if (holidayDday >= 0) {
-                holidayLabel.textContent = holidayName;
-                countdownHoliday.textContent = holidayDday === 0 ? "D-Day" : `D-${holidayDday}`;
-            } else {
-                holidayLabel.textContent = "다음 공휴일";
-                countdownHoliday.textContent = "없음";
+            if (holidayLabel && countdownHoliday) {
+                holidayLabel.textContent = "다음 쉬는날까지";
+                if (restDayDday === 0) {
+                    countdownHoliday.textContent = `오늘 (${nextRestDayName})`;
+                } else {
+                    countdownHoliday.textContent = `D-${restDayDday} (${nextRestDayName})`;
+                }
             }
 
             const vacationDday = data.vacationDday;
             const countdownVacation = document.getElementById("countdown-vacation");
             const vacationLabel = document.getElementById("vacation-label");
-            if (vacationDday >= 0) {
-                vacationLabel.textContent = data.dDayLabel;
-                countdownVacation.textContent = vacationDday === 0 ? "D-Day" : `D-${vacationDday}`;
-            } else {
-                countdownVacation.textContent = "- 일";
+            if (vacationLabel && countdownVacation) {
+                if (vacationDday >= 0) {
+                    vacationLabel.textContent = data.dDayLabel;
+                    countdownVacation.textContent = vacationDday === 0 ? "D-Day" : `D-${vacationDday}`;
+                } else {
+                    vacationLabel.textContent = "종강(학기시작)까지";
+                    countdownVacation.textContent = "없음";
+                }
             }
 
-            // 퇴근 시간 상태 문구 세팅
+            // 퇴근/출근 시간 상태 문구 세팅
             const leaveStatus = document.getElementById("leave-status");
             const leaveTimeStr = data.leaveTime.substring(0, 5); // HH:mm
-            if (data.isVacation) {
-                leaveStatus.textContent = `단축 근무 기간 (${leaveTimeStr} 퇴근)`;
-                leaveStatus.className = "text-xs text-emerald-600 font-semibold mt-1";
+            if (data.isWorkCountdown) {
+                leaveStatus.textContent = `09:00 출근 기준`;
+                leaveStatus.className = "text-xs text-indigo-600 font-semibold mt-1";
             } else {
-                leaveStatus.textContent = `학기 중 정상 근무 (${leaveTimeStr} 퇴근)`;
+                leaveStatus.textContent = `${leaveTimeStr} 퇴근 기준`;
                 leaveStatus.className = "text-xs text-indigo-600 font-semibold mt-1";
             }
 
             // 실시간 타이머 시작
-            let secondsLeft = data.secondsToLeave;
+            let secondsLeft = data.secondsToEvent;
             const timerDisplay = document.getElementById("leave-timer");
+            const isWorkCountdown = data.isWorkCountdown;
+
+            // 타이틀 엘리먼트 동적 설정
+            const titleEl = document.getElementById("countdown-title");
+            if (titleEl) {
+                const icon = '<i class="fa-solid fa-clock-rotate-left mr-1.5 text-indigo-500"></i>';
+                titleEl.innerHTML = icon + (isWorkCountdown ? "출근까지" : "퇴근까지");
+            }
 
             if (countdownInterval) clearInterval(countdownInterval);
 
+            const finishedText = isWorkCountdown ? "출근 완료! 💼" : "퇴근 완료! 🎉";
+            const finishedClass = isWorkCountdown 
+                ? "text-3xl md:text-4xl font-black text-indigo-600 tracking-tight animate-bounce"
+                : "text-3xl md:text-4xl font-black text-emerald-600 tracking-tight animate-bounce";
+
             if (secondsLeft <= 0) {
-                timerDisplay.textContent = "퇴근 완료! 🎉";
-                timerDisplay.className = "text-3xl md:text-4xl font-black text-emerald-600 tracking-tight animate-bounce";
+                timerDisplay.textContent = finishedText;
+                timerDisplay.className = finishedClass;
             } else {
                 timerDisplay.className = "text-4xl md:text-5xl font-black text-slate-800 tracking-tight";
                 
                 function updateTimerDisplay() {
                     if (secondsLeft <= 0) {
-                        timerDisplay.textContent = "퇴근 완료! 🎉";
-                        timerDisplay.className = "text-3xl md:text-4xl font-black text-emerald-600 tracking-tight animate-bounce";
+                        timerDisplay.textContent = finishedText;
+                        timerDisplay.className = finishedClass;
                         clearInterval(countdownInterval);
+                        setTimeout(initCountdownWidget, 5000);
                         return;
                     }
                     
@@ -116,25 +134,15 @@ function loadCountdownAdminConfig() {
             const form = document.getElementById("countdown-config-form");
             if (!form) return;
 
-            // D-day 계산을 위한 설정을 백엔드에서 다시 가져오거나 폼에 바인딩
-            // 설정 값 목록을 얻기 위해 /api/widgets/countdown API에서 설정 키를 반환하게 하거나 프론트에서 가공
-            // 백엔드가 Config 정보 자체를 리스트로 내려주진 않고 매핑해서 사용
-            // 폼 데이터를 프리필하기 위해 임시 바인딩 처리
-            form.elements["OFFICE_LEAVE_TIME_NORMAL"].value = data.isVacation ? "18:00:00" : data.leaveTime;
-            form.elements["OFFICE_LEAVE_TIME_VACATION"].value = data.isVacation ? data.leaveTime : "16:00:00";
-            
-            // 날짜 데이터가 있으면 바인딩 (없으면 공란)
-            // 방학 날짜 등을 백엔드 Config API를 호출해 상세 조회
-            fetch("/api/widgets/countdown") // 실무에선 이 API의 설정들을 바로 폼에 대입
-                .then(() => {
-                    // 예제 포맷을 맞추기 위해 임시 값 설정 (기본값 설정)
-                    if (!form.elements["OFFICE_LEAVE_TIME_NORMAL"].value) {
-                        form.elements["OFFICE_LEAVE_TIME_NORMAL"].value = "18:00:00";
-                    }
-                    if (!form.elements["OFFICE_LEAVE_TIME_VACATION"].value) {
-                        form.elements["OFFICE_LEAVE_TIME_VACATION"].value = "16:00:00";
-                    }
-                });
+            const leaveTimeInput = document.getElementById("admin-office-leave-time");
+            if (leaveTimeInput) {
+                leaveTimeInput.value = data.leaveTimeNormal || "18:00:00";
+            }
+            form.elements["VACATION_START_DATE"].value = data.vacationStartDate || "";
+            form.elements["SEMESTER_START_DATE"].value = data.semesterStartDate || "";
+
+            // 공휴일 목록 로드
+            loadHolidays();
         });
 }
 
@@ -146,6 +154,13 @@ function handleCountdownConfigSubmit(e) {
     const data = {};
     formData.forEach((val, key) => data[key] = val);
 
+    const leaveTimeInput = document.getElementById("admin-office-leave-time");
+    if (leaveTimeInput) {
+        const leaveTimeVal = leaveTimeInput.value || "18:00:00";
+        data["OFFICE_LEAVE_TIME_NORMAL"] = leaveTimeVal;
+        data["OFFICE_LEAVE_TIME_VACATION"] = leaveTimeVal;
+    }
+
     fetch("/api/widgets/countdown/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -153,7 +168,7 @@ function handleCountdownConfigSubmit(e) {
     })
     .then(res => {
         if (res.ok) {
-            alert("퇴근 및 방학 설정이 성공적으로 반영되었습니다.");
+            alert("설정이 성공적으로 저장되었습니다.");
             closeAdminCountdownModal();
             initCountdownWidget(); // 위젯 새로고침
         } else {
@@ -163,40 +178,154 @@ function handleCountdownConfigSubmit(e) {
     .catch(err => alert("설정 저장 중 오류가 발생했습니다: " + err));
 }
 
+// 공휴일 목록 로드
+function loadHolidays() {
+    const container = document.getElementById("holiday-list-container");
+    if (!container) return;
+
+    fetch("/api/widgets/countdown/holidays")
+        .then(res => res.json())
+        .then(list => {
+            if (list.length === 0) {
+                container.innerHTML = `<div class="text-slate-400 text-center py-4 font-semibold">등록된 공휴일이 없습니다.</div>`;
+                return;
+            }
+            container.innerHTML = list.map(h => `
+                <div class="flex justify-between items-center bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl">
+                    <span class="font-extrabold text-slate-700">${h.holidayDate} (${h.holidayName})</span>
+                    <button type="button" onclick="handleDeleteHoliday('${h.holidayDate}')" class="text-rose-500 hover:text-rose-700 transition">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
+                    </button>
+                </div>
+            `).join('');
+        })
+        .catch(err => {
+            console.error("공휴일 목록 로드 실패:", err);
+            container.innerHTML = `<div class="text-rose-500 text-center py-2 font-semibold">로드 중 오류가 발생했습니다.</div>`;
+        });
+}
+
+// 공휴일 추가
+function handleAddHoliday() {
+    const dateInput = document.getElementById("new-holiday-date");
+    const nameInput = document.getElementById("new-holiday-name");
+    if (!dateInput || !nameInput) return;
+
+    const holidayDate = dateInput.value;
+    const holidayName = nameInput.value.trim();
+
+    if (!holidayDate || !holidayName) {
+        alert("날짜와 공휴일 이름을 모두 입력해주세요.");
+        return;
+    }
+
+    fetch("/api/widgets/countdown/holidays", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ holidayDate, holidayName })
+    })
+    .then(res => {
+        if (res.ok) {
+            dateInput.value = "";
+            nameInput.value = "";
+            loadHolidays();
+            initCountdownWidget(); // 위젯 새로고침
+        } else {
+            res.text().then(text => alert("공휴일 추가 실패: " + text));
+        }
+    })
+    .catch(err => alert("공휴일 추가 중 오류 발생: " + err));
+}
+
+// 공휴일 삭제
+function handleDeleteHoliday(date) {
+    if (!confirm(`${date} 공휴일을 삭제하시겠습니까?`)) return;
+
+    fetch(`/api/widgets/countdown/holidays?date=${date}`, {
+        method: "DELETE"
+    })
+    .then(res => {
+        if (res.ok) {
+            loadHolidays();
+            initCountdownWidget(); // 위젯 새로고침
+        } else {
+            res.text().then(text => alert("공휴일 삭제 실패: " + text));
+        }
+    })
+    .catch(err => alert("공휴일 삭제 중 오류 발생: " + err));
+}
+
 
 // ==========================================
 // 2. 날씨 위젯
 // ==========================================
 function fetchWeatherWidgetData() {
     fetch("/api/widgets/weather")
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("HTTP error");
+            return res.json();
+        })
         .then(data => {
+            if (!data || data.currentTemp === undefined) {
+                showWeatherError();
+                return;
+            }
             document.getElementById("weather-current-temp").textContent = data.currentTemp;
             document.getElementById("weather-current-status").textContent = data.currentStatus;
             
+            const popElem = document.getElementById("weather-current-pop");
+            if (popElem) {
+                popElem.textContent = data.currentPop !== undefined ? data.currentPop : 0;
+            }
+            
             // 날씨 아이콘 변경
             const iconElem = document.getElementById("weather-main-icon");
-            iconElem.className = `fa-solid ${data.currentIcon} text-5xl filter drop-shadow-sm`;
-
+            if (iconElem) {
+                iconElem.className = `fa-solid ${data.currentIcon} text-5xl filter drop-shadow-sm`;
+            }
+ 
             // 시간대별 예보 렌더링
             const hourlyList = document.getElementById("weather-hourly-list");
-            hourlyList.innerHTML = ""; // 초기화
-
-            data.forecastHours.forEach(hour => {
-                const hourDiv = document.createElement("div");
-                hourDiv.className = "flex flex-col items-center flex-shrink-0 text-center min-w-[50px] p-1";
-                hourDiv.innerHTML = `
-                    <span class="text-[10px] text-slate-400 font-semibold">${hour.time}</span>
-                    <i class="fa-solid ${hour.icon} text-lg my-1.5"></i>
-                    <span class="text-xs font-bold text-slate-700">${hour.temp}°</span>
-                `;
-                hourlyList.appendChild(hourDiv);
-            });
+            if (hourlyList) {
+                hourlyList.innerHTML = ""; // 초기화
+                if (data.forecastHours && data.forecastHours.length > 0) {
+                    data.forecastHours.forEach(hour => {
+                        const hourDiv = document.createElement("div");
+                        hourDiv.className = "flex flex-col items-center flex-shrink-0 text-center min-w-[50px] p-1";
+                        hourDiv.innerHTML = `
+                            <span class="text-[10px] text-slate-400 font-semibold">${hour.time}</span>
+                            <i class="fa-solid ${hour.icon} text-lg my-1.5"></i>
+                            <span class="text-xs font-bold text-slate-700">${hour.temp}°</span>
+                            <span class="text-[9px] font-semibold text-sky-500 mt-0.5"><i class="fa-solid fa-droplet text-[8px] mr-0.5"></i>${hour.pop}%</span>
+                        `;
+                        hourlyList.appendChild(hourDiv);
+                    });
+                }
+            }
         })
         .catch(err => {
             console.error("날씨 정보 로드 실패:", err);
-            document.getElementById("weather-current-status").textContent = "날씨 정보 에러";
+            showWeatherError();
         });
+}
+
+function showWeatherError() {
+    const tempElem = document.getElementById("weather-current-temp");
+    if (tempElem) tempElem.textContent = "-";
+    const statusElem = document.getElementById("weather-current-status");
+    if (statusElem) {
+        statusElem.textContent = "업데이트 할 수 없음";
+    }
+    const popElem = document.getElementById("weather-current-pop");
+    if (popElem) popElem.textContent = "-";
+    const iconElem = document.getElementById("weather-main-icon");
+    if (iconElem) {
+        iconElem.className = "fa-solid fa-triangle-exclamation text-5xl text-amber-500 filter drop-shadow-sm";
+    }
+    const hourlyList = document.getElementById("weather-hourly-list");
+    if (hourlyList) {
+        hourlyList.innerHTML = `<div class="w-full text-center text-xs text-red-400 font-extrabold py-2">업데이트 할 수 없음</div>`;
+    }
 }
 
 
@@ -206,62 +335,108 @@ function fetchWeatherWidgetData() {
 function fetchTransitWidgetData() {
     const subway1 = document.getElementById("transit-subway1-info");
     const subway7 = document.getElementById("transit-subway7-info");
-    const busList = document.getElementById("transit-bus-list");
+    const bus17999 = document.getElementById("transit-bus-17999");
+    const bus17117 = document.getElementById("transit-bus-17117");
+    const bus17682 = document.getElementById("transit-bus-17682");
 
-    subway1.textContent = "업데이트 중...";
-    subway7.textContent = "업데이트 중...";
-    busList.innerHTML = `<span class="text-[10px] text-slate-400 font-bold">로딩 중...</span>`;
+    if (subway1) subway1.textContent = "업데이트 중...";
+    if (subway7) subway7.textContent = "업데이트 중...";
+    const loaderHtml = `<span class="text-[10px] text-slate-400 font-bold">로딩 중...</span>`;
+    if (bus17999) bus17999.innerHTML = loaderHtml;
+    if (bus17117) bus17117.innerHTML = loaderHtml;
+    if (bus17682) bus17682.innerHTML = loaderHtml;
 
     fetch("/api/widgets/transit")
         .then(res => res.json())
         .then(data => {
-            // 1호선 매칭
-            if (data.subwayLine1 && data.subwayLine1.length >= 2) {
-                subway1.innerHTML = `
-                    <span class="text-blue-600 font-bold">${data.subwayLine1[0].arrivalTime}</span> (하행) / 
-                    <span class="text-blue-600 font-bold">${data.subwayLine1[1].arrivalTime}</span> (상행)
-                `;
-            } else {
-                subway1.textContent = "도착 정보 없음";
-            }
-
-            // 7호선 매칭
-            if (data.subwayLine7 && data.subwayLine7.length >= 2) {
-                subway7.innerHTML = `
-                    <span class="text-emerald-600 font-bold">${data.subwayLine7[0].arrivalTime}</span> (하행) / 
-                    <span class="text-emerald-600 font-bold">${data.subwayLine7[1].arrivalTime}</span> (상행)
-                `;
-            } else {
-                subway7.textContent = "도착 정보 없음";
-            }
-
-            // 버스 정보 매칭
-            busList.innerHTML = "";
-            if (data.busArrivals && data.busArrivals.length > 0) {
-                data.busArrivals.forEach(bus => {
-                    const busItem = document.createElement("div");
-                    busItem.className = "flex items-center justify-end space-x-1.5 mb-1 last:mb-0";
+            // 지하철 렌더링 헬퍼
+            const renderSubwayList = (element, arrivals, badgeColorClass, textColorClass) => {
+                if (!element) return;
+                element.innerHTML = "";
+                if (arrivals === null) {
+                    element.innerHTML = `<span class="text-[10px] text-red-400 font-extrabold">업데이트 할 수 없음</span>`;
+                    return;
+                }
+                if (arrivals && arrivals.length > 0) {
+                    const downTrains = arrivals.filter(t => t.direction === "하행");
+                    const upTrains = arrivals.filter(t => t.direction === "상행");
                     
-                    let badgeClass = "bg-slate-200 text-slate-700";
-                    if (bus.type === "지선") badgeClass = "bg-green-100 text-green-700";
-                    else if (bus.type === "간선") badgeClass = "bg-blue-100 text-blue-700";
-
-                    busItem.innerHTML = `
-                        <span class="font-extrabold text-slate-700">${bus.busNo}번</span>
-                        <span class="text-[10px] px-1 py-0.2 rounded font-bold ${badgeClass}">${bus.type}</span>
-                        <span class="font-black text-rose-500">${bus.arrivalTime}</span>
+                    let html = "";
+                    
+                    // 하행
+                    const downTrainsStr = downTrains.length > 0 
+                        ? downTrains.slice(0, 2).map(t => `<span class="font-extrabold text-slate-700">${t.destination}</span> <span class="font-black ${textColorClass}">${t.arrivalTime}</span>`).join(", ")
+                        : `<span class="text-slate-400">도착 정보 없음</span>`;
+                    html += `
+                        <div class="flex items-center justify-end space-x-1.5 mb-1">
+                            <span class="text-[9px] px-1 py-0.2 rounded font-bold ${badgeColorClass}">하행</span>
+                            <span class="text-slate-600">${downTrainsStr}</span>
+                        </div>
                     `;
-                    busList.appendChild(busItem);
-                });
-            } else {
-                busList.textContent = "도착 정보 없음";
-            }
+                    
+                    // 상행
+                    const upTrainsStr = upTrains.length > 0 
+                        ? upTrains.slice(0, 2).map(t => `<span class="font-extrabold text-slate-700">${t.destination}</span> <span class="font-black ${textColorClass}">${t.arrivalTime}</span>`).join(", ")
+                        : `<span class="text-slate-400">도착 정보 없음</span>`;
+                    html += `
+                        <div class="flex items-center justify-end space-x-1.5">
+                            <span class="text-[9px] px-1 py-0.2 rounded font-bold ${badgeColorClass}">상행</span>
+                            <span class="text-slate-600">${upTrainsStr}</span>
+                        </div>
+                    `;
+                    element.innerHTML = html;
+                } else {
+                    element.innerHTML = `<span class="text-[10px] text-slate-400 font-bold">도착 정보 없음</span>`;
+                }
+            };
+
+            renderSubwayList(subway1, data.subwayLine1, "bg-blue-100 text-blue-700", "text-blue-600");
+            renderSubwayList(subway7, data.subwayLine7, "bg-green-100 text-green-700", "text-emerald-600");
+
+            // 버스 렌더링 헬퍼
+            const renderBusList = (element, arrivals) => {
+                if (!element) return;
+                element.innerHTML = "";
+                if (arrivals === null) {
+                    element.innerHTML = `<span class="text-[10px] text-red-400 font-extrabold">업데이트 할 수 없음</span>`;
+                    return;
+                }
+                if (arrivals && arrivals.length > 0) {
+                    arrivals.slice(0, 3).forEach(bus => {
+                        const busItem = document.createElement("div");
+                        busItem.className = "flex items-center justify-end space-x-1.5 mb-1 last:mb-0";
+                        
+                        let badgeClass = "bg-slate-200 text-slate-700";
+                        if (bus.type === "지선") badgeClass = "bg-green-100 text-green-700";
+                        else if (bus.type === "간선") badgeClass = "bg-blue-100 text-blue-700";
+                        else if (bus.type === "순환") badgeClass = "bg-yellow-100 text-yellow-700";
+                        else if (bus.type === "광역") badgeClass = "bg-red-100 text-red-700";
+
+                        busItem.innerHTML = `
+                            <span class="font-extrabold text-slate-700">${bus.busNo}번</span>
+                            <span class="text-[9px] px-1 py-0.2 rounded font-bold ${badgeClass}">${bus.type}</span>
+                            <span class="font-black text-rose-500">${bus.arrivalTime}</span>
+                        `;
+                        element.appendChild(busItem);
+                    });
+                } else {
+                    element.innerHTML = `<span class="text-[10px] text-slate-400 font-bold">도착 정보 없음</span>`;
+                }
+            };
+
+            // 각 정류장별 버스 리스트 렌더링
+            renderBusList(bus17999, data.bus17999);
+            renderBusList(bus17117, data.bus17117);
+            renderBusList(bus17682, data.bus17682);
         })
         .catch(err => {
             console.error("교통 정보 로드 실패:", err);
-            subway1.textContent = "에러";
-            subway7.textContent = "에러";
-            busList.textContent = "에러";
+            if (subway1) subway1.textContent = "에러";
+            if (subway7) subway7.textContent = "에러";
+            const errHtml = `<span class="text-[10px] text-red-500 font-bold">에러</span>`;
+            if (bus17999) bus17999.innerHTML = errHtml;
+            if (bus17117) bus17117.innerHTML = errHtml;
+            if (bus17682) bus17682.innerHTML = errHtml;
         });
 }
 

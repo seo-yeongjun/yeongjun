@@ -12,8 +12,8 @@ import java.util.Collections;
 @ControllerAdvice
 public class GlobalModelAttributeAdvice {
     @ModelAttribute("user")
-    public String addUserToModel(@AuthenticationPrincipal User user) {
-        return user != null ? user.getUsername() : null;
+    public User addUserToModel(@AuthenticationPrincipal User user) {
+        return user;
     }
     @ModelAttribute("isAdmin")
     public boolean isAdmin(@AuthenticationPrincipal User user) {
