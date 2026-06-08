@@ -557,29 +557,98 @@ public class WidgetService {
     // ==========================================
     public TransitForecast getTransitData() {
         LocalDateTime now = LocalDateTime.now();
-        // 30초 캐시 체크 (대중교통 정보는 실시간성이 중요하므로 캐시 주기를 30초로 지정)
+        // 1) 30초 인메모리 캐시 체크 (짧은 주기 로컬 캐시로 동시 요청 보호)
         if (cachedTransit != null && transitCacheTime != null && 
             ChronoUnit.SECONDS.between(transitCacheTime, now) < 30) {
             return cachedTransit;
         }
 
-        TransitForecast forecast = new TransitForecast();
-        
-        // 1) 1호선 온수역
-        forecast.setSubwayLine1(fetchSubwayArrivals("1001"));
-        
-        // 2) 7호선 온수역
-        forecast.setSubwayLine7(fetchSubwayArrivals("1007"));
-        
-        // 3) 버스 17999 (성공회대입구)
-        forecast.setBus17999(fetchBusArrivals("17999"));
-        
-        // 4) 버스 17117 (온수역)
-        forecast.setBus17117(fetchBusArrivals("17117"));
-        
-        // 5) 버스 17682 (온수역종점)
-        forecast.setBus17682(fetchBusArrivals("17682"));
+        // 2) DB 캐시 체크 (공공 API 일일 트래픽 보호를 위해 캐시 주기 120초 지정)
+        String dbTimeStr = widgetDAO.selectConfig("TRANSIT_CACHE_TIME");
+        String dbDataStr = widgetDAO.selectConfig("TRANSIT_CACHE_DATA");
+        TransitForecast dbForecast = null;
+        LocalDateTime dbTime = null;
 
+        if (dbTimeStr != null && !dbTimeStr.trim().isEmpty() &&
+            dbDataStr != null && !dbDataStr.trim().isEmpty()) {
+            try {
+                dbTime = LocalDateTime.parse(dbTimeStr);
+                dbForecast = objectMapper.readValue(dbDataStr, TransitForecast.class);
+                
+                // 캐시 주기(120초) 이내인 경우 바로 캐시 반환
+                if (ChronoUnit.SECONDS.between(dbTime, now) < 120) {
+                    cachedTransit = dbForecast;
+                    transitCacheTime = dbTime;
+                    return dbForecast;
+                }
+            } catch (Exception e) {
+                log.warn("대중교통 DB 캐시 파싱 중 예외 발생, 강제 갱신을 진행합니다: {}", e.getMessage());
+            }
+        }
+
+        // 3) 캐시가 만료되었거나 없을 때 -> 실시간 API 호출
+        TransitForecast forecast = new TransitForecast();
+        boolean subwaySuccess = false;
+        boolean busSuccess = false;
+
+        // 지하철 데이터 수집
+        List<SubwayArrival> subway1 = fetchSubwayArrivals("1001");
+        List<SubwayArrival> subway7 = fetchSubwayArrivals("1007");
+        if (subway1 != null || subway7 != null) {
+            forecast.setSubwayLine1(subway1);
+            forecast.setSubwayLine7(subway7);
+            subwaySuccess = true;
+        }
+
+        // 버스 데이터 수집
+        Map<String, List<BusArrival>> allBusMap = fetchAllBusArrivalsMap();
+        if (allBusMap != null && allBusMap.get("17999") != null) {
+            forecast.setBus17999(allBusMap.get("17999"));
+            forecast.setBus17117(allBusMap.get("17177")); // 17177 데이터는 DTO 필드 bus17117에 매핑
+            forecast.setBus17682(allBusMap.get("17682"));
+            busSuccess = true;
+        }
+
+        // API 전체 실패 시 과거 DB 캐시가 존재하면 폴백하여 반환
+        if (!subwaySuccess && !busSuccess) {
+            if (dbForecast != null) {
+                log.warn("대중교통 API 전체 호출 실패로 과거 DB 캐시 정보를 반환합니다.");
+                return dbForecast;
+            }
+            return null;
+        }
+
+        // 부분 실패 처리 (지하철 성공 & 버스 실패 또는 그 반대의 경우 과거 캐시로 보완)
+        if (!subwaySuccess && dbForecast != null) {
+            forecast.setSubwayLine1(dbForecast.getSubwayLine1());
+            forecast.setSubwayLine7(dbForecast.getSubwayLine7());
+        }
+        if (!busSuccess && dbForecast != null) {
+            forecast.setBus17999(dbForecast.getBus17999());
+            forecast.setBus17117(dbForecast.getBus17117());
+            forecast.setBus17682(dbForecast.getBus17682());
+        }
+
+        // 4) DB 캐시 업데이트 (성공한 데이터 갱신)
+        try {
+            String jsonStr = objectMapper.writeValueAsString(forecast);
+            
+            WidgetConfig dataConfig = new WidgetConfig();
+            dataConfig.setConfigKey("TRANSIT_CACHE_DATA");
+            dataConfig.setConfigValue(jsonStr);
+            widgetDAO.updateConfig(dataConfig);
+
+            WidgetConfig timeConfig = new WidgetConfig();
+            timeConfig.setConfigKey("TRANSIT_CACHE_TIME");
+            timeConfig.setConfigValue(now.toString());
+            widgetDAO.updateConfig(timeConfig);
+            
+            log.info("성공적으로 대중교통 정보를 DB 캐시에 저장했습니다.");
+        } catch (Exception e) {
+            log.error("대중교통 정보 DB 캐시 저장 중 예외 발생: {}", e.getMessage());
+        }
+
+        // 인메모리 캐시 업데이트
         cachedTransit = forecast;
         transitCacheTime = now;
         return forecast;
@@ -707,34 +776,83 @@ public class WidgetService {
 
 
 
-    private List<BusArrival> fetchBusArrivals(String arsId) {
+    private Map<String, List<BusArrival>> fetchAllBusArrivalsMap() {
+        Map<String, List<BusArrival>> busMap = new HashMap<>();
+
         if (busApiKey == null || busApiKey.trim().isEmpty() || "sample".equals(busApiKey)) {
-            return null;
+            busMap.put("17999", null);
+            busMap.put("17177", null);
+            busMap.put("17682", null);
+            return busMap;
         }
-        try {
-            String url = "http://ws.bus.go.kr/api/rest/stationinfo/getStationByUid?ServiceKey=" + busApiKey + "&arsId=" + arsId + "&resultType=json";
-            String responseStr = restTemplate.getForObject(java.net.URI.create(url), String.class);
-            JsonNode root = objectMapper.readTree(responseStr);
-            JsonNode items = root.path("ServiceResult").path("msgBody").path("itemList");
-            List<BusArrival> arrivals = new ArrayList<>();
-            if (items.isArray()) {
-                for (JsonNode item : items) {
-                    String busNo = item.path("rtNm").asText();
-                    String arrmsg1 = item.path("arrmsg1").asText();
-                    String routeType = item.path("routeType").asText();
-                    
-                    if ("운행종료".equals(arrmsg1) || "정류소 미정차".equals(arrmsg1)) {
-                        continue;
-                    }
-                    
-                    arrivals.add(new BusArrival(busNo, arrmsg1, mapRouteType(routeType)));
+
+        busMap.put("17999", new ArrayList<>());
+        busMap.put("17177", new ArrayList<>());
+        busMap.put("17682", new ArrayList<>());
+
+        // 성공회대/유한대/동삼빌라 정류소를 지나는 서울 시내버스 노선 ID 목록:
+        // 6614(100100297), 5626(100100282), 600(100100085), 160(100100033)
+        String[] routeIds = {"100100297", "100100282", "100100085", "100100033"};
+        boolean successAtLeastOnce = false;
+
+        for (String routeId : routeIds) {
+            try {
+                String url = "http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRouteAll?ServiceKey=" + busApiKey + "&busRouteId=" + routeId + "&resultType=json";
+                String responseStr = restTemplate.getForObject(java.net.URI.create(url), String.class);
+                JsonNode root = objectMapper.readTree(responseStr);
+
+                String headerCd = root.path("msgHeader").path("headerCd").asText();
+                if ("0".equals(headerCd)) {
+                    successAtLeastOnce = true;
+                } else {
+                    log.warn("버스 API headerCd 에러 (routeId: {}): {}", routeId, root.path("msgHeader").path("headerMsg").asText());
+                    continue;
                 }
+
+                JsonNode items = root.path("msgBody").path("itemList");
+                if (items.isArray()) {
+                    for (JsonNode item : items) {
+                        String arsId = item.path("arsId").asText();
+                        String targetKey = null;
+                        
+                        // 17999는 부천시 관할 정류소라 서울시 API 조회 시 부재하므로,
+                        // 동일한 위치의 서울시 관할 정류소인 17184 (온수역, 유한대방면)를 매핑해 줌
+                        if ("17184".equals(arsId)) {
+                            targetKey = "17999";
+                        } else if ("17177".equals(arsId)) {
+                            targetKey = "17177";
+                        } else if ("17682".equals(arsId)) {
+                            targetKey = "17682";
+                        }
+
+                        if (targetKey != null) {
+                            String busNo = item.path("rtNm").asText(); // 차량 번호 대신 노선 번호(예: 6614)를 사용
+                            String arrmsg1 = item.path("arrmsg1").asText();
+                            String routeType = item.path("routeType").asText();
+
+                            // Skip non‑service messages
+                            if (arrmsg1 == null || arrmsg1.isEmpty() || "운행종료".equals(arrmsg1) || "정류소 미정차".equals(arrmsg1)) {
+                                continue;
+                            }
+
+                            BusArrival arrival = new BusArrival(busNo, arrmsg1, mapRouteType(routeType));
+                            busMap.get(targetKey).add(arrival);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.error("버스 API 호출 실패 (routeId: {}): {}", routeId, e.getMessage());
             }
-            return arrivals;
-        } catch (Exception e) {
-            log.error("버스 API 호출 실패 (arsId: {}): {}", arsId, e.getMessage());
-            return null;
         }
+
+        // 단 한번도 API 호출에 성공하지 못했다면 모두 null 처리하여 화면에 "업데이트 할 수 없음"이 뜨게 함
+        if (!successAtLeastOnce) {
+            busMap.put("17999", null);
+            busMap.put("17177", null);
+            busMap.put("17682", null);
+        }
+
+        return busMap;
     }
 
     private String mapRouteType(String routeType) {
