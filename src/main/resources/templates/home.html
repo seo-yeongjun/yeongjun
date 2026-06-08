@@ -176,9 +176,12 @@
         <div class="widget-card bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg relative flex flex-col justify-between min-h-[200px]">
             <div class="flex justify-between items-start">
                 <span class="text-sm font-bold text-gray-500 uppercase tracking-wider"><i class="fa-solid fa-cloud-sun mr-1.5 text-amber-500"></i>성공회대 날씨</span>
-                <span class="text-[10px] text-slate-400 font-semibold bg-slate-100 px-2 py-0.5 rounded-full">구로구 항동</span>
+                <div class="flex flex-col items-end space-y-0.5">
+                    <span class="text-[10px] text-slate-400 font-semibold bg-slate-100 px-2 py-0.5 rounded-full">구로구 항동</span>
+                    <span class="text-[8px] text-slate-400/80 font-medium tracking-tight">출처: 기상청 단기예보</span>
+                </div>
             </div>
-            <div class="flex items-center justify-around my-2.5">
+            <div class="flex items-center justify-around my-2">
                 <div class="text-center">
                     <i id="weather-main-icon" class="fa-solid fa-sun text-5xl text-amber-500 filter drop-shadow-sm"></i>
                 </div>
@@ -186,10 +189,16 @@
                     <div class="flex items-start">
                         <span id="weather-current-temp" class="text-4xl font-extrabold text-slate-800">-</span>
                         <span class="text-xl font-bold text-slate-600 mt-0.5">°C</span>
+                        <span class="text-[9px] font-bold text-slate-400 ml-2.5 mt-1.5 flex flex-col leading-none">
+                            <span class="text-rose-500">▲<span id="weather-temp-max">-</span>°</span>
+                            <span class="text-blue-500 mt-1">▼<span id="weather-temp-min">-</span>°</span>
+                        </span>
                     </div>
-                    <div class="flex flex-col">
-                        <span id="weather-current-status" class="text-sm font-bold text-slate-600">맑음</span>
-                        <span class="text-[11px] font-semibold text-slate-400 mt-0.5"><i class="fa-solid fa-umbrella mr-1 text-sky-400"></i>강수확률 <span id="weather-current-pop">0</span>%</span>
+                    <div class="flex flex-col text-[10px] font-semibold text-slate-400 mt-0.5 space-y-0.5">
+                        <span id="weather-current-status" class="text-xs font-bold text-slate-600 mb-0.5">맑음</span>
+                        <span class="flex items-center"><i class="fa-solid fa-umbrella mr-1.5 text-sky-400 w-3"></i>강수확률 <span id="weather-current-pop" class="ml-1 font-bold text-slate-600">0</span>%</span>
+                        <span class="flex items-center"><i class="fa-solid fa-droplet mr-1.5 text-blue-400 w-3"></i>습도 <span id="weather-current-humidity" class="ml-1 font-bold text-slate-600">-</span>%</span>
+                        <span class="flex items-center"><i class="fa-solid fa-wind mr-1.5 text-teal-400 w-3"></i>바람 <span id="weather-current-wind" class="ml-1 font-bold text-slate-600">-</span> m/s</span>
                     </div>
                 </div>
             </div>

@@ -237,12 +237,64 @@ public class WidgetService {
     // ==========================================
     // 2. 날씨 서비스 (성공회대학교 기준, API 폴백)
     // ==========================================
+    // 예보 발표 기준 시각과 날짜 구하기 (15분 마진)
+    private String[] getBaseDateTime() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime target = now.minusMinutes(15);
+        
+        LocalDate date = target.toLocalDate();
+        LocalTime time = target.toLocalTime();
+        
+        String baseDate = date.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String baseTime = "0200";
+        
+        int hour = time.getHour();
+        if (hour < 2) {
+            LocalDate yesterday = date.minusDays(1);
+            baseDate = yesterday.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+            baseTime = "2300";
+        } else if (hour < 5) {
+            baseTime = "0200";
+        } else if (hour < 8) {
+            baseTime = "0500";
+        } else if (hour < 11) {
+            baseTime = "0800";
+        } else if (hour < 14) {
+            baseTime = "1100";
+        } else if (hour < 17) {
+            baseTime = "1400";
+        } else if (hour < 20) {
+            baseTime = "1700";
+        } else if (hour < 23) {
+            baseTime = "2000";
+        } else {
+            baseTime = "2300";
+        }
+        
+        return new String[]{baseDate, baseTime};
+    }
+
+    private String mapKmaWeatherStatus(int sky, int pty) {
+        if (sky == 1 && pty == 0) {
+            return "맑음";
+        } else if ((sky == 3 || sky == 4) && pty == 0) {
+            return "흐림"; // 구름조금 혹은 흐림
+        } else if (pty == 1 || pty == 4) {
+            return "비";
+        } else if (pty == 2) {
+            return "비/눈";
+        } else if (pty == 3) {
+            return "눈";
+        }
+        return "맑음";
+    }
+
     public WeatherForecast getWeatherData() {
         LocalDateTime now = LocalDateTime.now();
         
-        // 1) 15분 인메모리 캐시 체크 (트래픽 효율 극대화)
+        // 1) 10초 인메모리 캐시 체크 (하루 9000회 한도 최적화)
         if (cachedWeather != null && weatherCacheTime != null && 
-            ChronoUnit.MINUTES.between(weatherCacheTime, now) < 15) {
+            ChronoUnit.SECONDS.between(weatherCacheTime, now) < 10) {
             return cachedWeather;
         }
 
@@ -254,7 +306,7 @@ public class WidgetService {
             dbDataStr != null && !dbDataStr.trim().isEmpty()) {
             try {
                 LocalDateTime dbTime = LocalDateTime.parse(dbTimeStr);
-                if (ChronoUnit.MINUTES.between(dbTime, now) < 15) {
+                if (ChronoUnit.SECONDS.between(dbTime, now) < 10) {
                     WeatherForecast dbForecast = objectMapper.readValue(dbDataStr, WeatherForecast.class);
                     // 인메모리 캐시 동기화
                     cachedWeather = dbForecast;
@@ -274,134 +326,169 @@ public class WidgetService {
 
         if (weatherApiKey != null && !weatherApiKey.trim().isEmpty()) {
             try {
-                // 1) Current Weather
-                String currentWeatherUrl = "https://api.openweathermap.org/data/2.5/weather?lat=37.4878&lon=126.8258&appid=" + weatherApiKey.trim() + "&units=metric&lang=kr";
-                String currentRes = restTemplate.getForObject(currentWeatherUrl, String.class);
-                JsonNode currentRoot = objectMapper.readTree(currentRes);
+                String[] base = getBaseDateTime();
+                String baseDate = base[0];
+                String baseTime = base[1];
+                String serviceKey = weatherApiKey.trim();
 
-                double tempDouble = currentRoot.path("main").path("temp").asDouble();
-                int currentTemp = (int) Math.round(tempDouble);
-                int weatherId = currentRoot.path("weather").path(0).path("id").asInt();
-                String status = mapWeatherStatus(weatherId);
+                // 중복 URL Encoding 방지를 위한 URI 직접 생성
+                String urlStr = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
+                        + "?serviceKey=" + serviceKey
+                        + "&pageNo=1"
+                        + "&numOfRows=1000"
+                        + "&dataType=JSON"
+                        + "&base_date=" + baseDate
+                        + "&base_time=" + baseTime
+                        + "&nx=57"
+                        + "&ny=125";
+                java.net.URI uri = java.net.URI.create(urlStr);
 
-                forecast.setCurrentTemp(currentTemp);
-                forecast.setCurrentStatus(status);
-                forecast.setCurrentIcon(getWeatherIcon(status));
+                String res = restTemplate.getForObject(uri, String.class);
+                JsonNode root = objectMapper.readTree(res);
+                JsonNode responseNode = root.path("response");
+                JsonNode headerNode = responseNode.path("header");
+                String resultCode = headerNode.path("resultCode").asText();
+                
+                if (!"00".equals(resultCode)) {
+                    throw new RuntimeException("기상청 API 에러: " + headerNode.path("resultMsg").asText());
+                }
 
-                // 2) Forecast Weather (5-day / 3-hour forecast)
-                String forecastUrl = "https://api.openweathermap.org/data/2.5/forecast?lat=37.4878&lon=126.8258&appid=" + weatherApiKey.trim() + "&units=metric&lang=kr";
-                String forecastRes = restTemplate.getForObject(forecastUrl, String.class);
-                JsonNode forecastRoot = objectMapper.readTree(forecastRes);
-                JsonNode listNode = forecastRoot.path("list");
+                JsonNode itemsNode = responseNode.path("body").path("items").path("item");
+                if (itemsNode.isArray() && itemsNode.size() > 0) {
+                    // 1) 현재 시각과 가장 일치하거나 근접한 미래 정각 데이터 찾기 (예: 현재 09:30 이면 10:00 예보)
+                    LocalDateTime currentTarget = now.plusMinutes(30);
+                    String currentFcstDate = currentTarget.toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+                    String currentFcstTime = String.format("%02d00", currentTarget.getHour());
 
-                if (listNode.isArray()) {
-                    if (listNode.size() > 0) {
-                        double firstPop = listNode.get(0).path("pop").asDouble();
-                        forecast.setCurrentPop((int) Math.round(firstPop * 100));
-                    } else {
-                        forecast.setCurrentPop(0);
-                    }
+                    int currentTemp = 0;
+                    int currentPop = 0;
+                    int currentHumidity = 0;
+                    double currentWindSpeed = 0.0;
+                    int currentSky = 1;
+                    int currentPty = 0;
 
-                    // Raw forecast points list for interpolation
-                    List<ForecastPoint> points = new ArrayList<>();
-                    
-                    // Add Point 0 (Current Weather)
-                    ForecastPoint p0 = new ForecastPoint();
-                    p0.hoursFromNow = 0.0;
-                    p0.temp = currentTemp;
-                    p0.pop = forecast.getCurrentPop();
-                    p0.status = status;
-                    p0.icon = forecast.getCurrentIcon();
-                    points.add(p0);
-
-                    long nowEpoch = now.atZone(ZoneId.of("Asia/Seoul")).toEpochSecond();
-
-                    for (JsonNode item : listNode) {
-                        long dt = item.path("dt").asLong();
-                        double diffHours = (double) (dt - nowEpoch) / 3600.0;
-                        if (diffHours < 0) continue; // Skip past points
-
-                        double fTempDouble = item.path("main").path("temp").asDouble();
-                        int fTemp = (int) Math.round(fTempDouble);
-                        int fWeatherId = item.path("weather").path(0).path("id").asInt();
-                        String fStatus = mapWeatherStatus(fWeatherId);
-                        double fPopDouble = item.path("pop").asDouble();
-                        int fPop = (int) Math.round(fPopDouble * 100);
-
-                        ForecastPoint fp = new ForecastPoint();
-                        fp.hoursFromNow = diffHours;
-                        fp.temp = fTemp;
-                        fp.pop = fPop;
-                        fp.status = fStatus;
-                        fp.icon = getWeatherIcon(fStatus);
-                        points.add(fp);
-
-                        // Fetch enough forecast points (up to 12 hours out) to interpolate 6 hourly slots
-                        if (diffHours >= 12.0) {
-                            break;
+                    for (JsonNode item : itemsNode) {
+                        String fcstDate = item.path("fcstDate").asText();
+                        String fcstTime = item.path("fcstTime").asText();
+                        if (currentFcstDate.equals(fcstDate) && currentFcstTime.equals(fcstTime)) {
+                            String category = item.path("category").asText();
+                            String val = item.path("fcstValue").asText();
+                            switch (category) {
+                                case "TMP":
+                                    try { currentTemp = (int) Math.round(Double.parseDouble(val)); } catch (Exception ignored) {}
+                                    break;
+                                case "POP":
+                                    try { currentPop = (int) Math.round(Double.parseDouble(val)); } catch (Exception ignored) {}
+                                    break;
+                                case "REH":
+                                    try { currentHumidity = Integer.parseInt(val); } catch (Exception ignored) {}
+                                    break;
+                                case "WSD":
+                                    try { currentWindSpeed = Double.parseDouble(val); } catch (Exception ignored) {}
+                                    break;
+                                case "SKY":
+                                    try { currentSky = Integer.parseInt(val); } catch (Exception ignored) {}
+                                    break;
+                                case "PTY":
+                                    try { currentPty = Integer.parseInt(val); } catch (Exception ignored) {}
+                                    break;
+                            }
                         }
                     }
 
-                    // Perform linear interpolation for h = 1..6 hours from now
+                    String status = mapKmaWeatherStatus(currentSky, currentPty);
+                    forecast.setCurrentTemp(currentTemp);
+                    forecast.setCurrentStatus(status);
+                    forecast.setCurrentIcon(getWeatherIcon(status));
+                    forecast.setCurrentPop(currentPop);
+                    forecast.setCurrentHumidity(currentHumidity);
+                    forecast.setCurrentWindSpeed(currentWindSpeed);
+
+                    // 2) 오늘 하루 기온(TMP) 목록 수집 (최저/최고 기온 TMN, TMX 폴백용 및 실제 TMN/TMX 추출)
+                    List<Integer> todayTemps = new ArrayList<>();
+                    Integer tmn = null;
+                    Integer tmx = null;
+                    String todayStr = now.toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+                    for (JsonNode item : itemsNode) {
+                        String fcstDate = item.path("fcstDate").asText();
+                        String category = item.path("category").asText();
+                        String fcstValue = item.path("fcstValue").asText();
+
+                        if (todayStr.equals(fcstDate)) {
+                            if ("TMP".equals(category)) {
+                                try { todayTemps.add((int) Math.round(Double.parseDouble(fcstValue))); } catch (Exception ignored) {}
+                            } else if ("TMN".equals(category)) {
+                                try { tmn = (int) Math.round(Double.parseDouble(fcstValue)); } catch (Exception ignored) {}
+                            } else if ("TMX".equals(category)) {
+                                try { tmx = (int) Math.round(Double.parseDouble(fcstValue)); } catch (Exception ignored) {}
+                            }
+                        }
+                    }
+
+                    if (tmn == null && !todayTemps.isEmpty()) {
+                        tmn = Collections.min(todayTemps);
+                    }
+                    if (tmx == null && !todayTemps.isEmpty()) {
+                        tmx = Collections.max(todayTemps);
+                    }
+
+                    forecast.setTodayMinTemp(tmn != null ? tmn : currentTemp);
+                    forecast.setTodayMaxTemp(tmx != null ? tmx : currentTemp);
+
+                    // 3) 향후 6시간 예보 (1시간 단위로 순회하여 데이터 매핑)
                     for (int h = 1; h <= 6; h++) {
-                        double targetHour = (double) h;
-                        ForecastPoint left = null;
-                        ForecastPoint right = null;
-
-                        for (ForecastPoint p : points) {
-                            if (p.hoursFromNow <= targetHour) {
-                                if (left == null || p.hoursFromNow > left.hoursFromNow) {
-                                    left = p;
-                                }
-                            }
-                            if (p.hoursFromNow >= targetHour) {
-                                if (right == null || p.hoursFromNow < right.hoursFromNow) {
-                                    right = p;
-                                }
-                            }
-                        }
-
-                        if (left == null) left = points.get(0);
-                        if (right == null) right = points.get(points.size() - 1);
-
-                        int finalTemp;
-                        int finalPop;
-                        String finalStatus;
-                        String finalIcon;
-
-                        if (left == right || Math.abs(right.hoursFromNow - left.hoursFromNow) < 0.001) {
-                            finalTemp = left.temp;
-                            finalPop = left.pop;
-                            finalStatus = left.status;
-                            finalIcon = left.icon;
-                        } else {
-                            double fraction = (targetHour - left.hoursFromNow) / (right.hoursFromNow - left.hoursFromNow);
-                            finalTemp = (int) Math.round(left.temp + (right.temp - left.temp) * fraction);
-                            finalPop = (int) Math.round(left.pop + (right.pop - left.pop) * fraction);
-                            if (fraction < 0.5) {
-                                finalStatus = left.status;
-                                finalIcon = left.icon;
-                            } else {
-                                finalStatus = right.status;
-                                finalIcon = right.icon;
-                            }
-                        }
-
                         LocalDateTime targetTime = now.plusHours(h);
-                        WeatherHour wh = new WeatherHour();
-                        wh.setTime(String.format("%02d:00", targetTime.getHour()));
-                        wh.setTemp(finalTemp);
-                        wh.setStatus(finalStatus);
-                        wh.setIcon(finalIcon);
-                        wh.setPop(finalPop);
-                        hours.add(wh);
+                        String targetDateStr = targetTime.toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+                        String targetTimeStr = String.format("%02d00", targetTime.getHour());
+
+                        int fTemp = 0;
+                        int fPop = 0;
+                        int fSky = 1;
+                        int fPty = 0;
+                        boolean found = false;
+
+                        for (JsonNode item : itemsNode) {
+                            String fcstDate = item.path("fcstDate").asText();
+                            String fcstTime = item.path("fcstTime").asText();
+                            if (targetDateStr.equals(fcstDate) && targetTimeStr.equals(fcstTime)) {
+                                found = true;
+                                String category = item.path("category").asText();
+                                String val = item.path("fcstValue").asText();
+                                switch (category) {
+                                    case "TMP":
+                                        try { fTemp = (int) Math.round(Double.parseDouble(val)); } catch (Exception ignored) {}
+                                        break;
+                                    case "POP":
+                                        try { fPop = (int) Math.round(Double.parseDouble(val)); } catch (Exception ignored) {}
+                                        break;
+                                    case "SKY":
+                                        try { fSky = Integer.parseInt(val); } catch (Exception ignored) {}
+                                        break;
+                                    case "PTY":
+                                        try { fPty = Integer.parseInt(val); } catch (Exception ignored) {}
+                                        break;
+                                }
+                            }
+                        }
+
+                        if (found) {
+                            String fStatus = mapKmaWeatherStatus(fSky, fPty);
+                            WeatherHour wh = new WeatherHour();
+                            wh.setTime(String.format("%02d:00", targetTime.getHour()));
+                            wh.setTemp(fTemp);
+                            wh.setStatus(fStatus);
+                            wh.setIcon(getWeatherIcon(fStatus));
+                            wh.setPop(fPop);
+                            hours.add(wh);
+                        }
                     }
                 }
 
                 success = true;
-                log.info("성공적으로 실시간 날씨 정보를 OpenWeatherMap API로부터 조회 및 1시간 단위 보간 처리했습니다.");
+                log.info("성공적으로 실시간 날씨 정보를 기상청 단기예보 OpenAPI로부터 조회하였습니다.");
             } catch (Exception e) {
-                log.error("OpenWeatherMap API 호출 중 에러 발생: {}", e.getMessage());
+                log.error("기상청 OpenAPI 호출 중 에러 발생: {}", e.getMessage());
             }
         }
 
@@ -459,6 +546,7 @@ public class WidgetService {
             case "구름조금": return "fa-cloud-sun text-blue-400";
             case "흐림": return "fa-cloud text-gray-500";
             case "비": return "fa-cloud-showers-heavy text-indigo-500";
+            case "비/눈": return "fa-cloud-meatball text-sky-400";
             case "눈": return "fa-snowflake text-sky-300";
             default: return "fa-sun text-yellow-500";
         }
@@ -751,6 +839,10 @@ public class WidgetService {
         private String currentStatus;
         private String currentIcon;
         private int currentPop;
+        private int currentHumidity;
+        private double currentWindSpeed;
+        private Integer todayMinTemp;
+        private Integer todayMaxTemp;
         private List<WeatherHour> forecastHours;
     }
 
@@ -761,14 +853,6 @@ public class WidgetService {
         private String status;
         private String icon;
         private int pop;
-    }
-
-    private static class ForecastPoint {
-        double hoursFromNow;
-        int temp;
-        int pop;
-        String status;
-        String icon;
     }
 
     @Data

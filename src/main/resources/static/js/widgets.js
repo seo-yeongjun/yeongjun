@@ -278,6 +278,26 @@ function fetchWeatherWidgetData() {
                 popElem.textContent = data.currentPop !== undefined ? data.currentPop : 0;
             }
 
+            const humidityElem = document.getElementById("weather-current-humidity");
+            if (humidityElem) {
+                humidityElem.textContent = data.currentHumidity !== undefined ? data.currentHumidity : "-";
+            }
+
+            const windElem = document.getElementById("weather-current-wind");
+            if (windElem) {
+                windElem.textContent = data.currentWindSpeed !== undefined ? data.currentWindSpeed : "-";
+            }
+
+            const minTempElem = document.getElementById("weather-temp-min");
+            if (minTempElem) {
+                minTempElem.textContent = data.todayMinTemp !== undefined ? data.todayMinTemp : "-";
+            }
+
+            const maxTempElem = document.getElementById("weather-temp-max");
+            if (maxTempElem) {
+                maxTempElem.textContent = data.todayMaxTemp !== undefined ? data.todayMaxTemp : "-";
+            }
+
             // 날씨 아이콘 변경
             const iconElem = document.getElementById("weather-main-icon");
             if (iconElem) {
@@ -296,7 +316,7 @@ function fetchWeatherWidgetData() {
                             <span class="text-[10px] text-slate-400 font-semibold">${hour.time}</span>
                             <i class="fa-solid ${hour.icon} text-lg my-1.5"></i>
                             <span class="text-xs font-bold text-slate-700">${hour.temp}°</span>
-                            <span class="text-[9px] font-semibold text-sky-500 mt-0.5"><i class="fa-solid fa-droplet text-[8px] mr-0.5"></i>${hour.pop}%</span>
+                            <span class="text-[9px] font-semibold text-sky-500 mt-0.5"><i class="fa-solid fa-umbrella text-[8px] mr-0.5"></i>${hour.pop}%</span>
                         `;
                         hourlyList.appendChild(hourDiv);
                     });
@@ -318,6 +338,15 @@ function showWeatherError() {
     }
     const popElem = document.getElementById("weather-current-pop");
     if (popElem) popElem.textContent = "-";
+    const humidityElem = document.getElementById("weather-current-humidity");
+    if (humidityElem) humidityElem.textContent = "-";
+    const windElem = document.getElementById("weather-current-wind");
+    if (windElem) windElem.textContent = "-";
+    const minTempElem = document.getElementById("weather-temp-min");
+    if (minTempElem) minTempElem.textContent = "-";
+    const maxTempElem = document.getElementById("weather-temp-max");
+    if (maxTempElem) maxTempElem.textContent = "-";
+
     const iconElem = document.getElementById("weather-main-icon");
     if (iconElem) {
         iconElem.className = "fa-solid fa-triangle-exclamation text-5xl text-amber-500 filter drop-shadow-sm";
