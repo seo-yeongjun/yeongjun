@@ -563,7 +563,7 @@ public class WidgetService {
             return cachedTransit;
         }
 
-        // 2) DB 캐시 체크 (공공 API 일일 트래픽 보호를 위해 캐시 주기 120초 지정)
+        // 2) DB 캐시 체크 (공공 API 일일 트래픽 보호를 위해 캐시 주기 120초 지정, 심야 시간대 연장)
         String dbTimeStr = widgetDAO.selectConfig("TRANSIT_CACHE_TIME");
         String dbDataStr = widgetDAO.selectConfig("TRANSIT_CACHE_DATA");
         TransitForecast dbForecast = null;
@@ -575,8 +575,17 @@ public class WidgetService {
                 dbTime = LocalDateTime.parse(dbTimeStr);
                 dbForecast = objectMapper.readValue(dbDataStr, TransitForecast.class);
                 
-                // 캐시 주기(120초) 이내인 경우 바로 캐시 반환
-                if (ChronoUnit.SECONDS.between(dbTime, now) < 120) {
+                // 캐시 주기 설정 (오전 1:00 ~ 오전 5:30 사이에는 캐시 업데이트를 중단하고 유효 기간을 4.5시간으로 연장)
+                long cacheLimitSeconds = 120;
+                LocalTime timeNow = now.toLocalTime();
+                LocalTime silentStart = LocalTime.of(1, 0);
+                LocalTime silentEnd = LocalTime.of(5, 30);
+                if (!timeNow.isBefore(silentStart) && timeNow.isBefore(silentEnd)) {
+                    cacheLimitSeconds = 16200; // 4.5시간 (오전 1시 ~ 5시 30분 동안 캐시 유지)
+                }
+
+                // 캐시 주기 이내인 경우 바로 캐시 반환
+                if (ChronoUnit.SECONDS.between(dbTime, now) < cacheLimitSeconds) {
                     cachedTransit = dbForecast;
                     transitCacheTime = dbTime;
                     return dbForecast;
