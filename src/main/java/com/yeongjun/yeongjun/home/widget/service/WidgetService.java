@@ -572,13 +572,28 @@ public class WidgetService {
         forecast.setSubwayLine7(fetchSubwayArrivals("1007"));
         
         // 3) 버스 17999 (성공회대입구)
-        forecast.setBus17999(fetchBusArrivals("17999"));
+        List<BusArrival> bus17999 = new ArrayList<>();
+        List<BusArrival> seoul17999 = fetchBusArrivals("17999");
+        List<BusArrival> gyeonggi17999 = fetchGyeonggiBusArrivals("116000091");
+        if (seoul17999 != null) bus17999.addAll(seoul17999);
+        if (gyeonggi17999 != null) bus17999.addAll(gyeonggi17999);
+        forecast.setBus17999(bus17999);
         
         // 4) 버스 17117 (온수역)
-        forecast.setBus17117(fetchBusArrivals("17117"));
+        List<BusArrival> bus17117 = new ArrayList<>();
+        List<BusArrival> seoul17117 = fetchBusArrivals("17117");
+        List<BusArrival> gyeonggi17117 = fetchGyeonggiBusArrivals("116000091");
+        if (seoul17117 != null) bus17117.addAll(seoul17117);
+        if (gyeonggi17117 != null) bus17117.addAll(gyeonggi17117);
+        forecast.setBus17117(bus17117);
         
         // 5) 버스 17682 (온수역종점)
-        forecast.setBus17682(fetchBusArrivals("17682"));
+        List<BusArrival> bus17682 = new ArrayList<>();
+        List<BusArrival> seoul17682 = fetchBusArrivals("17682");
+        List<BusArrival> gyeonggi17682 = fetchGyeonggiBusArrivals("116900006");
+        if (seoul17682 != null) bus17682.addAll(seoul17682);
+        if (gyeonggi17682 != null) bus17682.addAll(gyeonggi17682);
+        forecast.setBus17682(bus17682);
 
         cachedTransit = forecast;
         transitCacheTime = now;
@@ -742,6 +757,51 @@ public class WidgetService {
         if ("4".equals(routeType)) return "지선";
         if ("5".equals(routeType)) return "순환";
         if ("6".equals(routeType)) return "광역";
+        return "일반";
+    }
+
+    private List<BusArrival> fetchGyeonggiBusArrivals(String stationId) {
+        if (busApiKey == null || busApiKey.trim().isEmpty() || "sample".equals(busApiKey)) {
+            return new ArrayList<>();
+        }
+        try {
+            String url = "https://apis.data.go.kr/6410000/busarrivalservice/v2/getBusArrivalListv2?serviceKey=" 
+                    + busApiKey + "&stationId=" + stationId + "&format=json";
+            String responseStr = restTemplate.getForObject(java.net.URI.create(url), String.class);
+            JsonNode root = objectMapper.readTree(responseStr);
+            JsonNode listNode = root.path("response").path("msgBody").path("busArrivalList");
+            
+            List<BusArrival> arrivals = new ArrayList<>();
+            
+            // 1. 결과가 배열 형태인 경우
+            if (listNode.isArray()) {
+                for (JsonNode item : listNode) {
+                    String busNo = item.path("routeName").asText();
+                    int minutes = item.path("predictTime1").asInt(-1);
+                    String arrivalMsg = minutes > 0 ? minutes + "분 뒤" : "도착 임박";
+                    String routeTypeCd = item.path("routeTypeCd").asText();
+                    arrivals.add(new BusArrival(busNo, arrivalMsg, mapGyeonggiRouteType(routeTypeCd)));
+                }
+            } 
+            // 2. 결과가 단일 객체 형태인 경우
+            else if (listNode.isObject()) {
+                String busNo = listNode.path("routeName").asText();
+                int minutes = listNode.path("predictTime1").asInt(-1);
+                String arrivalMsg = minutes > 0 ? minutes + "분 뒤" : "도착 임박";
+                String routeTypeCd = listNode.path("routeTypeCd").asText();
+                arrivals.add(new BusArrival(busNo, arrivalMsg, mapGyeonggiRouteType(routeTypeCd)));
+            }
+            return arrivals;
+        } catch (Exception e) {
+            log.error("경기도 버스 API 호출 실패 (stationId: {}): {}", stationId, e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    private String mapGyeonggiRouteType(String routeTypeCd) {
+        if ("11".equals(routeTypeCd) || "15".equals(routeTypeCd) || "22".equals(routeTypeCd)) return "광역";
+        if ("14".equals(routeTypeCd) || "16".equals(routeTypeCd)) return "순환";
+        if ("13".equals(routeTypeCd) || "23".equals(routeTypeCd)) return "지선";
         return "일반";
     }
 
