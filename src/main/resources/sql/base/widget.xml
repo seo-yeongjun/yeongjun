@@ -13,9 +13,9 @@
     </select>
 
     <update id="updateConfig" parameterType="com.yeongjun.yeongjun.home.widget.model.WidgetConfig">
-        UPDATE widget_config
-        SET config_value = #{configValue}
-        WHERE config_key = #{configKey}
+        INSERT INTO widget_config (config_key, config_value)
+        VALUES (#{configKey}, #{configValue})
+        ON DUPLICATE KEY UPDATE config_value = #{configValue}
     </update>
 
     <select id="selectConfigList" resultType="com.yeongjun.yeongjun.home.widget.model.WidgetConfig">
