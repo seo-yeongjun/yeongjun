@@ -422,6 +422,19 @@ function fetchTransitWidgetData() {
             renderSubwayList(subway1, data.subwayLine1, "bg-blue-100 text-blue-700", "text-blue-600");
             renderSubwayList(subway7, data.subwayLine7, "bg-green-100 text-green-700", "text-emerald-600");
 
+            // 정류소별 고정 정차 버스 목록
+            const FIXED_BUS_LISTS = {
+                "transit-bus-17999": ["10", "52", "57", "57-1", "75", "83", "88"],
+                "transit-bus-17117": ["10", "52", "57", "57-1", "75", "83", "88", "660", "구로07"],
+                "transit-bus-17682": ["660", "6614", "구로07"]
+            };
+
+            const BUS_DEFAULT_TYPES = {
+                "660": "지선",
+                "6614": "지선",
+                "구로07": "지선"
+            };
+
             // 버스 렌더링 헬퍼
             const renderBusList = (element, arrivals) => {
                 if (!element) return;
@@ -430,27 +443,49 @@ function fetchTransitWidgetData() {
                     element.innerHTML = `<span class="text-[10px] text-red-400 font-extrabold">업데이트 할 수 없음</span>`;
                     return;
                 }
-                if (arrivals && arrivals.length > 0) {
-                    arrivals.slice(0, 3).forEach(bus => {
-                        const busItem = document.createElement("div");
-                        busItem.className = "flex items-center justify-end space-x-1.5 mb-1 last:mb-0";
 
-                        let badgeClass = "bg-slate-200 text-slate-700";
-                        if (bus.type === "지선") badgeClass = "bg-green-100 text-green-700";
-                        else if (bus.type === "간선") badgeClass = "bg-blue-100 text-blue-700";
-                        else if (bus.type === "순환") badgeClass = "bg-yellow-100 text-yellow-700";
-                        else if (bus.type === "광역") badgeClass = "bg-red-100 text-red-700";
+                // 해당 엘리먼트의 고정 버스 목록 가져오기
+                const fixedList = FIXED_BUS_LISTS[element.id] || [];
+                const realArrivals = arrivals || [];
 
-                        busItem.innerHTML = `
-                            <span class="font-extrabold text-slate-700">${bus.busNo}번</span>
-                            <span class="text-[9px] px-1 py-0.2 rounded font-bold ${badgeClass}">${bus.type}</span>
-                            <span class="font-black text-rose-500">${bus.arrivalTime}</span>
-                        `;
-                        element.appendChild(busItem);
-                    });
-                } else {
-                    element.innerHTML = `<span class="text-[10px] text-slate-400 font-bold">버스정보는 추후에 제공될 예정입니다.</span>`;
-                }
+                fixedList.forEach(busNo => {
+                    // 실시간 정보에서 일치하는 버스 찾기
+                    const matchedBus = realArrivals.find(b => b.busNo === busNo);
+                    
+                    const busItem = document.createElement("div");
+                    busItem.className = "flex items-center justify-end space-x-1.5 mb-1 last:mb-0";
+
+                    let busType = "일반";
+                    let arrivalTime1 = "도착 정보 없음";
+                    let arrivalTime2 = "-";
+
+                    if (matchedBus) {
+                        busType = matchedBus.type || "일반";
+                        arrivalTime1 = matchedBus.arrivalTime1 || "도착 정보 없음";
+                        arrivalTime2 = matchedBus.arrivalTime2 || "-";
+                    } else {
+                        busType = BUS_DEFAULT_TYPES[busNo] || "일반";
+                    }
+
+                    let badgeClass = "bg-slate-200 text-slate-700";
+                    if (busType === "지선") badgeClass = "bg-green-100 text-green-700";
+                    else if (busType === "간선") badgeClass = "bg-blue-100 text-blue-700";
+                    else if (busType === "순환") badgeClass = "bg-yellow-100 text-yellow-700";
+                    else if (busType === "광역") badgeClass = "bg-red-100 text-red-700";
+
+                    const time1ColorClass = arrivalTime1 === "도착 정보 없음" ? "text-slate-400 font-medium text-[10px]" : "font-black text-rose-500";
+                    
+                    const time2Html = arrivalTime2 && arrivalTime2 !== "-"
+                        ? `<span class="text-[10px] text-slate-400 font-bold ml-1">(${arrivalTime2})</span>`
+                        : "";
+
+                    busItem.innerHTML = `
+                        <span class="font-extrabold text-slate-700">${busNo}번</span>
+                        <span class="text-[9px] px-1 py-0.2 rounded font-bold ${badgeClass}">${busType}</span>
+                        <span class="${time1ColorClass}">${arrivalTime1}</span>${time2Html}
+                    `;
+                    element.appendChild(busItem);
+                });
             };
 
             // 각 정류장별 버스 리스트 렌더링

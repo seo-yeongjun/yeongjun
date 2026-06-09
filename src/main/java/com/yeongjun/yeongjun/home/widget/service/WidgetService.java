@@ -612,24 +612,10 @@ public class WidgetService {
         // 버스 데이터 수집
         Map<String, List<BusArrival>> allBusMap = fetchAllBusArrivalsMap();
         if (allBusMap != null && allBusMap.get("17999") != null) {
-            // 서울 버스 데이터(allBusMap)와 경기도 버스 데이터 병합
-            List<BusArrival> bus17999 = new ArrayList<>();
-            if (allBusMap.get("17999") != null) bus17999.addAll(allBusMap.get("17999"));
-            List<BusArrival> gyeonggi17999 = fetchGyeonggiBusArrivals("116000091");
-            if (gyeonggi17999 != null) bus17999.addAll(gyeonggi17999);
-            forecast.setBus17999(bus17999);
-            
-            List<BusArrival> bus17117 = new ArrayList<>();
-            if (allBusMap.get("17177") != null) bus17117.addAll(allBusMap.get("17177"));
-            List<BusArrival> gyeonggi17117 = fetchGyeonggiBusArrivals("116000091");
-            if (gyeonggi17117 != null) bus17117.addAll(gyeonggi17117);
-            forecast.setBus17117(bus17117);
-            
-            List<BusArrival> bus17682 = new ArrayList<>();
-            if (allBusMap.get("17682") != null) bus17682.addAll(allBusMap.get("17682"));
-            List<BusArrival> gyeonggi17682 = fetchGyeonggiBusArrivals("116900006");
-            if (gyeonggi17682 != null) bus17682.addAll(gyeonggi17682);
-            forecast.setBus17682(bus17682);
+            // 서울 버스 데이터(allBusMap)와 경기도 버스 데이터 병합 및 중복 제거
+            forecast.setBus17999(mergeBusArrivals(allBusMap.get("17999"), fetchGyeonggiBusArrivals("116000091")));
+            forecast.setBus17117(mergeBusArrivals(allBusMap.get("17117"), fetchGyeonggiBusArrivals("116000091")));
+            forecast.setBus17682(mergeBusArrivals(allBusMap.get("17682"), fetchGyeonggiBusArrivals("116900006")));
             
             busSuccess = true;
         }
@@ -806,23 +792,21 @@ public class WidgetService {
 
         if (busApiKey == null || busApiKey.trim().isEmpty() || "sample".equals(busApiKey)) {
             busMap.put("17999", null);
-            busMap.put("17177", null);
+            busMap.put("17117", null);
             busMap.put("17682", null);
             return busMap;
         }
 
         busMap.put("17999", new ArrayList<>());
-        busMap.put("17177", new ArrayList<>());
+        busMap.put("17117", new ArrayList<>());
         busMap.put("17682", new ArrayList<>());
 
-        // 성공회대/유한대/동삼빌라 정류소를 지나는 서울 시내버스 노선 ID 목록:
-        // 6614(100100297), 5626(100100282), 600(100100085), 160(100100033)
-        String[] routeIds = {"100100297", "100100282", "100100085", "100100033"};
+        String[] targetArsIds = {"17117", "17682"};
         boolean successAtLeastOnce = false;
 
-        for (String routeId : routeIds) {
+        for (String arsId : targetArsIds) {
             try {
-                String url = "http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRouteAll?ServiceKey=" + busApiKey + "&busRouteId=" + routeId + "&resultType=json";
+                String url = "http://ws.bus.go.kr/api/rest/arrive/getArrInfoByUniqueUid?ServiceKey=" + busApiKey + "&arsId=" + arsId + "&resultType=json";
                 String responseStr = restTemplate.getForObject(java.net.URI.create(url), String.class);
                 JsonNode root = objectMapper.readTree(responseStr);
 
@@ -830,50 +814,51 @@ public class WidgetService {
                 if ("0".equals(headerCd)) {
                     successAtLeastOnce = true;
                 } else {
-                    log.warn("버스 API headerCd 에러 (routeId: {}): {}", routeId, root.path("msgHeader").path("headerMsg").asText());
+                    log.warn("서울 버스 정류소 API headerCd 에러 (arsId: {}): {}", arsId, root.path("msgHeader").path("headerMsg").asText());
                     continue;
                 }
 
                 JsonNode items = root.path("msgBody").path("itemList");
                 if (items.isArray()) {
                     for (JsonNode item : items) {
-                        String arsId = item.path("arsId").asText();
-                        String targetKey = null;
-                        
-                        // 17999는 부천시 관할 정류소라 서울시 API 조회 시 부재하므로,
-                        // 동일한 위치의 서울시 관할 정류소인 17184 (온수역, 유한대방면)를 매핑해 줌
-                        if ("17184".equals(arsId)) {
-                            targetKey = "17999";
-                        } else if ("17177".equals(arsId)) {
-                            targetKey = "17177";
-                        } else if ("17682".equals(arsId)) {
-                            targetKey = "17682";
+                        String busNo = item.path("rtNm").asText();
+                        String arrmsg1 = item.path("arrmsg1").asText();
+                        String arrmsg2 = item.path("arrmsg2").asText();
+                        String routeType = item.path("routeType").asText();
+
+                        // Skip non‑service messages
+                        if (arrmsg1 == null || arrmsg1.isEmpty() || "운행종료".equals(arrmsg1) || "정류소 미정차".equals(arrmsg1)) {
+                            continue;
+                        }
+                        if (arrmsg2 == null || arrmsg2.isEmpty() || "운행종료".equals(arrmsg2) || "정류소 미정차".equals(arrmsg2)) {
+                            arrmsg2 = "-";
                         }
 
-                        if (targetKey != null) {
-                            String busNo = item.path("rtNm").asText(); // 차량 번호 대신 노선 번호(예: 6614)를 사용
-                            String arrmsg1 = item.path("arrmsg1").asText();
-                            String routeType = item.path("routeType").asText();
+                        BusArrival arrival = new BusArrival(busNo, arrmsg1, arrmsg2, mapRouteType(routeType));
+                        busMap.get(arsId).add(arrival);
+                    }
+                } else if (items.isObject()) {
+                    String busNo = items.path("rtNm").asText();
+                    String arrmsg1 = items.path("arrmsg1").asText();
+                    String arrmsg2 = items.path("arrmsg2").asText();
+                    String routeType = items.path("routeType").asText();
 
-                            // Skip non‑service messages
-                            if (arrmsg1 == null || arrmsg1.isEmpty() || "운행종료".equals(arrmsg1) || "정류소 미정차".equals(arrmsg1)) {
-                                continue;
-                            }
-
-                            BusArrival arrival = new BusArrival(busNo, arrmsg1, mapRouteType(routeType));
-                            busMap.get(targetKey).add(arrival);
+                    if (arrmsg1 != null && !arrmsg1.isEmpty() && !"운행종료".equals(arrmsg1) && !"정류소 미정차".equals(arrmsg1)) {
+                        if (arrmsg2 == null || arrmsg2.isEmpty() || "운행종료".equals(arrmsg2) || "정류소 미정차".equals(arrmsg2)) {
+                            arrmsg2 = "-";
                         }
+                        BusArrival arrival = new BusArrival(busNo, arrmsg1, arrmsg2, mapRouteType(routeType));
+                        busMap.get(arsId).add(arrival);
                     }
                 }
             } catch (Exception e) {
-                log.error("버스 API 호출 실패 (routeId: {}): {}", routeId, e.getMessage());
+                log.error("서울 버스 정류소 API 호출 실패 (arsId: {}): {}", arsId, e.getMessage());
             }
         }
 
-        // 단 한번도 API 호출에 성공하지 못했다면 모두 null 처리하여 화면에 "업데이트 할 수 없음"이 뜨게 함
+        // 단 한번도 API 호출에 성공하지 못했다면 서울 정류소 데이터를 null 처리하여 화면에 에러를 표시
         if (!successAtLeastOnce) {
-            busMap.put("17999", null);
-            busMap.put("17177", null);
+            busMap.put("17117", null);
             busMap.put("17682", null);
         }
 
@@ -905,19 +890,27 @@ public class WidgetService {
             if (listNode.isArray()) {
                 for (JsonNode item : listNode) {
                     String busNo = item.path("routeName").asText();
-                    int minutes = item.path("predictTime1").asInt(-1);
-                    String arrivalMsg = minutes > 0 ? minutes + "분 뒤" : "도착 임박";
+                    int time1 = item.path("predictTime1").asInt(-1);
+                    int time2 = item.path("predictTime2").asInt(-1);
+                    
+                    String arrivalMsg1 = time1 > 0 ? time1 + "분 뒤" : (time1 == 0 ? "도착 임박" : "-");
+                    String arrivalMsg2 = time2 > 0 ? time2 + "분 뒤" : (time2 == 0 ? "도착 임박" : "-");
+                    
                     String routeTypeCd = item.path("routeTypeCd").asText();
-                    arrivals.add(new BusArrival(busNo, arrivalMsg, mapGyeonggiRouteType(routeTypeCd)));
+                    arrivals.add(new BusArrival(busNo, arrivalMsg1, arrivalMsg2, mapGyeonggiRouteType(routeTypeCd)));
                 }
             } 
             // 2. 결과가 단일 객체 형태인 경우
             else if (listNode.isObject()) {
                 String busNo = listNode.path("routeName").asText();
-                int minutes = listNode.path("predictTime1").asInt(-1);
-                String arrivalMsg = minutes > 0 ? minutes + "분 뒤" : "도착 임박";
+                int time1 = listNode.path("predictTime1").asInt(-1);
+                int time2 = listNode.path("predictTime2").asInt(-1);
+                
+                String arrivalMsg1 = time1 > 0 ? time1 + "분 뒤" : (time1 == 0 ? "도착 임박" : "-");
+                String arrivalMsg2 = time2 > 0 ? time2 + "분 뒤" : (time2 == 0 ? "도착 임박" : "-");
+                
                 String routeTypeCd = listNode.path("routeTypeCd").asText();
-                arrivals.add(new BusArrival(busNo, arrivalMsg, mapGyeonggiRouteType(routeTypeCd)));
+                arrivals.add(new BusArrival(busNo, arrivalMsg1, arrivalMsg2, mapGyeonggiRouteType(routeTypeCd)));
             }
             return arrivals;
         } catch (Exception e) {
@@ -931,6 +924,24 @@ public class WidgetService {
         if ("14".equals(routeTypeCd) || "16".equals(routeTypeCd)) return "순환";
         if ("13".equals(routeTypeCd) || "23".equals(routeTypeCd)) return "지선";
         return "일반";
+    }
+
+    private List<BusArrival> mergeBusArrivals(List<BusArrival> seoulBuses, List<BusArrival> gyeonggiBuses) {
+        if (seoulBuses == null && gyeonggiBuses == null) {
+            return null;
+        }
+        Map<String, BusArrival> merged = new LinkedHashMap<>();
+        if (seoulBuses != null) {
+            for (BusArrival bus : seoulBuses) {
+                merged.put(bus.getBusNo(), bus);
+            }
+        }
+        if (gyeonggiBuses != null) {
+            for (BusArrival bus : gyeonggiBuses) {
+                merged.put(bus.getBusNo(), bus);
+            }
+        }
+        return new ArrayList<>(merged.values());
     }
 
     // ==========================================
@@ -1070,12 +1081,14 @@ public class WidgetService {
     @Data
     public static class BusArrival {
         private String busNo;
-        private String arrivalTime;
+        private String arrivalTime1;
+        private String arrivalTime2;
         private String type; // 일반, 지선 등
 
-        public BusArrival(String busNo, String arrivalTime, String type) {
+        public BusArrival(String busNo, String arrivalTime1, String arrivalTime2, String type) {
             this.busNo = busNo;
-            this.arrivalTime = arrivalTime;
+            this.arrivalTime1 = arrivalTime1;
+            this.arrivalTime2 = arrivalTime2;
             this.type = type;
         }
     }
