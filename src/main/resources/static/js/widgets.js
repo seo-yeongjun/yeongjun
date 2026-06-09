@@ -440,7 +440,7 @@ function fetchTransitWidgetData() {
                 if (!element) return;
                 element.innerHTML = "";
                 if (arrivals === null) {
-                    element.innerHTML = `<span class="text-[10px] text-red-400 font-extrabold">업데이트 할 수 없음</span>`;
+                    element.innerHTML = `<span class="text-[10px] text-red-400 font-extrabold whitespace-nowrap">업데이트 할 수 없음</span>`;
                     return;
                 }
 
@@ -453,7 +453,7 @@ function fetchTransitWidgetData() {
                     const matchedBus = realArrivals.find(b => b.busNo === busNo);
                     
                     const busItem = document.createElement("div");
-                    busItem.className = "flex items-center justify-end space-x-1.5 mb-1 last:mb-0";
+                    busItem.className = "flex flex-col items-center justify-center flex-shrink-0 bg-slate-50/70 hover:bg-slate-100/70 border border-slate-100 rounded-xl px-2 py-0.5 min-w-[76px] transition-colors duration-150";
 
                     let busType = "일반";
                     let arrivalTime1 = "도착 정보 없음";
@@ -473,16 +473,20 @@ function fetchTransitWidgetData() {
                     else if (busType === "순환") badgeClass = "bg-yellow-100 text-yellow-700";
                     else if (busType === "광역") badgeClass = "bg-red-100 text-red-700";
 
-                    const time1ColorClass = arrivalTime1 === "도착 정보 없음" ? "text-slate-400 font-medium text-[10px]" : "font-black text-rose-500";
+                    const time1ColorClass = arrivalTime1 === "도착 정보 없음" ? "text-slate-400 font-medium text-[8px] tracking-tight" : "font-black text-rose-500 text-[10px] tracking-tight";
                     
                     const time2Html = arrivalTime2 && arrivalTime2 !== "-"
-                        ? `<span class="text-[10px] text-slate-400 font-bold ml-1">(${arrivalTime2})</span>`
+                        ? `<span class="text-[9px] text-slate-400 font-bold ml-0.5">(${arrivalTime2})</span>`
                         : "";
 
                     busItem.innerHTML = `
-                        <span class="font-extrabold text-slate-700">${busNo}번</span>
-                        <span class="text-[9px] px-1 py-0.2 rounded font-bold ${badgeClass}">${busType}</span>
-                        <span class="${time1ColorClass}">${arrivalTime1}</span>${time2Html}
+                        <div class="flex items-center space-x-1 whitespace-nowrap">
+                            <span class="font-bold text-slate-700 text-[10px]">${busNo}번</span>
+                            <span class="text-[8px] px-0.5 py-0 rounded font-black ${badgeClass}">${busType}</span>
+                        </div>
+                        <div class="flex items-center justify-center whitespace-nowrap">
+                            <span class="${time1ColorClass}">${arrivalTime1}</span>${time2Html}
+                        </div>
                     `;
                     element.appendChild(busItem);
                 });

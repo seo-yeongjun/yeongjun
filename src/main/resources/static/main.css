@@ -932,10 +932,6 @@ video {
   max-height: 12rem;
 }
 
-.max-h-\[120px\] {
-  max-height: 120px;
-}
-
 .max-h-\[60vh\] {
   max-height: 60vh;
 }
@@ -1919,6 +1915,10 @@ video {
   padding-left: 0.5rem;
 }
 
+.pl-2\.5 {
+  padding-left: 0.625rem;
+}
+
 .pr-1 {
   padding-right: 0.25rem;
 }
@@ -2393,6 +2393,21 @@ video {
 
 .ease-out {
   transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Chrome, Safari and Opera */
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* IE, Edge and Firefox */
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .last\:mr-0:last-child {
