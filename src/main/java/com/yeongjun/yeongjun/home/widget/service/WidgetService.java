@@ -947,51 +947,43 @@ public class WidgetService {
     // ==========================================
     // 4. 밸런스 게임 서비스
     // ==========================================
-    public BalanceGame getActiveBalanceGame(String ipAddress) {
-        BalanceGame activeGame = widgetDAO.selectActiveBalanceGame();
-        if (activeGame == null) {
-            return null;
+    public List<BalanceGame> getAllBalanceGames() {
+        List<BalanceGame> games = widgetDAO.selectAllBalanceGames();
+        if (games == null || games.isEmpty()) {
+            return new ArrayList<>();
         }
 
-        // 투표수 집계
-        int countA = widgetDAO.selectVoteCount(activeGame.getId(), "A");
-        int countB = widgetDAO.selectVoteCount(activeGame.getId(), "B");
-        int total = countA + countB;
+        for (BalanceGame game : games) {
+            // 투표수 집계
+            int countA = widgetDAO.selectVoteCount(game.getId(), "A");
+            int countB = widgetDAO.selectVoteCount(game.getId(), "B");
+            int total = countA + countB;
 
-        activeGame.setCountA(countA);
-        activeGame.setCountB(countB);
-        activeGame.setTotalCount(total);
+            game.setCountA(countA);
+            game.setCountB(countB);
+            game.setTotalCount(total);
 
-        if (total > 0) {
-            // 퍼센트 계산
-            double pctA = Math.round(((double) countA / total * 100) * 10) / 10.0;
-            double pctB = Math.round(((double) countB / total * 100) * 10) / 10.0;
-            activeGame.setPercentA(pctA);
-            activeGame.setPercentB(pctB);
-        } else {
-            activeGame.setPercentA(0.0);
-            activeGame.setPercentB(0.0);
+            if (total > 0) {
+                // 퍼센트 계산
+                double pctA = Math.round(((double) countA / total * 100) * 10) / 10.0;
+                double pctB = Math.round(((double) countB / total * 100) * 10) / 10.0;
+                game.setPercentA(pctA);
+                game.setPercentB(pctB);
+            } else {
+                game.setPercentA(0.0);
+                game.setPercentB(0.0);
+            }
+            game.setVoted(false); // 로컬 스토리지 기반으로 처리하므로 기본값 false
         }
 
-        // 해당 IP의 투표 참여 여부 검증
-        int votedCount = widgetDAO.checkIpVoted(activeGame.getId(), ipAddress);
-        activeGame.setVoted(votedCount > 0);
-
-        return activeGame;
+        return games;
     }
 
     @Transactional
     public Map<String, Object> voteBalanceGame(Long questionId, String selection, String ipAddress) {
         Map<String, Object> result = new HashMap<>();
 
-        // 중복 투표 체크
-        int count = widgetDAO.checkIpVoted(questionId, ipAddress);
-        if (count > 0) {
-            result.put("success", false);
-            result.put("message", "이미 이 밸런스 게임에 투표하셨습니다.");
-            return result;
-        }
-
+        // 로컬 스토리지 기반이므로 서버 측 중복 IP 체크 생략 (유연한 중복 투표 허용)
         // 투표 등록
         BalanceGameVote vote = new BalanceGameVote();
         vote.setQuestionId(questionId);

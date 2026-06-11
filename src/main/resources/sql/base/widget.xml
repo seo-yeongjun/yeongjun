@@ -47,7 +47,7 @@
     </delete>
 
     <!-- 3. 밸런스 게임 관리 -->
-    <select id="selectActiveBalanceGame" resultType="com.yeongjun.yeongjun.home.widget.model.BalanceGame">
+    <select id="selectAllBalanceGames" resultType="com.yeongjun.yeongjun.home.widget.model.BalanceGame">
         SELECT
             id,
             question,
@@ -55,8 +55,7 @@
             option_b AS optionB,
             created_at AS createdAt
         FROM balance_game
-        ORDER BY id DESC
-        LIMIT 1
+        ORDER BY id ASC
     </select>
 
     <insert id="insertBalanceGame" parameterType="com.yeongjun.yeongjun.home.widget.model.BalanceGame" useGeneratedKeys="true" keyProperty="id">

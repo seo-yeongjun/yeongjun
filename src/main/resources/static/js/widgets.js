@@ -22,6 +22,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // 전역 변수
 let countdownInterval = null;
 let activeQuestionId = null;
+let allBalanceGames = [];
+let balanceTimer = null;
+let balanceProgressInterval = null;
+const LOCAL_STORAGE_KEY = "voted_balance_games";
 
 // ==========================================
 // 1. 퇴근 카운트다운 위젯
@@ -512,13 +516,41 @@ function fetchTransitWidgetData() {
 // ==========================================
 // 4. 밸런스 게임 위젯
 // ==========================================
+function getVotedGamesMap() {
+    try {
+        return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "{}");
+    } catch (e) {
+        return {};
+    }
+}
+
+function saveVoteToLocalStorage(gameId, selection) {
+    const map = getVotedGamesMap();
+    map[gameId] = selection;
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(map));
+}
+
+function clearBalanceTimer() {
+    if (balanceTimer) {
+        clearTimeout(balanceTimer);
+        balanceTimer = null;
+    }
+    if (balanceProgressInterval) {
+        clearInterval(balanceProgressInterval);
+        balanceProgressInterval = null;
+    }
+}
+
 function fetchBalanceGameWidgetData() {
+    clearBalanceTimer();
+    
     fetch("/api/widgets/balance-game")
         .then(res => {
             if (res.status === 204) {
-                document.getElementById("balance-question-text").textContent = "등록된 밸런스 게임이 없습니다.";
-                document.getElementById("balance-vote-buttons").classList.add("hidden");
-                document.getElementById("balance-vote-results").classList.add("hidden");
+                const body = document.getElementById("balance-widget-body");
+                if (body) {
+                    body.innerHTML = `<h3 class="text-sm font-extrabold text-slate-800 text-center leading-snug">등록된 밸런스 게임이 없습니다.</h3>`;
+                }
                 return null;
             }
             return res.json();
@@ -526,50 +558,45 @@ function fetchBalanceGameWidgetData() {
         .then(data => {
             if (!data) return;
 
-            activeQuestionId = data.id;
+            allBalanceGames = data;
+            const votedMap = getVotedGamesMap();
+            
+            // 미투표 게임 중 첫 번째(ID 순) 찾기
+            const unvoted = allBalanceGames.find(g => !votedMap[g.id]);
+            const body = document.getElementById("balance-widget-body");
+            if (!body) return;
 
-            // 질문 주입
-            document.getElementById("balance-question-text").textContent = data.question;
-
-            const voteButtonsDiv = document.getElementById("balance-vote-buttons");
-            const voteResultsDiv = document.getElementById("balance-vote-results");
-
-            if (data.voted) {
-                // 이미 투표 완료한 경우 결과 그래프 노출
-                voteButtonsDiv.classList.add("hidden");
-                voteResultsDiv.classList.remove("hidden");
-
-                renderBalanceResults(data);
+            if (unvoted) {
+                activeQuestionId = unvoted.id;
+                
+                // 단건 투표 화면 렌더링
+                body.innerHTML = `
+                    <div class="animate-fade-in-up">
+                        <h3 id="balance-question-text" class="text-sm font-extrabold text-slate-800 text-center mb-4 leading-snug">${unvoted.question}</h3>
+                        <div id="balance-vote-buttons" class="grid grid-cols-2 gap-3">
+                            <button onclick="voteBalanceGame('A')" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-bold py-2.5 px-3 rounded-2xl transition text-xs text-center line-clamp-2 min-h-[44px]">${unvoted.optionA}</button>
+                            <button onclick="voteBalanceGame('B')" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold py-2.5 px-3 rounded-2xl transition text-xs text-center line-clamp-2 min-h-[44px]">${unvoted.optionB}</button>
+                        </div>
+                    </div>
+                `;
             } else {
-                // 아직 투표 안한 경우 선택 버튼 노출
-                voteResultsDiv.classList.add("hidden");
-                voteButtonsDiv.classList.remove("hidden");
-
-                // 버튼 텍스트 설정
-                const buttons = voteButtonsDiv.getElementsByTagName("button");
-                buttons[0].textContent = data.optionA;
-                buttons[1].textContent = data.optionB;
+                // 모든 게임 완료 상태 -> 전체 결과 리스트 렌더링
+                renderVotedGamesList(allBalanceGames, votedMap);
             }
         })
-        .catch(err => console.error("밸런스 게임 로드 실패:", err));
-}
-
-// 투표 결과 시각화 헬퍼
-function renderBalanceResults(data) {
-    document.getElementById("balance-res-a-name").textContent = data.optionA;
-    document.getElementById("balance-res-a-pct").textContent = `${data.percentA}% (${data.countA}표)`;
-    document.getElementById("balance-bar-a").style.width = `${data.percentA}%`;
-
-    document.getElementById("balance-res-b-name").textContent = data.optionB;
-    document.getElementById("balance-res-b-pct").textContent = `${data.percentB}% (${data.countB}표)`;
-    document.getElementById("balance-bar-b").style.width = `${data.percentB}%`;
-
-    document.getElementById("balance-total-votes").textContent = data.totalCount;
+        .catch(err => {
+            console.error("밸런스 게임 로드 실패:", err);
+            const body = document.getElementById("balance-widget-body");
+            if (body) {
+                body.innerHTML = `<h3 class="text-sm font-extrabold text-red-500 text-center leading-snug">밸런스 게임을 불러올 수 없습니다.</h3>`;
+            }
+        });
 }
 
 // 투표하기 비동기 요청
 function voteBalanceGame(selection) {
     if (!activeQuestionId) return;
+    clearBalanceTimer();
 
     const params = new URLSearchParams();
     params.append("questionId", activeQuestionId);
@@ -582,32 +609,205 @@ function voteBalanceGame(selection) {
         .then(res => res.json())
         .then(result => {
             if (result.success) {
-                // 투표 성공 시 UI 갱신 및 전환
-                document.getElementById("balance-vote-buttons").classList.add("hidden");
+                // 1. 로컬스토리지 저장
+                saveVoteToLocalStorage(activeQuestionId, selection);
 
-                const resultsDiv = document.getElementById("balance-vote-results");
-                resultsDiv.classList.remove("hidden");
+                // 2. 전역 리스트 내 현재 문제 통계 데이터 업데이트
+                const gameIdx = allBalanceGames.findIndex(g => g.id === activeQuestionId);
+                if (gameIdx !== -1) {
+                    allBalanceGames[gameIdx].countA = result.countA;
+                    allBalanceGames[gameIdx].countB = result.countB;
+                    allBalanceGames[gameIdx].totalCount = result.totalCount;
+                    allBalanceGames[gameIdx].percentA = result.percentA;
+                    allBalanceGames[gameIdx].percentB = result.percentB;
+                }
 
-                // 결과 매핑 정보 주입을 위해 activeGame의 option 이름 재활용
-                const optionA = document.getElementById("balance-vote-buttons").getElementsByTagName("button")[0].textContent;
-                const optionB = document.getElementById("balance-vote-buttons").getElementsByTagName("button")[1].textContent;
+                // 3. 투표 결과 화면 렌더링
+                const curGame = allBalanceGames.find(g => g.id === activeQuestionId);
+                const body = document.getElementById("balance-widget-body");
+                if (!body || !curGame) return;
 
-                const mockData = {
-                    optionA: optionA,
-                    optionB: optionB,
-                    percentA: result.percentA,
-                    countA: result.countA,
-                    percentB: result.percentB,
-                    countB: result.countB,
-                    totalCount: result.totalCount
+                body.innerHTML = `
+                    <div class="animate-fade-in-up">
+                        <h3 class="text-sm font-extrabold text-slate-800 text-center mb-4 leading-snug">${curGame.question}</h3>
+                        
+                        <div id="balance-vote-results" class="space-y-3">
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-indigo-700">
+                                    <span class="truncate max-w-[150px]">${curGame.optionA}</span>
+                                    <span>${result.percentA}% (${result.countA}표)</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden">
+                                    <div class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: ${result.percentA}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-rose-700">
+                                    <span class="truncate max-w-[150px]">${curGame.optionB}</span>
+                                    <span>${result.percentB}% (${result.countB}표)</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden">
+                                    <div class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: ${result.percentB}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-[10px] text-slate-400 font-bold text-center mt-1">참여 완료 (총 ${result.totalCount}명 투표)</div>
+                        </div>
+
+                        <!-- 다음 질문 자동 이동 타이머 버튼 -->
+                        <div id="balance-next-container" class="mt-4 flex justify-center">
+                            <button id="balance-next-btn" class="relative overflow-hidden bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-5 rounded-2xl transition text-xs shadow-md flex items-center justify-center min-h-[36px] w-full max-w-[200px] select-none">
+                                <span class="relative z-10" id="balance-next-btn-text">다음 질문 ➡️ (3초)</span>
+                                <div id="balance-next-btn-progress" class="absolute left-0 top-0 bottom-0 bg-indigo-500/40 w-0 transition-all duration-100 ease-linear"></div>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // 4. 자동 이동 타이머 구동
+                const votedMap = getVotedGamesMap();
+                const nextUnvoted = allBalanceGames.find(g => g.id !== activeQuestionId && !votedMap[g.id]);
+                const hasMore = !!nextUnvoted;
+
+                const nextBtn = document.getElementById("balance-next-btn");
+                const progressEl = document.getElementById("balance-next-btn-progress");
+                const textEl = document.getElementById("balance-next-btn-text");
+
+                if (!nextBtn) return;
+
+                const nextText = hasMore ? "다음 질문 ➡️" : "전체 결과 보기 📋";
+                textEl.textContent = `${nextText} (3초)`;
+
+                let timeLeft = 3000;
+                
+                // 즉시 이동 함수
+                const triggerNext = () => {
+                    clearBalanceTimer();
+                    fetchBalanceGameWidgetData();
                 };
-                renderBalanceResults(mockData);
+                
+                nextBtn.onclick = triggerNext;
+
+                // 타이머 인터벌
+                balanceProgressInterval = setInterval(() => {
+                    timeLeft -= 100;
+                    const pct = ((3000 - timeLeft) / 3000) * 100;
+                    if (progressEl) progressEl.style.width = `${pct}%`;
+                    if (textEl) {
+                        textEl.textContent = `${nextText} (${Math.ceil(timeLeft / 1000)}초)`;
+                    }
+
+                    if (timeLeft <= 0) {
+                        triggerNext();
+                    }
+                }, 100);
+
+                // 마우스 호버 시 타이머 정지 (수동 대기)
+                const pauseTimer = () => {
+                    clearBalanceTimer();
+                    if (progressEl) progressEl.style.width = '0%';
+                    if (textEl) textEl.textContent = nextText;
+                };
+
+                nextBtn.onmouseenter = pauseTimer;
+                nextBtn.ontouchstart = pauseTimer;
+
             } else {
                 alert(result.message || "투표 처리에 실패했습니다.");
             }
         })
         .catch(err => alert("투표 중 네트워크 오류 발생: " + err));
 }
+
+// 전체 투표 완료 결과 리스트 렌더링 함수
+function renderVotedGamesList(games, votedMap) {
+    const body = document.getElementById("balance-widget-body");
+    if (!body) return;
+
+    if (games.length === 0) {
+        body.innerHTML = `<h3 class="text-sm font-extrabold text-slate-800 text-center leading-snug">등록된 밸런스 게임이 없습니다.</h3>`;
+        return;
+    }
+
+    // 최신 투표 게임이 위로 오게 리버스 정렬
+    const sortedGames = [...games].reverse();
+
+    let listHtml = sortedGames.map(g => {
+        const mySelection = votedMap[g.id]; // 'A' or 'B' or undefined
+        
+        const isASelected = mySelection === 'A';
+        const isBSelected = mySelection === 'B';
+
+        // 옵션 A 스타일 정의
+        const aClass = isASelected 
+            ? "border-indigo-200 bg-indigo-50/30 text-indigo-900" 
+            : "border-slate-100 bg-white text-slate-400 opacity-60";
+        const aBadge = isASelected 
+            ? `<span class="inline-block text-[9px] bg-indigo-100 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded-md ml-1 shadow-sm"><i class="fa-solid fa-check mr-0.5"></i>내 선택</span>` 
+            : "";
+        const aBarColor = isASelected ? "bg-indigo-500" : "bg-slate-400";
+
+        // 옵션 B 스타일 정의
+        const bClass = isBSelected 
+            ? "border-rose-200 bg-rose-50/30 text-rose-900" 
+            : "border-slate-100 bg-white text-slate-400 opacity-60";
+        const bBadge = isBSelected 
+            ? `<span class="inline-block text-[9px] bg-rose-100 text-rose-700 font-extrabold px-1.5 py-0.5 rounded-md ml-1 shadow-sm"><i class="fa-solid fa-check mr-0.5"></i>내 선택</span>` 
+            : "";
+        const bBarColor = isBSelected ? "bg-rose-500" : "bg-slate-400";
+
+        return `
+            <div class="border border-slate-100 rounded-2xl p-3 bg-slate-50/50 hover:bg-slate-50/80 transition duration-150 relative">
+                <h4 class="font-extrabold text-slate-800 text-xs mb-2 leading-snug"><i class="fa-solid fa-circle-question text-[10px] text-rose-400 mr-1"></i>${g.question}</h4>
+                
+                <div class="space-y-1.5 text-[10px]">
+                    <!-- 옵션 A -->
+                    <div class="p-1.5 rounded-xl border transition-all duration-200 ${aClass}">
+                        <div class="flex justify-between items-center font-bold">
+                            <span class="flex items-center truncate max-w-[150px]">${g.optionA} ${aBadge}</span>
+                            <span>${g.percentA}% (${g.countA}표)</span>
+                        </div>
+                        <div class="w-full bg-slate-200/50 h-1.5 rounded-full overflow-hidden mt-1">
+                            <div class="${aBarColor} h-full rounded-full" style="width: ${g.percentA}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- 옵션 B -->
+                    <div class="p-1.5 rounded-xl border transition-all duration-200 ${bClass}">
+                        <div class="flex justify-between items-center font-bold">
+                            <span class="flex items-center truncate max-w-[150px]">${g.optionB} ${bBadge}</span>
+                            <span>${g.percentB}% (${g.countB}표)</span>
+                        </div>
+                        <div class="w-full bg-slate-200/50 h-1.5 rounded-full overflow-hidden mt-1">
+                            <div class="${bBarColor} h-full rounded-full" style="width: ${g.percentB}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join("");
+
+    body.innerHTML = `
+        <div class="animate-fade-in-up flex flex-col h-full">
+            <div class="flex justify-between items-center mb-2 text-[10px] text-slate-400 font-bold px-1 select-none">
+                <span>📊 전체 투표 결과 리스트</span>
+                <span class="text-rose-500 font-extrabold hover:underline cursor-pointer" onclick="resetLocalVotes()">초기화 <i class="fa-solid fa-rotate-left text-[9px]"></i></span>
+            </div>
+            <div class="space-y-2.5 max-h-[200px] overflow-y-auto pr-1 thin-scrollbar">
+                ${listHtml}
+            </div>
+        </div>
+    `;
+}
+
+// 로컬 스토리지 초기화 헬퍼 함수
+window.resetLocalVotes = function() {
+    if (confirm("정말 투표 기록을 초기화하고 처음부터 다시 해보시겠습니까?")) {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        fetchBalanceGameWidgetData();
+    }
+};
 
 // 관리자용 새 밸런스 게임 생성 등록
 function handleBalanceCreateSubmit(e) {

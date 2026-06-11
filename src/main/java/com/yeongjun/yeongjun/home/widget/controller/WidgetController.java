@@ -106,15 +106,14 @@ public class WidgetController {
         return ResponseEntity.ok(widgetService.getTransitData());
     }
 
-    // 5. 최신 밸런스 게임 정보 조회 (IP 중복 여부 판정 포함)
+    // 5. 전체 밸런스 게임 목록 조회
     @GetMapping("/balance-game")
-    public ResponseEntity<BalanceGame> getBalanceGame(HttpServletRequest request) {
-        String ipAddress = getClientIp(request);
-        BalanceGame game = widgetService.getActiveBalanceGame(ipAddress);
-        if (game == null) {
+    public ResponseEntity<List<BalanceGame>> getBalanceGames() {
+        List<BalanceGame> games = widgetService.getAllBalanceGames();
+        if (games.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(game);
+        return ResponseEntity.ok(games);
     }
 
     // 6. 밸런스 게임 투표 (IP 기반)

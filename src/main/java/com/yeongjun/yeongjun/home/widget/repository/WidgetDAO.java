@@ -23,7 +23,7 @@ public interface WidgetDAO {
     int deleteHoliday(@Param("holidayDate") LocalDate holidayDate);
 
     // 3. 밸런스 게임 관리
-    BalanceGame selectActiveBalanceGame();
+    List<BalanceGame> selectAllBalanceGames();
     int insertBalanceGame(BalanceGame game);
     int selectVoteCount(@Param("questionId") Long questionId, @Param("selection") String selection);
     int checkIpVoted(@Param("questionId") Long questionId, @Param("ipAddress") String ipAddress);
