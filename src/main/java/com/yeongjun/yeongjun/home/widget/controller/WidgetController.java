@@ -3,6 +3,7 @@ package com.yeongjun.yeongjun.home.widget.controller;
 import com.yeongjun.yeongjun.Security.model.Role;
 import com.yeongjun.yeongjun.Security.model.User;
 import com.yeongjun.yeongjun.home.widget.model.BalanceGame;
+import com.yeongjun.yeongjun.home.widget.model.BalanceGameVote;
 import com.yeongjun.yeongjun.home.widget.model.WidgetHoliday;
 import com.yeongjun.yeongjun.home.widget.service.WidgetService;
 import jakarta.servlet.http.HttpServletRequest;
