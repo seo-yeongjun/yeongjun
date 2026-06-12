@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import jakarta.annotation.PostConstruct;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -51,6 +52,16 @@ public class WidgetService {
 
     public WidgetService(WidgetDAO widgetDAO) {
         this.widgetDAO = widgetDAO;
+    }
+
+    @PostConstruct
+    public void initDatabaseSchema() {
+        try {
+            widgetDAO.alterConfigValueColumnType();
+            log.info("성공적으로 widget_config 테이블의 config_value 컬럼을 TEXT 타입으로 확장하였습니다.");
+        } catch (Exception e) {
+            log.warn("widget_config 테이블 컬럼 확장 중 예외 발생 (이미 적용되었거나 권한 부족 가능성): {}", e.getMessage());
+        }
     }
 
     // ==========================================

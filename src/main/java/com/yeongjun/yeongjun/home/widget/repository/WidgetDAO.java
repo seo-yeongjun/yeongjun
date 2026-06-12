@@ -6,12 +6,16 @@ import com.yeongjun.yeongjun.home.widget.model.WidgetConfig;
 import com.yeongjun.yeongjun.home.widget.model.WidgetHoliday;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Mapper
 public interface WidgetDAO {
+    // 0. DB 스키마 교정
+    @Update("ALTER TABLE widget_config MODIFY COLUMN config_value TEXT")
+    void alterConfigValueColumnType();
     // 1. 위젯 기본 설정 관리
     String selectConfig(@Param("configKey") String configKey);
     int updateConfig(WidgetConfig config);
