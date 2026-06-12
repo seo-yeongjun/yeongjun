@@ -598,15 +598,13 @@ function voteBalanceGame(selection) {
     if (!activeQuestionId) return;
     clearBalanceTimer();
 
-    const data = {
-        questionId: activeQuestionId,
-        selection: selection
-    };
+    const params = new URLSearchParams();
+    params.append("questionId", activeQuestionId);
+    params.append("selection", selection);
 
     fetch("/api/widgets/balance-game/vote", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: params
     })
         .then(res => {
             if (!res.ok) {

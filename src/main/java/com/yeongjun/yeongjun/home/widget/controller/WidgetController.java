@@ -121,7 +121,7 @@ public class WidgetController {
     @PostMapping("/balance-game/vote")
     public ResponseEntity<Map<String, Object>> voteBalanceGame(
             HttpServletRequest request,
-            @RequestBody BalanceGameVote voteDto) {
+            BalanceGameVote voteDto) {
         
         Map<String, Object> result = new HashMap<>();
         try {
