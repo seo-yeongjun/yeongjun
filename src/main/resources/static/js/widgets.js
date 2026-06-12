@@ -455,7 +455,7 @@ function fetchTransitWidgetData() {
                 fixedList.forEach(busNo => {
                     // 실시간 정보에서 일치하는 버스 찾기
                     const matchedBus = realArrivals.find(b => b.busNo === busNo);
-                    
+
                     const busItem = document.createElement("div");
                     busItem.className = "flex flex-col items-center justify-center flex-shrink-0 bg-slate-50/70 hover:bg-slate-100/70 border border-slate-100 rounded-xl px-2 py-0.5 min-w-[76px] transition-colors duration-150";
 
@@ -478,7 +478,7 @@ function fetchTransitWidgetData() {
                     else if (busType === "광역") badgeClass = "bg-red-100 text-red-700";
 
                     const time1ColorClass = arrivalTime1 === "도착 정보 없음" ? "text-slate-400 font-medium text-[8px] tracking-tight" : "font-black text-rose-500 text-[10px] tracking-tight";
-                    
+
                     const time2Html = arrivalTime2 && arrivalTime2 !== "-"
                         ? `<span class="text-[9px] text-slate-400 font-bold ml-0.5">(${arrivalTime2})</span>`
                         : "";
@@ -543,7 +543,7 @@ function clearBalanceTimer() {
 
 function fetchBalanceGameWidgetData() {
     clearBalanceTimer();
-    
+
     fetch("/api/widgets/balance-game")
         .then(res => {
             if (res.status === 204) {
@@ -560,7 +560,7 @@ function fetchBalanceGameWidgetData() {
 
             allBalanceGames = data;
             const votedMap = getVotedGamesMap();
-            
+
             // 미투표 게임 중 첫 번째(ID 순) 찾기
             const unvoted = allBalanceGames.find(g => !votedMap[g.id]);
             const body = document.getElementById("balance-widget-body");
@@ -568,7 +568,7 @@ function fetchBalanceGameWidgetData() {
 
             if (unvoted) {
                 activeQuestionId = unvoted.id;
-                
+
                 // 단건 투표 화면 렌더링
                 body.innerHTML = `
                     <div class="animate-fade-in-up">
@@ -598,15 +598,31 @@ function voteBalanceGame(selection) {
     if (!activeQuestionId) return;
     clearBalanceTimer();
 
-    const params = new URLSearchParams();
-    params.append("questionId", activeQuestionId);
-    params.append("selection", selection);
+    const data = {
+        questionId: activeQuestionId,
+        selection: selection
+    };
 
     fetch("/api/widgets/balance-game/vote", {
         method: "POST",
-        body: params
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
     })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                return res.text().then(text => {
+                    let errMsg = "투표 처리에 실패했습니다.";
+                    try {
+                        const errObj = JSON.parse(text);
+                        errMsg = errObj.message || errMsg;
+                    } catch (e) {
+                        errMsg = `네트워크 오류 발생 (Status: ${res.status})`;
+                    }
+                    throw new Error(errMsg);
+                });
+            }
+            return res.json();
+        })
         .then(result => {
             if (result.success) {
                 // 1. 로컬스토리지 저장
@@ -680,13 +696,13 @@ function voteBalanceGame(selection) {
                 textEl.textContent = `${nextText} (3초)`;
 
                 let timeLeft = 3000;
-                
+
                 // 즉시 이동 함수
                 const triggerNext = () => {
                     clearBalanceTimer();
                     fetchBalanceGameWidgetData();
                 };
-                
+
                 nextBtn.onclick = triggerNext;
 
                 // 타이머 인터벌
@@ -717,7 +733,7 @@ function voteBalanceGame(selection) {
                 alert(result.message || "투표 처리에 실패했습니다.");
             }
         })
-        .catch(err => alert("투표 중 네트워크 오류 발생: " + err));
+        .catch(err => alert(err.message || "투표 중 네트워크 오류 발생"));
 }
 
 // 전체 투표 완료 결과 리스트 렌더링 함수
@@ -735,25 +751,25 @@ function renderVotedGamesList(games, votedMap) {
 
     let listHtml = sortedGames.map(g => {
         const mySelection = votedMap[g.id]; // 'A' or 'B' or undefined
-        
+
         const isASelected = mySelection === 'A';
         const isBSelected = mySelection === 'B';
 
         // 옵션 A 스타일 정의
-        const aClass = isASelected 
-            ? "border-indigo-200 bg-indigo-50/30 text-indigo-900" 
+        const aClass = isASelected
+            ? "border-indigo-200 bg-indigo-50/30 text-indigo-900"
             : "border-slate-100 bg-white text-slate-400 opacity-60";
-        const aBadge = isASelected 
-            ? `<span class="inline-block text-[9px] bg-indigo-100 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded-md ml-1 shadow-sm"><i class="fa-solid fa-check mr-0.5"></i>내 선택</span>` 
+        const aBadge = isASelected
+            ? `<span class="inline-block text-[9px] bg-indigo-100 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded-md ml-1 shadow-sm"><i class="fa-solid fa-check mr-0.5"></i>내 선택</span>`
             : "";
         const aBarColor = isASelected ? "bg-indigo-500" : "bg-slate-400";
 
         // 옵션 B 스타일 정의
-        const bClass = isBSelected 
-            ? "border-rose-200 bg-rose-50/30 text-rose-900" 
+        const bClass = isBSelected
+            ? "border-rose-200 bg-rose-50/30 text-rose-900"
             : "border-slate-100 bg-white text-slate-400 opacity-60";
-        const bBadge = isBSelected 
-            ? `<span class="inline-block text-[9px] bg-rose-100 text-rose-700 font-extrabold px-1.5 py-0.5 rounded-md ml-1 shadow-sm"><i class="fa-solid fa-check mr-0.5"></i>내 선택</span>` 
+        const bBadge = isBSelected
+            ? `<span class="inline-block text-[9px] bg-rose-100 text-rose-700 font-extrabold px-1.5 py-0.5 rounded-md ml-1 shadow-sm"><i class="fa-solid fa-check mr-0.5"></i>내 선택</span>`
             : "";
         const bBarColor = isBSelected ? "bg-rose-500" : "bg-slate-400";
 
@@ -802,7 +818,7 @@ function renderVotedGamesList(games, votedMap) {
 }
 
 // 로컬 스토리지 초기화 헬퍼 함수
-window.resetLocalVotes = function() {
+window.resetLocalVotes = function () {
     if (confirm("정말 투표 기록을 초기화하고 처음부터 다시 해보시겠습니까?")) {
         localStorage.removeItem(LOCAL_STORAGE_KEY);
         fetchBalanceGameWidgetData();

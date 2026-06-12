@@ -983,32 +983,42 @@ public class WidgetService {
     public Map<String, Object> voteBalanceGame(Long questionId, String selection, String ipAddress) {
         Map<String, Object> result = new HashMap<>();
 
-        // 로컬 스토리지 기반이므로 서버 측 중복 IP 체크 생략 (유연한 중복 투표 허용)
+        // IP 기반 중복 체크 제거 (로컬 스토리지 기반으로 투표 제어가 이루어지므로 서버 측 중복 체크 생략)
+        // 단, DB의 uq_balance_vote (question_id, ip_address) 유니크 제약조건 충돌을 피하기 위해
+        // ip_address 컬럼에 고유 UUID 문자열을 저장합니다.
+        String uniqueIp = UUID.randomUUID().toString();
+
         // 투표 등록
         BalanceGameVote vote = new BalanceGameVote();
         vote.setQuestionId(questionId);
-        vote.setIpAddress(ipAddress);
+        vote.setIpAddress(uniqueIp);
         vote.setSelection(selection);
 
-        int insertResult = widgetDAO.insertVote(vote);
-        if (insertResult > 0) {
-            // 최신 득표 결과 다시 계산하여 리턴
-            int countA = widgetDAO.selectVoteCount(questionId, "A");
-            int countB = widgetDAO.selectVoteCount(questionId, "B");
-            int total = countA + countB;
+        try {
+            int insertResult = widgetDAO.insertVote(vote);
+            if (insertResult > 0) {
+                // 최신 득표 결과 다시 계산하여 리턴
+                int countA = widgetDAO.selectVoteCount(questionId, "A");
+                int countB = widgetDAO.selectVoteCount(questionId, "B");
+                int total = countA + countB;
 
-            double pctA = total > 0 ? Math.round(((double) countA / total * 100) * 10) / 10.0 : 0.0;
-            double pctB = total > 0 ? Math.round(((double) countB / total * 100) * 10) / 10.0 : 0.0;
+                double pctA = total > 0 ? Math.round(((double) countA / total * 100) * 10) / 10.0 : 0.0;
+                double pctB = total > 0 ? Math.round(((double) countB / total * 100) * 10) / 10.0 : 0.0;
 
-            result.put("success", true);
-            result.put("countA", countA);
-            result.put("countB", countB);
-            result.put("totalCount", total);
-            result.put("percentA", pctA);
-            result.put("percentB", pctB);
-        } else {
+                result.put("success", true);
+                result.put("countA", countA);
+                result.put("countB", countB);
+                result.put("totalCount", total);
+                result.put("percentA", pctA);
+                result.put("percentB", pctB);
+            } else {
+                result.put("success", false);
+                result.put("message", "투표 처리 중 서버 오류가 발생했습니다.");
+            }
+        } catch (org.springframework.dao.DuplicateKeyException e) {
+            log.error("투표 등록 중 중복 키 예외 발생 (UUID 충돌): ", e);
             result.put("success", false);
-            result.put("message", "투표 처리 중 서버 오류가 발생했습니다.");
+            result.put("message", "투표 처리 중 일시적인 오류가 발생했습니다. 다시 시도해 주세요.");
         }
 
         return result;

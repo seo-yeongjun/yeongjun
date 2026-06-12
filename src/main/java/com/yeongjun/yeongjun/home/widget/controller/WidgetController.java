@@ -120,15 +120,22 @@ public class WidgetController {
     @PostMapping("/balance-game/vote")
     public ResponseEntity<Map<String, Object>> voteBalanceGame(
             HttpServletRequest request,
-            @RequestParam("questionId") Long questionId,
-            @RequestParam("selection") String selection) {
+            @RequestBody BalanceGameVote voteDto) {
         
-        String ipAddress = getClientIp(request);
-        Map<String, Object> result = widgetService.voteBalanceGame(questionId, selection, ipAddress);
-        if (Boolean.TRUE.equals(result.get("success"))) {
-            return ResponseEntity.ok(result);
-        } else {
-            return ResponseEntity.badRequest().body(result);
+        Map<String, Object> result = new HashMap<>();
+        try {
+            String ipAddress = getClientIp(request);
+            result = widgetService.voteBalanceGame(voteDto.getQuestionId(), voteDto.getSelection(), ipAddress);
+            if (Boolean.TRUE.equals(result.get("success"))) {
+                return ResponseEntity.ok(result);
+            } else {
+                return ResponseEntity.badRequest().body(result);
+            }
+        } catch (Exception e) {
+            log.error("밸런스 게임 투표 중 오류 발생: ", e);
+            result.put("success", false);
+            result.put("message", "서버 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
         }
     }
 
