@@ -806,7 +806,6 @@ function renderVotedGamesList(games, votedMap) {
         <div class="animate-fade-in-up flex flex-col h-full">
             <div class="flex justify-between items-center mb-2 text-[10px] text-slate-400 font-bold px-1 select-none">
                 <span>📊 전체 투표 결과 리스트</span>
-                <span class="text-rose-500 font-extrabold hover:underline cursor-pointer" onclick="resetLocalVotes()">초기화 <i class="fa-solid fa-rotate-left text-[9px]"></i></span>
             </div>
             <div class="space-y-2.5 max-h-[200px] overflow-y-auto pr-1 thin-scrollbar">
                 ${listHtml}
