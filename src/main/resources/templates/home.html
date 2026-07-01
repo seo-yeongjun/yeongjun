@@ -141,10 +141,10 @@
     <!-- ========================================== -->
     <!-- 4종 위젯 그리드 영역 -->
     <!-- ========================================== -->
-    <div class="widget-grid mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto px-2">
+    <div class="widget-grid mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-start max-w-5xl mx-auto px-2">
         
         <!-- 위젯 1: 퇴근 카운트다운 -->
-        <div class="widget-card bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg relative flex flex-col justify-between min-h-[200px]">
+        <div class="widget-card bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg relative flex flex-col justify-between min-h-[200px] md:col-span-2">
             <div class="flex justify-between items-start">
                 <span id="countdown-title" class="text-sm font-bold text-gray-500 uppercase tracking-wider"><i class="fa-solid fa-clock-rotate-left mr-1.5 text-indigo-500"></i>퇴근까지</span>
                 <!-- 관리자 톱니바퀴 -->
@@ -208,70 +208,6 @@
             </div>
         </div>
 
-        <!-- 위젯 3: 대중교통 정보 -->
-        <div class="widget-card bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg relative flex flex-col justify-between min-h-[200px]">
-            <div class="flex justify-between items-start">
-                <span class="text-sm font-bold text-gray-500 uppercase tracking-wider"><i class="fa-solid fa-bus mr-1.5 text-emerald-500"></i>교내 대중교통</span>
-                <button onclick="fetchTransitWidgetData()" class="text-gray-400 hover:text-emerald-600 transition-colors p-1 rounded-full hover:bg-gray-100/50">
-                    <i class="fa-solid fa-arrows-rotate text-sm"></i>
-                </button>
-            </div>
-            <div class="my-3 space-y-2.5 text-xs">
-                <!-- 1호선 다음 열차 -->
-                <div class="flex items-start justify-between border-b border-dashed border-slate-100 pb-1.5 text-[11px]">
-                    <div class="flex items-center space-x-1.5 flex-shrink-0">
-                        <span class="bg-blue-600 text-white font-black px-1.5 py-0.5 rounded text-[9px] whitespace-nowrap">1호선</span>
-                        <span class="font-bold text-slate-700 whitespace-nowrap">온수역</span>
-                    </div>
-                    <div id="transit-subway1-info" class="text-slate-600 text-right font-medium space-y-1 w-full pl-2">
-                        -
-                    </div>
-                </div>
-                <!-- 7호선 다음 열차 -->
-                <div class="flex items-start justify-between border-b border-dashed border-slate-100 pb-1.5 text-[11px]">
-                    <div class="flex items-center space-x-1.5 flex-shrink-0">
-                        <span class="bg-emerald-600 text-white font-black px-1.5 py-0.5 rounded text-[9px] whitespace-nowrap">7호선</span>
-                        <span class="font-bold text-slate-700 whitespace-nowrap">온수역</span>
-                    </div>
-                    <div id="transit-subway7-info" class="text-slate-600 text-right font-medium space-y-1 w-full pl-2">
-                        -
-                    </div>
-                </div>
-                <!-- 버스 정류소들 -->
-                <div class="space-y-3 pt-2 border-t border-slate-100">
-                    <!-- 성공회대입구 (17999) -->
-                    <div class="flex flex-col space-y-1 text-[11px]">
-                        <div class="flex items-center space-x-1.5 flex-shrink-0">
-                            <span class="bg-amber-500 text-white font-black px-1.5 py-0.5 rounded text-[9px] whitespace-nowrap">버스</span>
-                            <span class="font-bold text-slate-700 whitespace-nowrap">유한대방면</span>
-                        </div>
-                        <div id="transit-bus-17999" class="flex space-x-2 overflow-x-auto thin-scrollbar pb-1.5 w-full pl-0.5">
-                            -
-                        </div>
-                    </div>
-                    <!-- 온수역 (17117) -->
-                    <div class="flex flex-col space-y-1 text-[11px] border-t border-slate-50/50 pt-2">
-                        <div class="flex items-center space-x-1.5 flex-shrink-0">
-                            <span class="bg-amber-500 text-white font-black px-1.5 py-0.5 rounded text-[9px] whitespace-nowrap">버스</span>
-                            <span class="font-bold text-slate-700 whitespace-nowrap">서울가든빌라방면</span>
-                        </div>
-                        <div id="transit-bus-17117" class="flex space-x-2 overflow-x-auto thin-scrollbar pb-1.5 w-full pl-0.5">
-                            -
-                        </div>
-                    </div>
-                    <!-- 온수역종점 (17682) -->
-                    <div class="flex flex-col space-y-1 text-[11px] border-t border-slate-50/50 pt-2">
-                        <div class="flex items-center space-x-1.5 flex-shrink-0">
-                            <span class="bg-amber-500 text-white font-black px-1.5 py-0.5 rounded text-[9px] whitespace-nowrap">버스</span>
-                            <span class="font-bold text-slate-700 whitespace-nowrap">동삼빌라방면</span>
-                        </div>
-                        <div id="transit-bus-17682" class="flex space-x-2 overflow-x-auto thin-scrollbar pb-1.5 w-full pl-0.5">
-                            -
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- 위젯 4: 주간 밸런스 게임 -->
         <div class="widget-card bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg relative flex flex-col justify-between min-h-[200px]">

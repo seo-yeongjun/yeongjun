@@ -101,11 +101,6 @@ public class WidgetController {
         return ResponseEntity.ok(widgetService.getWeatherData());
     }
 
-    // 4. 대중교통 실시간 도착 정보 조회
-    @GetMapping("/transit")
-    public ResponseEntity<WidgetService.TransitForecast> getTransit() {
-        return ResponseEntity.ok(widgetService.getTransitData());
-    }
 
     // 5. 전체 밸런스 게임 목록 조회
     @GetMapping("/balance-game")

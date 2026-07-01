@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // 1. 위젯 데이터 초기화 호출
     initCountdownWidget();
     fetchWeatherWidgetData();
-    fetchTransitWidgetData();
     fetchBalanceGameWidgetData();
 
     // 2. 관리자 폼 이벤트 바인딩
@@ -362,155 +361,7 @@ function showWeatherError() {
 }
 
 
-// ==========================================
-// 3. 대중교통 정보 위젯
-// ==========================================
-function fetchTransitWidgetData() {
-    const subway1 = document.getElementById("transit-subway1-info");
-    const subway7 = document.getElementById("transit-subway7-info");
-    const bus17999 = document.getElementById("transit-bus-17999");
-    const bus17117 = document.getElementById("transit-bus-17117");
-    const bus17682 = document.getElementById("transit-bus-17682");
 
-    if (subway1) subway1.textContent = "업데이트 중...";
-    if (subway7) subway7.textContent = "업데이트 중...";
-    const loaderHtml = `<span class="text-[10px] text-slate-400 font-bold">로딩 중...</span>`;
-    if (bus17999) bus17999.innerHTML = loaderHtml;
-    if (bus17117) bus17117.innerHTML = loaderHtml;
-    if (bus17682) bus17682.innerHTML = loaderHtml;
-
-    fetch("/api/widgets/transit")
-        .then(res => res.json())
-        .then(data => {
-            // 지하철 렌더링 헬퍼
-            const renderSubwayList = (element, arrivals, badgeColorClass, textColorClass) => {
-                if (!element) return;
-                element.innerHTML = "";
-                if (arrivals === null) {
-                    element.innerHTML = `<span class="text-[10px] text-red-400 font-extrabold">업데이트 할 수 없음</span>`;
-                    return;
-                }
-                if (arrivals && arrivals.length > 0) {
-                    const downTrains = arrivals.filter(t => t.direction === "하행");
-                    const upTrains = arrivals.filter(t => t.direction === "상행");
-
-                    let html = "";
-
-                    // 하행
-                    const downTrainsStr = downTrains.length > 0
-                        ? downTrains.slice(0, 2).map(t => `<span class="font-extrabold text-slate-700">${t.destination}</span> <span class="font-black ${textColorClass}">${t.arrivalTime}</span>`).join(", ")
-                        : `<span class="text-slate-400">도착 정보 없음</span>`;
-                    html += `
-                        <div class="flex items-center justify-end space-x-1.5 mb-1">
-                            <span class="text-[9px] px-1 py-0.2 rounded font-bold ${badgeColorClass}">하행</span>
-                            <span class="text-slate-600">${downTrainsStr}</span>
-                        </div>
-                    `;
-
-                    // 상행
-                    const upTrainsStr = upTrains.length > 0
-                        ? upTrains.slice(0, 2).map(t => `<span class="font-extrabold text-slate-700">${t.destination}</span> <span class="font-black ${textColorClass}">${t.arrivalTime}</span>`).join(", ")
-                        : `<span class="text-slate-400">도착 정보 없음</span>`;
-                    html += `
-                        <div class="flex items-center justify-end space-x-1.5">
-                            <span class="text-[9px] px-1 py-0.2 rounded font-bold ${badgeColorClass}">상행</span>
-                            <span class="text-slate-600">${upTrainsStr}</span>
-                        </div>
-                    `;
-                    element.innerHTML = html;
-                } else {
-                    element.innerHTML = `<span class="text-[10px] text-slate-400 font-bold">도착 정보 없음</span>`;
-                }
-            };
-
-            renderSubwayList(subway1, data.subwayLine1, "bg-blue-100 text-blue-700", "text-blue-600");
-            renderSubwayList(subway7, data.subwayLine7, "bg-green-100 text-green-700", "text-emerald-600");
-
-            // 정류소별 고정 정차 버스 목록
-            const FIXED_BUS_LISTS = {
-                "transit-bus-17999": ["10", "52", "57", "57-1", "75", "83", "88"],
-                "transit-bus-17117": ["10", "52", "57", "57-1", "75", "83", "88", "660", "구로07"],
-                "transit-bus-17682": ["660", "6614", "구로07"]
-            };
-
-            const BUS_DEFAULT_TYPES = {
-                "660": "지선",
-                "6614": "지선",
-                "구로07": "지선"
-            };
-
-            // 버스 렌더링 헬퍼
-            const renderBusList = (element, arrivals) => {
-                if (!element) return;
-                element.innerHTML = "";
-                if (arrivals === null) {
-                    element.innerHTML = `<span class="text-[10px] text-red-400 font-extrabold whitespace-nowrap">업데이트 할 수 없음</span>`;
-                    return;
-                }
-
-                // 해당 엘리먼트의 고정 버스 목록 가져오기
-                const fixedList = FIXED_BUS_LISTS[element.id] || [];
-                const realArrivals = arrivals || [];
-
-                fixedList.forEach(busNo => {
-                    // 실시간 정보에서 일치하는 버스 찾기
-                    const matchedBus = realArrivals.find(b => b.busNo === busNo);
-
-                    const busItem = document.createElement("div");
-                    busItem.className = "flex flex-col items-center justify-center flex-shrink-0 bg-slate-50/70 hover:bg-slate-100/70 border border-slate-100 rounded-xl px-2 py-0.5 min-w-[76px] transition-colors duration-150";
-
-                    let busType = "일반";
-                    let arrivalTime1 = "도착 정보 없음";
-                    let arrivalTime2 = "-";
-
-                    if (matchedBus) {
-                        busType = matchedBus.type || "일반";
-                        arrivalTime1 = matchedBus.arrivalTime1 || "도착 정보 없음";
-                        arrivalTime2 = matchedBus.arrivalTime2 || "-";
-                    } else {
-                        busType = BUS_DEFAULT_TYPES[busNo] || "일반";
-                    }
-
-                    let badgeClass = "bg-slate-200 text-slate-700";
-                    if (busType === "지선") badgeClass = "bg-green-100 text-green-700";
-                    else if (busType === "간선") badgeClass = "bg-blue-100 text-blue-700";
-                    else if (busType === "순환") badgeClass = "bg-yellow-100 text-yellow-700";
-                    else if (busType === "광역") badgeClass = "bg-red-100 text-red-700";
-
-                    const time1ColorClass = arrivalTime1 === "도착 정보 없음" ? "text-slate-400 font-medium text-[8px] tracking-tight" : "font-black text-rose-500 text-[10px] tracking-tight";
-
-                    const time2Html = arrivalTime2 && arrivalTime2 !== "-"
-                        ? `<span class="text-[9px] text-slate-400 font-bold ml-0.5">(${arrivalTime2})</span>`
-                        : "";
-
-                    busItem.innerHTML = `
-                        <div class="flex items-center space-x-1 whitespace-nowrap">
-                            <span class="font-bold text-slate-700 text-[10px]">${busNo}번</span>
-                            <span class="text-[8px] px-0.5 py-0 rounded font-black ${badgeClass}">${busType}</span>
-                        </div>
-                        <div class="flex items-center justify-center whitespace-nowrap">
-                            <span class="${time1ColorClass}">${arrivalTime1}</span>${time2Html}
-                        </div>
-                    `;
-                    element.appendChild(busItem);
-                });
-            };
-
-            // 각 정류장별 버스 리스트 렌더링
-            renderBusList(bus17999, data.bus17999);
-            renderBusList(bus17117, data.bus17117);
-            renderBusList(bus17682, data.bus17682);
-        })
-        .catch(err => {
-            console.error("교통 정보 로드 실패:", err);
-            if (subway1) subway1.textContent = "에러";
-            if (subway7) subway7.textContent = "에러";
-            const errHtml = `<span class="text-[10px] text-red-500 font-bold">에러</span>`;
-            if (bus17999) bus17999.innerHTML = errHtml;
-            if (bus17117) bus17117.innerHTML = errHtml;
-            if (bus17682) bus17682.innerHTML = errHtml;
-        });
-}
 
 
 // ==========================================
@@ -669,63 +520,30 @@ function voteBalanceGame(selection) {
                             <div class="text-[10px] text-slate-400 font-bold text-center mt-1">참여 완료 (총 ${result.totalCount}명 투표)</div>
                         </div>
 
-                        <!-- 다음 질문 자동 이동 타이머 버튼 -->
+                        <!-- 다음 질문 수동 이동 버튼 -->
                         <div id="balance-next-container" class="mt-4 flex justify-center">
-                            <button id="balance-next-btn" class="relative overflow-hidden bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-5 rounded-2xl transition text-xs shadow-md flex items-center justify-center min-h-[36px] w-full max-w-[200px] select-none">
-                                <span class="relative z-10" id="balance-next-btn-text">다음 질문 ➡️ (3초)</span>
-                                <div id="balance-next-btn-progress" class="absolute left-0 top-0 bottom-0 bg-indigo-500/40 w-0 transition-all duration-100 ease-linear"></div>
+                            <button id="balance-next-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-2xl transition text-xs shadow-md flex items-center justify-center min-h-[36px] w-full max-w-[200px] select-none">
+                                <span id="balance-next-btn-text">다음 질문 ➡️</span>
                             </button>
                         </div>
                     </div>
                 `;
 
-                // 4. 자동 이동 타이머 구동
+                // 4. 수동 이동 설정
                 const votedMap = getVotedGamesMap();
                 const nextUnvoted = allBalanceGames.find(g => g.id !== activeQuestionId && !votedMap[g.id]);
                 const hasMore = !!nextUnvoted;
 
                 const nextBtn = document.getElementById("balance-next-btn");
-                const progressEl = document.getElementById("balance-next-btn-progress");
                 const textEl = document.getElementById("balance-next-btn-text");
 
-                if (!nextBtn) return;
-
-                const nextText = hasMore ? "다음 질문 ➡️" : "전체 결과 보기 📋";
-                textEl.textContent = `${nextText} (3초)`;
-
-                let timeLeft = 3000;
-
-                // 즉시 이동 함수
-                const triggerNext = () => {
-                    clearBalanceTimer();
-                    fetchBalanceGameWidgetData();
-                };
-
-                nextBtn.onclick = triggerNext;
-
-                // 타이머 인터벌
-                balanceProgressInterval = setInterval(() => {
-                    timeLeft -= 100;
-                    const pct = ((3000 - timeLeft) / 3000) * 100;
-                    if (progressEl) progressEl.style.width = `${pct}%`;
-                    if (textEl) {
-                        textEl.textContent = `${nextText} (${Math.ceil(timeLeft / 1000)}초)`;
-                    }
-
-                    if (timeLeft <= 0) {
-                        triggerNext();
-                    }
-                }, 100);
-
-                // 마우스 호버 시 타이머 정지 (수동 대기)
-                const pauseTimer = () => {
-                    clearBalanceTimer();
-                    if (progressEl) progressEl.style.width = '0%';
-                    if (textEl) textEl.textContent = nextText;
-                };
-
-                nextBtn.onmouseenter = pauseTimer;
-                nextBtn.ontouchstart = pauseTimer;
+                if (nextBtn && textEl) {
+                    const nextText = hasMore ? "다음 질문 ➡️" : "전체 결과 보기 📋";
+                    textEl.textContent = nextText;
+                    nextBtn.onclick = () => {
+                        fetchBalanceGameWidgetData();
+                    };
+                }
 
             } else {
                 alert(result.message || "투표 처리에 실패했습니다.");
@@ -758,7 +576,7 @@ function renderVotedGamesList(games, votedMap) {
             ? "border-indigo-200 bg-indigo-50/30 text-indigo-900"
             : "border-slate-100 bg-white text-slate-400 opacity-60";
         const aBadge = isASelected
-            ? `<span class="inline-block text-[9px] bg-indigo-100 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded-md ml-1 shadow-sm"><i class="fa-solid fa-check mr-0.5"></i>내 선택</span>`
+            ? `<span class="inline-block text-[8px] bg-indigo-100 text-indigo-700 font-extrabold px-1 py-0.2 rounded-md ml-1 shadow-sm"><i class="fa-solid fa-check mr-0.5"></i>내 선택</span>`
             : "";
         const aBarColor = isASelected ? "bg-indigo-500" : "bg-slate-400";
 
@@ -767,33 +585,33 @@ function renderVotedGamesList(games, votedMap) {
             ? "border-rose-200 bg-rose-50/30 text-rose-900"
             : "border-slate-100 bg-white text-slate-400 opacity-60";
         const bBadge = isBSelected
-            ? `<span class="inline-block text-[9px] bg-rose-100 text-rose-700 font-extrabold px-1.5 py-0.5 rounded-md ml-1 shadow-sm"><i class="fa-solid fa-check mr-0.5"></i>내 선택</span>`
+            ? `<span class="inline-block text-[8px] bg-rose-100 text-rose-700 font-extrabold px-1 py-0.2 rounded-md ml-1 shadow-sm"><i class="fa-solid fa-check mr-0.5"></i>내 선택</span>`
             : "";
         const bBarColor = isBSelected ? "bg-rose-500" : "bg-slate-400";
 
         return `
-            <div class="border border-slate-100 rounded-2xl p-3 bg-slate-50/50 hover:bg-slate-50/80 transition duration-150 relative">
-                <h4 class="font-extrabold text-slate-800 text-xs mb-2 leading-snug"><i class="fa-solid fa-circle-question text-[10px] text-rose-400 mr-1"></i>${g.question}</h4>
+            <div class="border border-slate-100 rounded-xl p-2.5 bg-slate-50/50 hover:bg-slate-50/80 transition duration-150 relative">
+                <h4 class="font-extrabold text-slate-800 text-[11px] mb-1.5 leading-snug"><i class="fa-solid fa-circle-question text-[9px] text-rose-400 mr-1"></i>${g.question}</h4>
                 
-                <div class="space-y-1.5 text-[10px]">
+                <div class="space-y-1 text-[9px]">
                     <!-- 옵션 A -->
-                    <div class="p-1.5 rounded-xl border transition-all duration-200 ${aClass}">
+                    <div class="p-1 rounded-lg border transition-all duration-200 ${aClass}">
                         <div class="flex justify-between items-center font-bold">
                             <span class="flex items-center truncate max-w-[150px]">${g.optionA} ${aBadge}</span>
                             <span>${g.percentA}% (${g.countA}표)</span>
                         </div>
-                        <div class="w-full bg-slate-200/50 h-1.5 rounded-full overflow-hidden mt-1">
+                        <div class="w-full bg-slate-200/50 h-1 rounded-full overflow-hidden mt-0.5">
                             <div class="${aBarColor} h-full rounded-full" style="width: ${g.percentA}%"></div>
                         </div>
                     </div>
 
                     <!-- 옵션 B -->
-                    <div class="p-1.5 rounded-xl border transition-all duration-200 ${bClass}">
+                    <div class="p-1 rounded-lg border transition-all duration-200 ${bClass}">
                         <div class="flex justify-between items-center font-bold">
                             <span class="flex items-center truncate max-w-[150px]">${g.optionB} ${bBadge}</span>
                             <span>${g.percentB}% (${g.countB}표)</span>
                         </div>
-                        <div class="w-full bg-slate-200/50 h-1.5 rounded-full overflow-hidden mt-1">
+                        <div class="w-full bg-slate-200/50 h-1 rounded-full overflow-hidden mt-0.5">
                             <div class="${bBarColor} h-full rounded-full" style="width: ${g.percentB}%"></div>
                         </div>
                     </div>
@@ -804,10 +622,10 @@ function renderVotedGamesList(games, votedMap) {
 
     body.innerHTML = `
         <div class="animate-fade-in-up flex flex-col h-full">
-            <div class="flex justify-between items-center mb-2 text-[10px] text-slate-400 font-bold px-1 select-none">
+            <div class="flex justify-between items-center mb-1.5 text-[10px] text-slate-400 font-bold px-1 select-none">
                 <span>📊 전체 투표 결과 리스트</span>
             </div>
-            <div class="space-y-2.5 max-h-[200px] overflow-y-auto pr-1 thin-scrollbar">
+            <div class="space-y-2 max-h-[150px] overflow-y-auto pr-1 thin-scrollbar">
                 ${listHtml}
             </div>
         </div>
