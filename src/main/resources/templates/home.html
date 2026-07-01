@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorate="~{layout}">
+
 <head>
     <title th:text="'영준닷컴 | 홈 페이지'">영준닷컴 | 홈 페이지</title>
     <style>
@@ -113,278 +114,321 @@
         }
     </style>
 </head>
+
 <body>
-<div layout:fragment="content">
-    <div class="app-grid">
-        <!-- 최상위 카테고리 반복 -->
-        <div th:each="category : ${baseCategory}"
-             th:if="${category.parent_id == 0}"
-             class="app-icon">
-            <!-- 자식이 있는 경우 모달 열기 -->
-            <div th:if="${category.has_children}"
-                 th:onclick="|openModal('${category.category_id}')|" class="flex flex-col items-center">
-                <img th:src="${category.icon_path != null ? category.icon_path : '/icon/default.png'}"
-                     th:alt="${category.category_name}" />
-                <span th:text="${category.category_name}">Category Name</span>
-            </div>
-            <!-- 자식이 없는 경우 바로 링크 -->
-            <a th:unless="${category.has_children}"
-               th:href="${category.path}"
-               class="flex flex-col items-center">
-                <img th:src="${category.icon_path != null ? category.icon_path : '/icon/default.png'}"
-                     th:alt="${category.category_name}" />
-                <span th:text="${category.category_name}">Category Name</span>
-            </a>
-        </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 4종 위젯 그리드 영역 -->
-    <!-- ========================================== -->
-    <div class="widget-grid mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-start max-w-5xl mx-auto px-2">
-        
-        <!-- 위젯 1: 퇴근 카운트다운 -->
-        <div class="widget-card bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg relative flex flex-col justify-between h-[260px]">
-            <div class="flex justify-between items-start">
-                <span id="countdown-title" class="text-sm font-bold text-gray-500 uppercase tracking-wider"><i class="fa-solid fa-clock-rotate-left mr-1.5 text-indigo-500"></i>퇴근까지</span>
-                <!-- 관리자 톱니바퀴 -->
-                <button th:if="${user != null && user.role.name() == 'ADMIN'}" onclick="openAdminCountdownModal()" class="text-gray-400 hover:text-indigo-600 transition-colors p-1.5 rounded-full hover:bg-gray-100/50">
-                    <i class="fa-solid fa-gear text-base"></i>
-                </button>
-            </div>
-            <div class="my-4 text-center">
-                <div id="leave-timer" class="text-4xl md:text-5xl font-black text-slate-800 tracking-tight select-all">00:00:00</div>
-                <div id="leave-status" class="text-xs text-indigo-600 font-semibold mt-1">18:00 퇴근 기준</div>
-            </div>
-            <div class="border-t border-slate-100/80 pt-3.5 grid grid-cols-3 gap-2 text-center text-xs">
-                <div>
-                    <span class="block text-slate-400 font-medium mb-0.5">이번달 남은 출근일</span>
-                    <span id="countdown-working-days" class="font-extrabold text-slate-700 text-sm">- 일</span>
+    <div layout:fragment="content">
+        <div class="app-grid">
+            <!-- 최상위 카테고리 반복 -->
+            <div th:each="category : ${baseCategory}" th:if="${category.parent_id == 0}" class="app-icon">
+                <!-- 자식이 있는 경우 모달 열기 -->
+                <div th:if="${category.has_children}" th:onclick="|openModal('${category.category_id}')|"
+                    class="flex flex-col items-center">
+                    <img th:src="${category.icon_path != null ? category.icon_path : '/icon/default.png'}"
+                        th:alt="${category.category_name}" />
+                    <span th:text="${category.category_name}">Category Name</span>
                 </div>
-                <div>
-                    <span class="block text-slate-400 font-medium mb-0.5" id="holiday-label">다음 쉬는날까지</span>
-                    <span id="countdown-holiday" class="font-extrabold text-rose-500 text-sm">-</span>
-                </div>
-                <div>
-                    <span class="block text-slate-400 font-medium mb-0.5" id="vacation-label">종강(학기시작)까지</span>
-                    <span id="countdown-vacation" class="font-extrabold text-emerald-600 text-sm">- 일</span>
-                </div>
+                <!-- 자식이 없는 경우 바로 링크 -->
+                <a th:unless="${category.has_children}" th:href="${category.path}" class="flex flex-col items-center">
+                    <img th:src="${category.icon_path != null ? category.icon_path : '/icon/default.png'}"
+                        th:alt="${category.category_name}" />
+                    <span th:text="${category.category_name}">Category Name</span>
+                </a>
             </div>
         </div>
 
-        <!-- 위젯 2: 성공회대 날씨 -->
-        <div class="widget-card bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg relative flex flex-col justify-between h-[260px]">
-            <div class="flex justify-between items-start">
-                <span class="text-sm font-bold text-gray-500 uppercase tracking-wider"><i class="fa-solid fa-cloud-sun mr-1.5 text-amber-500"></i>성공회대 날씨</span>
-                <div class="flex flex-col items-end space-y-0.5">
-                    <span class="text-[10px] text-slate-400 font-semibold bg-slate-100 px-2 py-0.5 rounded-full">구로구 항동</span>
-                    <span class="text-[8px] text-slate-400/80 font-medium tracking-tight">출처: 기상청 단기예보</span>
+        <!-- ========================================== -->
+        <!-- 4종 위젯 그리드 영역 -->
+        <!-- ========================================== -->
+        <div class="widget-grid mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-start max-w-5xl mx-auto px-2">
+
+            <!-- 위젯 1: 퇴근 카운트다운 -->
+            <div
+                class="widget-card bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg relative flex flex-col justify-between h-[300px]">
+                <div class="flex justify-between items-start">
+                    <span id="countdown-title" class="text-sm font-bold text-gray-500 uppercase tracking-wider"><i
+                            class="fa-solid fa-clock-rotate-left mr-1.5 text-indigo-500"></i>퇴근까지</span>
+                    <!-- 관리자 톱니바퀴 -->
+                    <button th:if="${user != null && user.role.name() == 'ADMIN'}" onclick="openAdminCountdownModal()"
+                        class="text-gray-400 hover:text-indigo-600 transition-colors p-1.5 rounded-full hover:bg-gray-100/50">
+                        <i class="fa-solid fa-gear text-base"></i>
+                    </button>
                 </div>
-            </div>
-            <div class="flex items-center justify-around my-2">
-                <div class="text-center">
-                    <i id="weather-main-icon" class="fa-solid fa-sun text-5xl text-amber-500 filter drop-shadow-sm"></i>
+                <div class="my-4 text-center">
+                    <div id="leave-timer"
+                        class="text-4xl md:text-5xl font-black text-slate-800 tracking-tight select-all">00:00:00</div>
+                    <div id="leave-status" class="text-xs text-indigo-600 font-semibold mt-1">18:00 퇴근 기준</div>
                 </div>
-                <div class="text-left">
-                    <div class="flex items-start">
-                        <span id="weather-current-temp" class="text-4xl font-extrabold text-slate-800">-</span>
-                        <span class="text-xl font-bold text-slate-600 mt-0.5">°C</span>
-                        <span class="text-[9px] font-bold text-slate-400 ml-2.5 mt-1.5 flex flex-col leading-none">
-                            <span class="text-rose-500">▲<span id="weather-temp-max">-</span>°</span>
-                            <span class="text-blue-500 mt-1">▼<span id="weather-temp-min">-</span>°</span>
-                        </span>
+                <div class="border-t border-slate-100/80 pt-3.5 grid grid-cols-3 gap-2 text-center text-xs">
+                    <div>
+                        <span class="block text-slate-400 font-medium mb-0.5">이번달 남은 출근일</span>
+                        <span id="countdown-working-days" class="font-extrabold text-slate-700 text-sm">- 일</span>
                     </div>
-                    <div class="flex flex-col text-[10px] font-semibold text-slate-400 mt-0.5 space-y-0.5">
-                        <span id="weather-current-status" class="text-xs font-bold text-slate-600 mb-0.5">맑음</span>
-                        <span class="flex items-center"><i class="fa-solid fa-umbrella mr-1.5 text-sky-400 w-3"></i>강수확률 <span id="weather-current-pop" class="ml-1 font-bold text-slate-600">0</span>%</span>
-                        <span class="flex items-center"><i class="fa-solid fa-droplet mr-1.5 text-blue-400 w-3"></i>습도 <span id="weather-current-humidity" class="ml-1 font-bold text-slate-600">-</span>%</span>
-                        <span class="flex items-center"><i class="fa-solid fa-wind mr-1.5 text-teal-400 w-3"></i>바람 <span id="weather-current-wind" class="ml-1 font-bold text-slate-600">-</span> m/s</span>
+                    <div>
+                        <span class="block text-slate-400 font-medium mb-0.5" id="holiday-label">다음 쉬는날까지</span>
+                        <span id="countdown-holiday" class="font-extrabold text-rose-500 text-sm">-</span>
+                    </div>
+                    <div>
+                        <span class="block text-slate-400 font-medium mb-0.5" id="vacation-label">종강(학기시작)까지</span>
+                        <span id="countdown-vacation" class="font-extrabold text-emerald-600 text-sm">- 일</span>
                     </div>
                 </div>
             </div>
-            <!-- 향후 예보 (시간대별) -->
-            <div id="weather-hourly-list" class="flex justify-between space-x-2 overflow-x-auto pt-3 border-t border-slate-100/80 scrollbar-none">
-                <!-- JS에서 채워줌 -->
-            </div>
-        </div>
 
-
-        <!-- 위젯 4: 주간 밸런스 게임 -->
-        <div class="widget-card bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg relative flex flex-col justify-between h-[260px]">
-            <div class="flex justify-between items-start">
-                <span class="text-sm font-bold text-gray-500 uppercase tracking-wider"><i class="fa-solid fa-scale-balanced mr-1.5 text-rose-500"></i>밸런스 게임</span>
-                <!-- 관리자 톱니바퀴 -->
-                <button th:if="${user != null && user.role.name() == 'ADMIN'}" onclick="openAdminBalanceModal()" class="text-gray-400 hover:text-rose-600 transition-colors p-1.5 rounded-full hover:bg-gray-100/50">
-                    <i class="fa-solid fa-gear text-base"></i>
-                </button>
-            </div>
-            <!-- 게임 영역 -->
-            <div id="balance-widget-body" class="my-3 flex-grow flex flex-col justify-center">
-                <!-- 질문 -->
-                <h3 id="balance-question-text" class="text-sm font-extrabold text-slate-800 text-center mb-4 leading-snug">-</h3>
-                
-                <!-- 투표 버튼들 (미투표 시) -->
-                <div id="balance-vote-buttons" class="grid grid-cols-2 gap-3 hidden">
-                    <button onclick="voteBalanceGame('A')" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-bold py-2.5 px-3 rounded-2xl transition text-xs text-center line-clamp-2 min-h-[44px]">Option A</button>
-                    <button onclick="voteBalanceGame('B')" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold py-2.5 px-3 rounded-2xl transition text-xs text-center line-clamp-2 min-h-[44px]">Option B</button>
+            <!-- 위젯 2: 성공회대 날씨 -->
+            <div
+                class="widget-card bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg relative flex flex-col justify-between h-[300px]">
+                <div class="flex justify-between items-start">
+                    <span class="text-sm font-bold text-gray-500 uppercase tracking-wider"><i
+                            class="fa-solid fa-cloud-sun mr-1.5 text-amber-500"></i>성공회대 날씨</span>
+                    <div class="flex flex-col items-end space-y-0.5">
+                        <span class="text-[10px] text-slate-400 font-semibold bg-slate-100 px-2 py-0.5 rounded-full">구로구
+                            항동</span>
+                        <span class="text-[8px] text-slate-400/80 font-medium tracking-tight">출처: 기상청 단기예보</span>
+                    </div>
                 </div>
-
-                <!-- 투표 결과 그래프 (투표 완료 시) -->
-                <div id="balance-vote-results" class="space-y-3 hidden">
-                    <div class="space-y-1">
-                        <div class="flex justify-between text-xs font-bold text-indigo-700">
-                            <span id="balance-res-a-name" class="truncate max-w-[150px]">Option A</span>
-                            <span id="balance-res-a-pct">0% (0표)</span>
+                <div class="flex items-center justify-around my-2">
+                    <div class="text-center">
+                        <i id="weather-main-icon"
+                            class="fa-solid fa-sun text-5xl text-amber-500 filter drop-shadow-sm"></i>
+                    </div>
+                    <div class="text-left">
+                        <div class="flex items-start">
+                            <span id="weather-current-temp" class="text-4xl font-extrabold text-slate-800">-</span>
+                            <span class="text-xl font-bold text-slate-600 mt-0.5">°C</span>
+                            <span class="text-[9px] font-bold text-slate-400 ml-2.5 mt-1.5 flex flex-col leading-none">
+                                <span class="text-rose-500">▲<span id="weather-temp-max">-</span>°</span>
+                                <span class="text-blue-500 mt-1">▼<span id="weather-temp-min">-</span>°</span>
+                            </span>
                         </div>
-                        <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden">
-                            <div id="balance-bar-a" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        <div class="flex flex-col text-[10px] font-semibold text-slate-400 mt-0.5 space-y-0.5">
+                            <span id="weather-current-status" class="text-xs font-bold text-slate-600 mb-0.5">맑음</span>
+                            <span class="flex items-center"><i
+                                    class="fa-solid fa-umbrella mr-1.5 text-sky-400 w-3"></i>강수확률 <span
+                                    id="weather-current-pop" class="ml-1 font-bold text-slate-600">0</span>%</span>
+                            <span class="flex items-center"><i
+                                    class="fa-solid fa-droplet mr-1.5 text-blue-400 w-3"></i>습도 <span
+                                    id="weather-current-humidity" class="ml-1 font-bold text-slate-600">-</span>%</span>
+                            <span class="flex items-center"><i class="fa-solid fa-wind mr-1.5 text-teal-400 w-3"></i>바람
+                                <span id="weather-current-wind" class="ml-1 font-bold text-slate-600">-</span>
+                                m/s</span>
                         </div>
                     </div>
-                    <div class="space-y-1">
-                        <div class="flex justify-between text-xs font-bold text-rose-700">
-                            <span id="balance-res-b-name" class="truncate max-w-[150px]">Option B</span>
-                            <span id="balance-res-b-pct">0% (0표)</span>
-                        </div>
-                        <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden">
-                            <div id="balance-bar-b" class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
+                </div>
+                <!-- 향후 예보 (시간대별) -->
+                <div id="weather-hourly-list"
+                    class="flex justify-between space-x-2 overflow-x-auto pt-3 border-t border-slate-100/80 scrollbar-none">
+                    <!-- JS에서 채워줌 -->
+                </div>
+            </div>
+
+
+            <!-- 위젯 4: 주간 밸런스 게임 -->
+            <div
+                class="widget-card bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg relative flex flex-col justify-between h-[300px]">
+                <div class="flex justify-between items-start">
+                    <span class="text-sm font-bold text-gray-500 uppercase tracking-wider"><i
+                            class="fa-solid fa-scale-balanced mr-1.5 text-rose-500"></i>밸런스 게임</span>
+                    <!-- 관리자 톱니바퀴 -->
+                    <button th:if="${user != null && user.role.name() == 'ADMIN'}" onclick="openAdminBalanceModal()"
+                        class="text-gray-400 hover:text-rose-600 transition-colors p-1.5 rounded-full hover:bg-gray-100/50">
+                        <i class="fa-solid fa-gear text-base"></i>
+                    </button>
+                </div>
+                <!-- 게임 영역 -->
+                <div id="balance-widget-body" class="my-3 flex-grow flex flex-col justify-center">
+                    <!-- 질문 -->
+                    <h3 id="balance-question-text"
+                        class="text-sm font-extrabold text-slate-800 text-center mb-4 leading-snug">-</h3>
+
+                    <!-- 투표 버튼들 (미투표 시) -->
+                    <div id="balance-vote-buttons" class="grid grid-cols-2 gap-3 hidden">
+                        <button onclick="voteBalanceGame('A')"
+                            class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-bold py-2.5 px-3 rounded-2xl transition text-xs text-center line-clamp-2 min-h-[44px]">Option
+                            A</button>
+                        <button onclick="voteBalanceGame('B')"
+                            class="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold py-2.5 px-3 rounded-2xl transition text-xs text-center line-clamp-2 min-h-[44px]">Option
+                            B</button>
                     </div>
-                    <div class="text-[10px] text-slate-400 font-bold text-center mt-1">참여 완료 (총 <span id="balance-total-votes">0</span>명 투표)</div>
+
+                    <!-- 투표 결과 그래프 (투표 완료 시) -->
+                    <div id="balance-vote-results" class="space-y-3 hidden">
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs font-bold text-indigo-700">
+                                <span id="balance-res-a-name" class="truncate max-w-[150px]">Option A</span>
+                                <span id="balance-res-a-pct">0% (0표)</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden">
+                                <div id="balance-bar-a"
+                                    class="bg-indigo-500 h-full rounded-full transition-all duration-500"
+                                    style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs font-bold text-rose-700">
+                                <span id="balance-res-b-name" class="truncate max-w-[150px]">Option B</span>
+                                <span id="balance-res-b-pct">0% (0표)</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden">
+                                <div id="balance-bar-b"
+                                    class="bg-rose-500 h-full rounded-full transition-all duration-500"
+                                    style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-bold text-center mt-1">참여 완료 (총 <span
+                                id="balance-total-votes">0</span>명 투표)</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 모달 템플릿들 -->
+        <!-- ========================================== -->
+        <!-- 최상위 모달 반복 -->
+        <div th:each="category : ${baseCategory}" th:if="${category.parent_id == 0}"
+            th:id="|modal-${category.category_id}|" class="modal">
+            <div class="modal-content" th:if="${category.has_children}">
+                <span class="close-modal" th:onclick="|closeModal('${category.category_id}')|">&times;</span>
+                <h2 th:text="${category.category_name}" class="text-xl font-bold mb-4">Category Name</h2>
+                <div class="subcategory-grid">
+                    <!-- 서브카테고리 반복 -->
+                    <div th:each="subcategory : ${baseCategory}"
+                        th:if="${subcategory.parent_id == category.category_id}" class="subcategory-icon">
+                        <a th:href="${subcategory.path}" class="flex flex-col items-center">
+                            <img th:src="${subcategory.icon_path != null ? subcategory.icon_path : '/icon/default.png'}"
+                                th:alt="${category.category_name}" />
+                            <span th:text="${subcategory.category_name}">Subcategory Name</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
-    </div>
+        <!-- ========================================== -->
+        <!-- 관리자 모달: 퇴근시간 및 일정 설정 -->
+        <!-- ========================================== -->
+        <div th:if="${user != null && user.role.name() == 'ADMIN'}" id="admin-countdown-modal" class="modal">
+            <div class="modal-content !max-w-md">
+                <span class="close-modal" onclick="closeAdminCountdownModal()">&times;</span>
+                <h2 class="text-lg font-black text-slate-800 mb-4 border-b pb-2"><i
+                        class="fa-solid fa-gear text-indigo-500 mr-2"></i>퇴근 및 일정 설정</h2>
+                <form id="countdown-config-form" class="space-y-4 text-xs font-semibold">
+                    <div>
+                        <label class="block text-slate-500 mb-1">퇴근 시각 설정</label>
+                        <input type="text" id="admin-office-leave-time"
+                            class="w-full border rounded-xl p-2.5 focus:outline-indigo-500 text-slate-700"
+                            placeholder="예: 18:00:00">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 mb-1">종강일</label>
+                        <input type="date" name="VACATION_START_DATE"
+                            class="w-full border rounded-xl p-2.5 focus:outline-indigo-500 text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 mb-1">학기 시작일</label>
+                        <input type="date" name="SEMESTER_START_DATE"
+                            class="w-full border rounded-xl p-2.5 focus:outline-indigo-500 text-slate-700">
+                    </div>
+                    <div class="flex justify-end space-x-2 pt-2 border-t mt-4">
+                        <button type="button" onclick="closeAdminCountdownModal()"
+                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-xl transition">취소</button>
+                        <button type="submit"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl transition shadow-md shadow-indigo-100">저장</button>
+                    </div>
+                </form>
 
-    <!-- ========================================== -->
-    <!-- 모달 템플릿들 -->
-    <!-- ========================================== -->
-    <!-- 최상위 모달 반복 -->
-    <div th:each="category : ${baseCategory}"
-         th:if="${category.parent_id == 0}"
-         th:id="|modal-${category.category_id}|"
-         class="modal">
-        <div class="modal-content" th:if="${category.has_children}">
-            <span class="close-modal" th:onclick="|closeModal('${category.category_id}')|">&times;</span>
-            <h2 th:text="${category.category_name}" class="text-xl font-bold mb-4">Category Name</h2>
-            <div class="subcategory-grid">
-                <!-- 서브카테고리 반복 -->
-                <div th:each="subcategory : ${baseCategory}"
-                     th:if="${subcategory.parent_id == category.category_id}"
-                     class="subcategory-icon">
-                    <a th:href="${subcategory.path}" class="flex flex-col items-center">
-                        <img th:src="${subcategory.icon_path != null ? subcategory.icon_path : '/icon/default.png'}"
-                             th:alt="${category.category_name}" />
-                        <span th:text="${subcategory.category_name}">Subcategory Name</span>
-                    </a>
+                <hr class="my-4 border-slate-100">
+                <h3 class="text-sm font-black text-slate-800 mb-2"><i
+                        class="fa-solid fa-calendar-days text-indigo-500 mr-2"></i>공휴일 관리</h3>
+
+                <!-- 공휴일 추가 폼 -->
+                <div class="flex space-x-2 mb-3 text-xs font-semibold">
+                    <input type="date" id="new-holiday-date"
+                        class="w-[45%] border rounded-xl p-2 focus:outline-indigo-500 text-slate-700">
+                    <input type="text" id="new-holiday-name" placeholder="공휴일 이름"
+                        class="w-[35%] border rounded-xl p-2 focus:outline-indigo-500 text-slate-700">
+                    <button type="button" onclick="handleAddHoliday()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 rounded-xl transition shadow-sm w-[20%]">추가</button>
+                </div>
+
+                <!-- 공휴일 목록 -->
+                <div id="holiday-list-container" class="max-h-36 overflow-y-auto space-y-1.5 pr-1 text-xs">
+                    <div class="text-slate-400 text-center py-2 font-semibold">공휴일을 불러오는 중...</div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- ========================================== -->
-    <!-- 관리자 모달: 퇴근시간 및 일정 설정 -->
-    <!-- ========================================== -->
-    <div th:if="${user != null && user.role.name() == 'ADMIN'}" id="admin-countdown-modal" class="modal">
-        <div class="modal-content !max-w-md">
-            <span class="close-modal" onclick="closeAdminCountdownModal()">&times;</span>
-            <h2 class="text-lg font-black text-slate-800 mb-4 border-b pb-2"><i class="fa-solid fa-gear text-indigo-500 mr-2"></i>퇴근 및 일정 설정</h2>
-            <form id="countdown-config-form" class="space-y-4 text-xs font-semibold">
-                <div>
-                    <label class="block text-slate-500 mb-1">퇴근 시각 설정</label>
-                    <input type="text" id="admin-office-leave-time" class="w-full border rounded-xl p-2.5 focus:outline-indigo-500 text-slate-700" placeholder="예: 18:00:00">
-                </div>
-                <div>
-                    <label class="block text-slate-500 mb-1">종강일</label>
-                    <input type="date" name="VACATION_START_DATE" class="w-full border rounded-xl p-2.5 focus:outline-indigo-500 text-slate-700">
-                </div>
-                <div>
-                    <label class="block text-slate-500 mb-1">학기 시작일</label>
-                    <input type="date" name="SEMESTER_START_DATE" class="w-full border rounded-xl p-2.5 focus:outline-indigo-500 text-slate-700">
-                </div>
-                <div class="flex justify-end space-x-2 pt-2 border-t mt-4">
-                    <button type="button" onclick="closeAdminCountdownModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-xl transition">취소</button>
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl transition shadow-md shadow-indigo-100">저장</button>
-                </div>
-            </form>
-
-            <hr class="my-4 border-slate-100">
-            <h3 class="text-sm font-black text-slate-800 mb-2"><i class="fa-solid fa-calendar-days text-indigo-500 mr-2"></i>공휴일 관리</h3>
-            
-            <!-- 공휴일 추가 폼 -->
-            <div class="flex space-x-2 mb-3 text-xs font-semibold">
-                <input type="date" id="new-holiday-date" class="w-[45%] border rounded-xl p-2 focus:outline-indigo-500 text-slate-700">
-                <input type="text" id="new-holiday-name" placeholder="공휴일 이름" class="w-[35%] border rounded-xl p-2 focus:outline-indigo-500 text-slate-700">
-                <button type="button" onclick="handleAddHoliday()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 rounded-xl transition shadow-sm w-[20%]">추가</button>
-            </div>
-            
-            <!-- 공휴일 목록 -->
-            <div id="holiday-list-container" class="max-h-36 overflow-y-auto space-y-1.5 pr-1 text-xs">
-                <div class="text-slate-400 text-center py-2 font-semibold">공휴일을 불러오는 중...</div>
+        <!-- ========================================== -->
+        <!-- 관리자 모달: 새 밸런스 게임 생성 -->
+        <!-- ========================================== -->
+        <div th:if="${user != null && user.role.name() == 'ADMIN'}" id="admin-balance-modal" class="modal">
+            <div class="modal-content !max-w-md">
+                <span class="close-modal" onclick="closeAdminBalanceModal()">&times;</span>
+                <h2 class="text-lg font-black text-slate-800 mb-4 border-b pb-2"><i
+                        class="fa-solid fa-plus text-rose-500 mr-2"></i>새 밸런스 게임 만들기</h2>
+                <form id="balance-create-form" class="space-y-4 text-xs font-semibold">
+                    <div>
+                        <label class="block text-slate-500 mb-1">밸런스 게임 질문</label>
+                        <textarea name="question" rows="3"
+                            class="w-full border rounded-xl p-2.5 focus:outline-rose-500 text-slate-700"
+                            placeholder="예: 평생 물만 마시기 vs 평생 제로콜라만 마시기"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 mb-1">선택지 A</label>
+                        <input type="text" name="optionA"
+                            class="w-full border rounded-xl p-2.5 focus:outline-rose-500 text-slate-700"
+                            placeholder="선택지 A 내용">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 mb-1">선택지 B</label>
+                        <input type="text" name="optionB"
+                            class="w-full border rounded-xl p-2.5 focus:outline-rose-500 text-slate-700"
+                            placeholder="선택지 B 내용">
+                    </div>
+                    <div class="flex justify-end space-x-2 pt-2 border-t mt-4">
+                        <button type="button" onclick="closeAdminBalanceModal()"
+                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-xl transition">취소</button>
+                        <button type="submit"
+                            class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-xl transition shadow-md shadow-rose-100">만들기</button>
+                    </div>
+                </form>
             </div>
         </div>
-    </div>
 
-    <!-- ========================================== -->
-    <!-- 관리자 모달: 새 밸런스 게임 생성 -->
-    <!-- ========================================== -->
-    <div th:if="${user != null && user.role.name() == 'ADMIN'}" id="admin-balance-modal" class="modal">
-        <div class="modal-content !max-w-md">
-            <span class="close-modal" onclick="closeAdminBalanceModal()">&times;</span>
-            <h2 class="text-lg font-black text-slate-800 mb-4 border-b pb-2"><i class="fa-solid fa-plus text-rose-500 mr-2"></i>새 밸런스 게임 만들기</h2>
-            <form id="balance-create-form" class="space-y-4 text-xs font-semibold">
-                <div>
-                    <label class="block text-slate-500 mb-1">밸런스 게임 질문</label>
-                    <textarea name="question" rows="3" class="w-full border rounded-xl p-2.5 focus:outline-rose-500 text-slate-700" placeholder="예: 평생 물만 마시기 vs 평생 제로콜라만 마시기"></textarea>
-                </div>
-                <div>
-                    <label class="block text-slate-500 mb-1">선택지 A</label>
-                    <input type="text" name="optionA" class="w-full border rounded-xl p-2.5 focus:outline-rose-500 text-slate-700" placeholder="선택지 A 내용">
-                </div>
-                <div>
-                    <label class="block text-slate-500 mb-1">선택지 B</label>
-                    <input type="text" name="optionB" class="w-full border rounded-xl p-2.5 focus:outline-rose-500 text-slate-700" placeholder="선택지 B 내용">
-                </div>
-                <div class="flex justify-end space-x-2 pt-2 border-t mt-4">
-                    <button type="button" onclick="closeAdminBalanceModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-xl transition">취소</button>
-                    <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-xl transition shadow-md shadow-rose-100">만들기</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 스크립트 리소스 로드 -->
-    <script th:src="@{/js/widgets.js(v=3)}"></script>
-    <script th:inline="javascript">
-        function openModal(categoryId) {
-            document.getElementById('modal-' + categoryId).style.display = 'block';
-        }
-        function closeModal(categoryId) {
-            document.getElementById('modal-' + categoryId).style.display = 'none';
-        }
-        
-        // 관리자 모달 제어
-        function openAdminCountdownModal() {
-            document.getElementById('admin-countdown-modal').style.display = 'block';
-            loadCountdownAdminConfig();
-        }
-        function closeAdminCountdownModal() {
-            document.getElementById('admin-countdown-modal').style.display = 'none';
-        }
-        function openAdminBalanceModal() {
-            document.getElementById('admin-balance-modal').style.display = 'block';
-        }
-        function closeAdminBalanceModal() {
-            document.getElementById('admin-balance-modal').style.display = 'none';
-        }
-
-        // 모달 외부 클릭 시 닫기
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
+        <!-- 스크립트 리소스 로드 -->
+        <script th:src="@{/js/widgets.js(v=3)}"></script>
+        <script th:inline="javascript">
+            function openModal(categoryId) {
+                document.getElementById('modal-' + categoryId).style.display = 'block';
             }
-        }
-    </script>
-</div>
+            function closeModal(categoryId) {
+                document.getElementById('modal-' + categoryId).style.display = 'none';
+            }
+
+            // 관리자 모달 제어
+            function openAdminCountdownModal() {
+                document.getElementById('admin-countdown-modal').style.display = 'block';
+                loadCountdownAdminConfig();
+            }
+            function closeAdminCountdownModal() {
+                document.getElementById('admin-countdown-modal').style.display = 'none';
+            }
+            function openAdminBalanceModal() {
+                document.getElementById('admin-balance-modal').style.display = 'block';
+            }
+            function closeAdminBalanceModal() {
+                document.getElementById('admin-balance-modal').style.display = 'none';
+            }
+
+            // 모달 외부 클릭 시 닫기
+            window.onclick = function (event) {
+                if (event.target.classList.contains('modal')) {
+                    event.target.style.display = 'none';
+                }
+            }
+        </script>
+    </div>
 </body>
+
 </html>
