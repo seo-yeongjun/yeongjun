@@ -521,7 +521,7 @@ function voteBalanceGame(selection) {
                         </div>
 
                         <!-- 다음 질문 수동 이동 버튼 -->
-                        <div id="balance-next-container" class="mt-4 flex justify-center">
+                        <div id="balance-next-container" class="mt-2.5 flex justify-center">
                             <button id="balance-next-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-2xl transition text-xs shadow-md flex items-center justify-center min-h-[36px] w-full max-w-[200px] select-none">
                                 <span id="balance-next-btn-text">다음 질문 ➡️</span>
                             </button>
@@ -625,7 +625,7 @@ function renderVotedGamesList(games, votedMap) {
             <div class="flex justify-between items-center mb-1.5 text-[10px] text-slate-400 font-bold px-1 select-none">
                 <span>📊 전체 투표 결과 리스트</span>
             </div>
-            <div class="space-y-2 max-h-[150px] overflow-y-auto pr-1 thin-scrollbar">
+            <div class="space-y-2 max-h-[120px] overflow-y-auto pr-1 thin-scrollbar">
                 ${listHtml}
             </div>
         </div>
