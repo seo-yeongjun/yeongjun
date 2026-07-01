@@ -625,7 +625,7 @@ function renderVotedGamesList(games, votedMap) {
             <div class="flex justify-between items-center mb-1.5 text-[10px] text-slate-400 font-bold px-1 select-none">
                 <span>📊 전체 투표 결과 리스트</span>
             </div>
-            <div class="space-y-2 pr-1 thin-scrollbar" style="max-height: 120px; overflow-y: auto;">
+            <div class="space-y-2 pr-1 thin-scrollbar balance-results-list" style="max-height: 120px; overflow-y: auto;">
                 ${listHtml}
             </div>
         </div>

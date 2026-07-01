@@ -46,4 +46,9 @@
   .animate-fade-in-up {
     animation: fadeInUp 0.3s ease-out forwards;
   }
+
+  .balance-results-list {
+    max-height: 120px !important;
+    overflow-y: auto !important;
+  }
 }
