@@ -265,8 +265,9 @@ function handleDeleteHoliday(date) {
 function fetchWeatherWidgetData() {
     fetch("/api/widgets/weather")
         .then(res => {
+            if (res.status === 204) return null;
             if (!res.ok) throw new Error("HTTP error");
-            return res.json();
+            return res.text().then(text => text ? JSON.parse(text) : null);
         })
         .then(data => {
             if (!data || data.currentTemp === undefined) {

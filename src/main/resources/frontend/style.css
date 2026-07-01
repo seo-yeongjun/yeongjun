@@ -48,7 +48,7 @@
   }
 
   .balance-results-list {
-    max-height: 120px !important;
+    max-height: 165px !important;
     overflow-y: auto !important;
   }
 }
