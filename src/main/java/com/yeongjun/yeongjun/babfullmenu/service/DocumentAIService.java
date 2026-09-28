@@ -34,7 +34,7 @@ public class DocumentAIService {
     @Value("${gcloud.processor-id}")
     private String processorId;
 
-    @Value("${gcloud.processor-version}")
+    @Value("${gcloud.processor-version:}")
     private String processorVersion;
 
     @Value("${gcloud.credentials-file}")
@@ -69,11 +69,20 @@ public class DocumentAIService {
         // 2) DocumentProcessorServiceClient 생성
         try (DocumentProcessorServiceClient client = DocumentProcessorServiceClient.create(settings)) {
 
-            // Processor Version 이름 설정
-            String processorVersionName = String.format(
-                    "projects/%s/locations/%s/processors/%s/processorVersions/%s",
-                    projectId, location, processorId, processorVersion
-            );
+            // Processor 이름 설정 (버전이 없거나 default일 경우 콘솔의 기본 버전 사용)
+            String resourceName;
+            if (processorVersion != null && !processorVersion.trim().isEmpty() && !"default".equalsIgnoreCase(processorVersion.trim())) {
+                resourceName = String.format(
+                        "projects/%s/locations/%s/processors/%s/processorVersions/%s",
+                        projectId, location, processorId, processorVersion.trim()
+                );
+            } else {
+                resourceName = String.format(
+                        "projects/%s/locations/%s/processors/%s",
+                        projectId, location, processorId
+                );
+            }
+            logger.info("Document AI 처리 리소스: {}", resourceName);
 
             // 3) RawDocument 생성 (MultipartFile → ByteString)
             RawDocument rawDocument = RawDocument.newBuilder()
@@ -83,7 +92,7 @@ public class DocumentAIService {
 
             // 4) 요청 빌드
             ProcessRequest request = ProcessRequest.newBuilder()
-                    .setName(processorVersionName)
+                    .setName(resourceName)
                     .setRawDocument(rawDocument)
                     .build();
 
